@@ -1,0 +1,84 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: meters_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  app:
+    build: ./app
+    container_name: meters_app
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8501:8501" # <-- Открываем порт для сайта в браузере
+    env_file:
+      - ./app/cEnergo.env # <-- ДОБАВЛЯЕМ ЭТУ СТРОКУ, чтобы контейнер подхватил пароли и настройки MSSQL
+    volumes:
+      - ./Catalog.xlsx:/app/catalog.xlsx
+      - ./app:/app # <-- связывает папку app на сервере с папкой /app в контейнере
+      - ./app/odbcinst.ini:/etc/odbcinst.ini
+    command: streamlit run web_site.py --server.port=8501 --server.address=0.0.0.0 # <-- Запускаем сайт при старте
+
+  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ ИЗ MS SQL
+  sync-mssql:
+    build: ./app
+    container_name: meters_sync_mssql
+    restart: always # <-- Если сервер упадет или перезагрузится, робот включится сам
+    depends_on:
+      - mongodb
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./app:/app
+      - ./app/odbcinst.ini:/etc/odbcinst.ini
+    command: python sync_mssql.py # <-- Запускаем именно робота, а не сайт
+
+  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ С СЕРВЕРА SANXING
+  sync-sanxing:
+    build: ./app
+    container_name: meters_sync_sanxing
+    restart: always
+    depends_on:
+      - mongodb
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./app:/app
+      - ./app/odbcinst.ini:/etc/odbcinst.ini
+    command: python sync_sanxing.py
+
+  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ С СЕРВЕРА SANRISE
+  sync-sanrise:
+    build: ./app
+    container_name: meters_sync_sanrise
+    restart: always
+    depends_on:
+      - mongodb
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./app:/app
+      - ./app/odbcinst.ini:/etc/odbcinst.ini
+    command: python sync_sanrise.py
+
+  # ВЕБ-ИНТЕРФЕЙС ДЛЯ БРАУЗЕРА
+  mongo-express:
+    image: mongo-express:latest
+    container_name: meters_web_admin
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb # Подключаемся к нашему контейнеру базы
+      - ME_CONFIG_BASICAUTH_USERNAME=admin # Логин для входа в веб-панель
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass # Пароль для входа в веб-панель
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data:
