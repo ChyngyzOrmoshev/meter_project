@@ -103,7 +103,7 @@ def run_sanrise_synchronization():
                                         "notes": "Авто-сбор: SunRise",
                                     }
                                 },
-                                upsert=True,
+                                find_one + update_one,
                             )
                         )
 

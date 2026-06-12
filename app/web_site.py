@@ -34,19 +34,29 @@ st.markdown(
 
 # Загружаем переменные окружения (.env подтягивается Docker-ом автоматически)
 load_dotenv()
+required_vars = [
+    "WEB_ADMIN_PASSWORD",
+    "WEB_OPERATOR_PASSWORD",
+    "WEB_USER_PASSWORD"
+]
+
+for var in required_vars:
+    if not os.getenv(var):
+        st.error(f"Не найдена переменная окружения: {var}")
+        st.stop()
 
 # Безопасная структура учетных записей из переменных окружения
 USER_CREDENTIALS = {
     "admin": {
-        "password": os.getenv("WEB_ADMIN_PASSWORD", "123"),
+        "password": os.getenv("WEB_ADMIN_PASSWORD"),
         "role": "admin"
     },
     "operator": {
-        "password": os.getenv("WEB_OPERATOR_PASSWORD", "456"),
+        "password": os.getenv("WEB_OPERATOR_PASSWORD"),
         "role": "operator"
     },
     "user": {
-        "password": os.getenv("WEB_USER_PASSWORD", "789"),
+        "password": os.getenv("WEB_USER_PASSWORD"),
         "role": "user"
     }
 }

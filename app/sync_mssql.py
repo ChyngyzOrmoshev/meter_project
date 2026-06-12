@@ -114,7 +114,7 @@ def run_synchronization():
                                         "notes": "Авто-сбор: База cEnergo",
                                     }
                                 },
-                                upsert=True,
+                                find_one + update_one,
                             )
                         )
 

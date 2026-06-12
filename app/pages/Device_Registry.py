@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from db_client import devices_col, models_col  # Импортируем коллекции из db_client
+from pymongo.errors import DuplicateKeyError
 
 # Настройка страницы во всю ширину
 st.set_page_config(page_title="Реестр устройств", page_icon="🏭", layout="wide")
@@ -78,10 +79,10 @@ if user_role in ["admin", "operator"]:
                 # Создаем аккуратные две колонки для двух нужных полей
                 col1, col2 = st.columns(2)
                 with col1:
-                    sn = st.text_input("Заводской номер:", disabled=True).strip()
+                    sn = st.text_input("Заводской номер:", disabled=False).strip()
                 with col2:
                     selected_model_str = st.selectbox(
-                        "Модель счетчика (и ток):", all_models, disabled=True
+                        "Модель счетчика (и ток):", all_models, disabled=False
                     )
                     
                 submit_btn = st.form_submit_button("💾 Зарегистрировать")
@@ -124,13 +125,21 @@ if user_role in ["admin", "operator"]:
                             }
                             
                             # Запись с проверкой на дубликат по серийному номеру
-                            exist_dev = devices_col.find_one({"serial_number": sn})
-                            if exist_dev:
-                                st.warning(f"⚠️ Прибор № {sn} уже зарегистрирован в реестре!")
-                            else:
+                            try:
                                 devices_col.insert_one(device_document)
-                                st.success(f"🎉 Прибор № {sn} успешно добавлен в систему!")
+
+                                st.success(
+                                    f"🎉 Прибор № {sn} успешно добавлен в систему!"
+                                )
                                 st.rerun()
+
+                            except DuplicateKeyError:
+                                st.warning(
+                                    f"⚠️ Прибор № {sn} уже зарегистрирован в реестре!"
+                                )
+
+                            except Exception as e:
+                                st.error(f"Ошибка добавления: {e}")
                                 
                         except Exception as e:
                             st.error(f"❌ Ошибка при сохранении прибора: {e}")
@@ -139,50 +148,93 @@ if user_role in ["admin", "operator"]:
 
 
         elif add_type == "Группой (Массовый ввод)":
-            from pymongo import UpdateOne
+            from pymongo.errors import BulkWriteError
 
             with st.form("bulk_device_form", clear_on_submit=True):
+
                 b_selected_model_str = st.selectbox(
-                    "Модель (и ток) для всей группы:", all_models
+                    "Модель (и ток) для всей группы:",
+                    all_models
                 )
+
                 b_status = st.selectbox(
-                    "Статус для всей группы:", ["active", "repair", "inactive"]
+                    "Статус для всей группы:",
+                    ["active", "repair", "inactive"]
                 )
+
                 b_sns = st.text_area(
                     "Вставьте список заводских номеров (каждый с новой строки):"
                 )
-                if st.form_submit_button("Зарегистрировать группу"):
+
+                submit = st.form_submit_button("Зарегистрировать группу")
+
+                if submit:
+
                     sn_list = [
-                        line.strip() for line in b_sns.split("\n") if line.strip()
+                        s.strip()
+                        for s in b_sns.split("\n")
+                        if s.strip()
                     ]
-                    if sn_list and b_selected_model_str:
-                        # Распаковка параметров для группы
-                        b_model_name = b_selected_model_str.split(" [")[0]
-                        b_nominal_current = (
-                            b_selected_model_str.split(" [")[1].replace("]", "")
-                            if " [" in b_selected_model_str
-                            else ""
+
+                    if not sn_list:
+                        st.error("Список пуст")
+                        st.stop()
+
+                    # убираем дубли внутри самого списка
+                    unique_sn_list = list(set(sn_list))
+
+                    # проверяем существующие в БД
+                    existing = set(
+                        devices_col.distinct(
+                            "serial_number",
+                            {"serial_number": {"$in": unique_sn_list}}
+                        )
+                    )
+
+                    # разделяем
+                    duplicates = list(existing)
+                    new_sns = [
+                        s for s in unique_sn_list
+                        if s not in existing
+                    ]
+
+                    # модель разбор
+                    b_model_name = b_selected_model_str.split(" [")[0]
+                    b_nominal_current = (
+                        b_selected_model_str.split(" [")[1].replace("]", "")
+                        if " [" in b_selected_model_str
+                        else ""
+                    )
+
+                    # вставка новых
+                    if new_sns:
+
+                        docs = [
+                            {
+                                "serial_number": sn,
+                                "model_name": b_model_name,
+                                "nominal_current": b_nominal_current,
+                                "status": b_status,
+                                "created_at": datetime.now()
+                            }
+                            for sn in new_sns
+                        ]
+
+                        devices_col.insert_many(docs)
+
+                    # отчёт пользователю
+                    if new_sns:
+                        st.success(
+                            f"✅ Добавлено новых приборов: {len(new_sns)}"
                         )
 
-                        operations = [
-                            UpdateOne(
-                                {"serial_number": s_num},
-                                {
-                                    "$set": {
-                                        "serial_number": s_num,
-                                        "model_name": b_model_name,
-                                        "nominal_current": b_nominal_current,
-                                        "status": b_status,
-                                    }
-                                },
-                                upsert=True,
-                            )
-                            for s_num in sn_list
-                        ]
-                        devices_col.bulk_write(operations)
-                        st.cache_data.clear()
-                        st.success(f"Успешно добавлено счетчиков: {len(sn_list)}")
-                        st.rerun()
+                    if duplicates:
+                        st.warning(
+                            f"⚠️ Уже существующие приборы ({len(duplicates)}):"
+                        )
+                        st.write(duplicates)
+
+                    st.rerun()
 
 # --- Интерфейс фильтрации данных ---
 f1, f2, f3 = st.columns(3)
@@ -268,6 +320,17 @@ if devices:
     final_df = final_df[[c for c in display_cols if c in final_df.columns]]
 
     st.dataframe(final_df, use_container_width=True, hide_index=True)
+    # можно в дальнейшем скачать, пока это скрыто
+    # csv = final_df.to_csv(
+    # index=False
+    # ).encode("utf-8-sig")
+
+    # st.download_button(
+    #     "📥 Скачать в Excel (CSV)",
+    #     csv,
+    #     "registry.csv",
+    #     "text/csv"
+    # )
 else:
     st.info("Приборы с указанными параметрами не найдены.")
 
@@ -282,7 +345,7 @@ if "delete_step2" not in st.session_state:
 if "delete_target_sn" not in st.session_state:
     st.session_state.delete_target_sn = ""
 
-if user_role in ["admin", "operator"]:
+if user_role == "admin":
     with st.expander("🗑️ Удалить прибор учета из базы данных"):
         st.warning("⚠️ Внимание: Удаление прибора сотрет его карту из реестра. Данные показаний в аналитике останутся.")
         

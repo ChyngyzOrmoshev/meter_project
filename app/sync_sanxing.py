@@ -125,7 +125,7 @@ def run_sanxing_synchronization():
                                         "notes": "Авто-сбор: Sanxing_old",
                                     }
                                 },
-                                upsert=True,
+                                find_one + update_one,
                             )
                         )
 
