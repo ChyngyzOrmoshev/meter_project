@@ -1,27 +1,29 @@
-# Виртуальное окружение (индивидуально для каждого ПК)
+# === КРИТИЧЕСКИЕ СЕКРЕТЫ И ДОСТУПЫ ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.gmac
+secrets.json
+config.local.ini
+
+# === ИНФРАСТРУКТУРА И БАЗЫ ДАННЫХ ===
 venv/
 .venv/
 env/
-ENV/
+/pgdata/
+/redis_data/
+/clickhouse_data/
+*.sqlite3
+*.db
+*.log
 
-# Кэш Python (автоматически создаваемые файлы)
+# === КЭШ И СИСТЕМНЫЕ ФАЙЛЫ ===
 **/__pycache__/
 *.pyc
 *.pyo
-*.pyd
 .pytest_cache/
-
-# Секретные ключи, пароли и настройки окружения (ВАЖНО!)
-.env
-*.local
-secrets.json
-
-# Логи и базы данных (чтобы не забивать репозиторий мусором)
-*.log
-*.sqlite3
-.database/
-
-# Настройки самой среды разработки VS Code
 .vscode/
 .idea/
 .DS_Store
