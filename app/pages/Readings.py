@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from db_client import readings_col, devices_col  # Подключение к MongoDB
+from pymongo.errors import BulkWriteError
 
 # Настройка страницы во всю ширину экрана
 st.set_page_config(page_title="Сбор показаний", page_icon="📉", layout="wide")
@@ -67,7 +68,13 @@ if user_role in ["admin", "operator"]:
                 with st.form("single_reading_form", clear_on_submit=True):
                     c1, c2, c3 = st.columns(3)
                     with c1:
-                        r_sn = st.selectbox("Заводской номер:", all_serial_numbers)
+                        serial_options = [str(sn) for sn in all_serial_numbers]
+                        r_sn = st.selectbox(
+                            "Заводской номер:",
+                            options=serial_options,
+                            index=None,
+                            placeholder="Начните вводить номер...")
+                        #r_sn = st.selectbox("Заводской номер:", all_serial_numbers)
                     with c2:
                         r_val = st.number_input(
                             "Показания (кВт*ч):", min_value=0.0, step=0.1
@@ -112,39 +119,121 @@ if user_role in ["admin", "operator"]:
 
                         if lines:
                             inserts = []
+                            errors  = []
+                            not_found = []
                             # ИСПРАВЛЕНО: Для всей группы принудительно задаем 00:00:00
                             full_dt = datetime.combine(br_date, datetime.min.time())
-
+                            
                             for line in lines:
                                 parts = line.split()
-                                if (
-                                    len(parts) >= 2
-                                    and parts[0] in all_serial_numbers_set
-                                ):
-                                    try:
-                                        val_str = parts[1].replace(",", ".")
-                                        inserts.append(
-                                            InsertOne(
-                                                {
-                                                    "serial_number": parts[0],
-                                                    "timestamp": full_dt,
-                                                    "reading_value": float(val_str),
-                                                    "notes": br_notes.strip(),
-                                                }
-                                            )
-                                        )
-                                    except (ValueError, IndexError):
-                                        pass
+                                # недостаточно данных в строке
+                                if len(parts) < 2:
+                                    errors.append(line)
+                                    continue
 
+                                serial_number = parts[0]
+
+                                # счетчик отсутствует в реестре
+                                if serial_number not in all_serial_numbers_set:
+                                    not_found.append(serial_number)
+                                    continue
+
+                                try:
+
+                                    value = float(
+                                        parts[1].replace(",", ".")
+                                    )
+
+                                    inserts.append(
+                                        InsertOne(
+                                            {
+                                                "serial_number": serial_number,
+                                                "timestamp": full_dt,
+                                                "reading_value": value,
+                                                "notes": br_notes.strip(),
+                                            }
+                                        )
+                                    )
+
+                                except ValueError:
+                                    errors.append(line)
+
+                            # запись в Mongo
                             if inserts:
-                                result = readings_col.bulk_write(inserts)
-                                st.success(
-                                    f"Успешно внесено показаний: {result.inserted_count} шт."
-                                )
-                                st.rerun()
+                                try:
+                                    result = readings_col.bulk_write(
+                                    inserts,
+                                    ordered=False
+                                    )
+
+                                    st.success(
+                                        f"✅ Успешно загружено показаний: {result.inserted_count}"
+                                    )
+
+                                except BulkWriteError as e:
+
+                                    inserted_count = e.details.get("nInserted", 0)
+
+                                    if inserted_count > 0:
+                                        st.success(
+                                            f"✅ Успешно загружено показаний: {inserted_count}"
+                                        )
+
+                                    duplicates = []
+
+                                    for err in e.details.get("writeErrors", []):
+
+                                        if err.get("code") == 11000:
+
+                                            serial_number = (
+                                                err.get("keyValue", {})
+                                                .get("serial_number")
+                                            )
+
+                                            if serial_number:
+                                                duplicates.append(serial_number)
+
+                                    if duplicates:
+
+                                        st.warning(
+                                            f"⚠️ Показания уже существуют за выбранную дату ({len(duplicates)} шт.)"
+                                        )
+
+                                        st.code(
+                                            "\n".join(sorted(set(duplicates)))
+                                        )
                             else:
                                 st.error(
-                                    "Не найдено корректных строк для добавления."
+                                     "❌ Нет корректных показаний для загрузки"
+                                )
+
+                            # счетчики отсутствуют в реестре
+                            if not_found:
+
+                                st.warning(
+                                    f"⚠️ Не найдены в реестре ({len(not_found)} шт.)"
+                                )
+
+                                st.code(
+                                    "\n".join(sorted(set(not_found)))
+                                )
+
+                            # ошибки формата
+                            if errors:
+
+                                st.error(
+                                    f"❌ Ошибочный формат строк ({len(errors)} шт.)"
+                                )
+
+                                st.code(
+                                    "\n".join(errors)
+                                )
+
+                            # вообще ничего не загрузилось
+                            if not inserts and not errors and not not_found:
+
+                                st.error(
+                                    "Не найдено корректных данных для загрузки."
                                 )
 
 # --- ЖУРНАЛ ПОКАЗАНИЙ С ВЫВОДОМ ИСТОРИИ ПО ДНЯМ ВНУТРИ ПЕРИОДА ---

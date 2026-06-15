@@ -15,6 +15,14 @@ devices_col.create_index(
 readings_col.create_index(
     [
         ("serial_number", ASCENDING),
+        ("timestamp", ASCENDING)
+    ],
+    unique=True
+)
+
+readings_col.create_index(
+    [
+        ("serial_number", ASCENDING),
         ("timestamp", DESCENDING)
     ]
 )

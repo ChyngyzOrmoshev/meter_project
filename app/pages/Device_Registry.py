@@ -115,7 +115,7 @@ if user_role in ["admin", "operator"]:
                             # Формируем документ для записи в коллекцию devices
                             device_document = {
                                 "serial_number": sn,
-                                "model": pure_model_name,      # Запишется чистая строка (например, A1801)
+                                "model_name": pure_model_name,      # Запишется чистая строка (например, A1801)
                                 "nominal_current": nominal_current,
                                 "status": "active",
                                 "phase": phase_val,            # Больше не будет None
@@ -180,25 +180,8 @@ if user_role in ["admin", "operator"]:
                         st.error("Список пуст")
                         st.stop()
 
-                    # убираем дубли внутри самого списка
-                    unique_sn_list = list(set(sn_list))
+                    unique_sn_list = list(dict.fromkeys(sn_list))
 
-                    # проверяем существующие в БД
-                    existing = set(
-                        devices_col.distinct(
-                            "serial_number",
-                            {"serial_number": {"$in": unique_sn_list}}
-                        )
-                    )
-
-                    # разделяем
-                    duplicates = list(existing)
-                    new_sns = [
-                        s for s in unique_sn_list
-                        if s not in existing
-                    ]
-
-                    # модель разбор
                     b_model_name = b_selected_model_str.split(" [")[0]
                     b_nominal_current = (
                         b_selected_model_str.split(" [")[1].replace("]", "")
@@ -206,7 +189,18 @@ if user_role in ["admin", "operator"]:
                         else ""
                     )
 
-                    # вставка новых
+                    # 🔥 ВАЖНО: ПРЕДПРОВЕРКА
+                    existing = set(
+                        devices_col.distinct(
+                            "serial_number",
+                            {"serial_number": {"$in": unique_sn_list}}
+                        )
+                    )
+
+                    new_sns = [s for s in unique_sn_list if s not in existing]
+                    duplicates = [s for s in unique_sn_list if s in existing]
+
+                    # 👉 вставляем только новые
                     if new_sns:
 
                         docs = [
@@ -220,19 +214,16 @@ if user_role in ["admin", "operator"]:
                             for sn in new_sns
                         ]
 
-                        devices_col.insert_many(docs)
+                        result = devices_col.insert_many(docs)
 
-                    # отчёт пользователю
-                    if new_sns:
-                        st.success(
-                            f"✅ Добавлено новых приборов: {len(new_sns)}"
-                        )
+                        st.success(f"✅ Добавлено новых приборов: {len(result.inserted_ids)}")
 
+                    # 👉 показываем дубликаты
                     if duplicates:
-                        st.warning(
-                            f"⚠️ Уже существующие приборы ({len(duplicates)}):"
-                        )
-                        st.write(duplicates)
+
+                        st.warning(f"⚠️ Уже существуют ({len(duplicates)}):")
+
+                        st.code("\n".join(duplicates))
 
                     st.rerun()
 
