@@ -1,12 +1,10 @@
 import os
 import streamlit as st
-import uuid
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from db_client import client, sessions_col
 
 st.set_page_config(page_title="ИнфоЭнерго", page_icon="⚡", layout="wide")
 
+# Кастомное меню (CSS)
 st.markdown(
     """
     <style>
@@ -20,6 +18,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Загружаем переменные окружения
 load_dotenv()
 required_vars = ["WEB_ADMIN_PASSWORD", "WEB_OPERATOR_PASSWORD", "WEB_USER_PASSWORD"]
 for var in required_vars:
@@ -33,37 +32,7 @@ USER_CREDENTIALS = {
     "user": {"password": os.getenv("WEB_USER_PASSWORD"), "role": "user"},
 }
 
-def create_session(username, role):
-    token = str(uuid.uuid4())
-    expires_at = datetime.now() + timedelta(days=30)
-    sessions_col.insert_one({"token": token, "username": username, "role": role, "expires_at": expires_at})
-    return token
-
-def check_token(token):
-    if not token:
-        return None
-    session = sessions_col.find_one({"token": token, "expires_at": {"$gt": datetime.now()}})
-    if session:
-        return session["username"], session["role"]
-    return None
-
-def delete_session(token):
-    if token:
-        sessions_col.delete_one({"token": token})
-
-# Восстанавливаем сессию из URL
-query_params = st.query_params
-token = query_params.get("token", None)
-if token:
-    result = check_token(token)
-    if result:
-        st.session_state.logged_in = True
-        st.session_state.user_role = result[1]
-        st.session_state.username = result[0]
-    else:
-        st.query_params.clear()
-
-# Инициализация session_state (не перезаписываем, если уже залогинены)
+# Инициализация состояния (только для текущей сессии)
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_role" not in st.session_state:
@@ -79,8 +48,6 @@ if not st.session_state.logged_in:
         password = st.text_input("Пароль:", type="password")
         if st.form_submit_button("Войти"):
             if username in USER_CREDENTIALS and USER_CREDENTIALS[username]["password"] == password:
-                token = create_session(username, USER_CREDENTIALS[username]["role"])
-                st.query_params["token"] = token
                 st.session_state.logged_in = True
                 st.session_state.user_role = USER_CREDENTIALS[username]["role"]
                 st.session_state.username = username
@@ -93,8 +60,6 @@ if not st.session_state.logged_in:
 col1, col2 = st.columns([6, 1])
 with col2:
     if st.button("Выйти"):
-        delete_session(st.query_params.get("token", None))
-        st.query_params.clear()
         st.session_state.logged_in = False
         st.session_state.user_role = None
         st.session_state.username = None

@@ -1,0 +1,4742 @@
+=== 1. Таблицы с DATA_ID ===
+a_data_catalogue
+a_data_info_group
+apparent_md_m_202001
+apparent_md_m_202002
+apparent_md_m_202003
+apparent_md_m_202004
+apparent_md_m_202005
+apparent_md_m_202006
+apparent_md_m_202007
+apparent_md_m_202008
+apparent_md_m_202009
+apparent_md_m_202010
+apparent_md_m_202011
+apparent_md_m_202012
+apparent_md_m_202101
+apparent_md_m_202102
+apparent_md_m_202103
+apparent_md_m_202104
+apparent_md_m_202105
+apparent_md_m_202106
+apparent_md_m_202107
+apparent_md_m_202108
+apparent_md_m_202109
+apparent_md_m_202110
+apparent_md_m_202111
+apparent_md_m_202112
+apparent_md_m_202201
+apparent_md_m_202202
+apparent_md_m_202203
+apparent_md_m_202204
+apparent_md_m_202205
+apparent_md_m_202206
+apparent_md_m_202207
+apparent_md_m_202208
+apparent_md_m_202209
+apparent_md_m_202210
+apparent_md_m_202211
+apparent_md_m_202212
+apparent_md_m_202301
+apparent_md_m_202302
+apparent_md_m_202303
+apparent_md_m_202304
+apparent_md_m_202305
+apparent_md_m_202306
+apparent_md_m_202307
+apparent_md_m_tmp
+apparent_md_m_tmp_1
+apparent_md_tmp_1
+av_ext_md_m_202001
+av_ext_md_m_202002
+av_ext_md_m_202003
+av_ext_md_m_202004
+av_ext_md_m_202005
+av_ext_md_m_202006
+av_ext_md_m_202007
+av_ext_md_m_202008
+av_ext_md_m_202009
+av_ext_md_m_202010
+av_ext_md_m_202011
+av_ext_md_m_202012
+av_ext_md_m_202101
+av_ext_md_m_202102
+av_ext_md_m_202103
+av_ext_md_m_202104
+av_ext_md_m_202105
+av_ext_md_m_202106
+av_ext_md_m_202107
+av_ext_md_m_202108
+av_ext_md_m_202109
+av_ext_md_m_202110
+av_ext_md_m_202111
+av_ext_md_m_202112
+av_ext_md_m_202201
+av_ext_md_m_202202
+av_ext_md_m_202203
+av_ext_md_m_202204
+av_ext_md_m_202205
+av_ext_md_m_202206
+av_ext_md_m_202207
+av_ext_md_m_202208
+av_ext_md_m_202209
+av_ext_md_m_202210
+av_ext_md_m_202211
+av_ext_md_m_202212
+av_ext_md_m_202301
+av_ext_md_m_202302
+av_ext_md_m_202303
+av_ext_md_m_202304
+av_ext_md_m_202305
+av_ext_md_m_202306
+av_ext_md_m_202307
+av_ext_md_m_tmp
+av_ext_md_m_tmp_1
+av_md_m_202001
+av_md_m_202002
+av_md_m_202003
+av_md_m_202004
+av_md_m_202005
+av_md_m_202006
+av_md_m_202007
+av_md_m_202008
+av_md_m_202009
+av_md_m_202010
+av_md_m_202011
+av_md_m_202012
+av_md_m_202101
+av_md_m_202102
+av_md_m_202103
+av_md_m_202104
+av_md_m_202105
+av_md_m_202106
+av_md_m_202107
+av_md_m_202108
+av_md_m_202109
+av_md_m_202110
+av_md_m_202111
+av_md_m_202112
+av_md_m_202201
+av_md_m_202202
+av_md_m_202203
+av_md_m_202204
+av_md_m_202205
+av_md_m_202206
+av_md_m_202207
+av_md_m_202208
+av_md_m_202209
+av_md_m_202210
+av_md_m_202211
+av_md_m_202212
+av_md_m_202301
+av_md_m_202302
+av_md_m_202303
+av_md_m_202304
+av_md_m_202305
+av_md_m_202306
+av_md_m_202307
+av_md_m_tmp
+av_md_m_tmp_1
+base_c_202112
+base_c_202201
+base_c_202202
+base_c_202203
+base_c_202204
+base_c_202205
+base_c_202206
+base_c_202207
+base_c_202208
+base_c_202209
+base_c_202210
+base_c_202211
+base_c_202212
+base_c_202301
+base_c_202302
+base_c_202303
+base_c_202304
+base_c_202305
+base_c_202306
+base_c_202307
+base_c_202308
+base_c_202309
+base_c_202310
+base_c_202311
+base_c_202312
+base_c_202401
+base_c_202402
+base_c_202403
+base_c_202404
+base_c_202405
+base_c_202406
+base_c_202407
+base_c_202408
+base_c_202409
+base_c_202410
+base_c_202411
+base_c_202412
+base_c_202501
+base_c_202502
+base_c_202503
+base_c_202504
+base_c_202505
+base_c_202506
+base_c_tmp_1
+base_d_202101
+base_d_202102
+base_d_202103
+base_d_202104
+base_d_202105
+base_d_202106
+base_d_202107
+base_d_202108
+base_d_202109
+base_d_202110
+base_d_202111
+base_d_202112
+base_d_202201
+base_d_202202
+base_d_202203
+base_d_202204
+base_d_202205
+base_d_202206
+base_d_202207
+base_d_202208
+base_d_202209
+base_d_202210
+base_d_202211
+base_d_202212
+base_d_202301
+base_d_202302
+base_d_202303
+base_d_202304
+base_d_202305
+base_d_202306
+base_d_202307
+base_d_202308
+base_d_202309
+base_d_202310
+base_d_202311
+base_d_202312
+base_d_202401
+base_d_202402
+base_d_202403
+base_d_202404
+base_d_202405
+base_d_202406
+base_d_202407
+base_d_tmp
+base_d_tmp_1
+base_m_202001
+base_m_202002
+base_m_202003
+base_m_202004
+base_m_202005
+base_m_202006
+base_m_202007
+base_m_202008
+base_m_202009
+base_m_202010
+base_m_202011
+base_m_202012
+base_m_202101
+base_m_202102
+base_m_202103
+base_m_202104
+base_m_202105
+base_m_202106
+base_m_202107
+base_m_202108
+base_m_202109
+base_m_202110
+base_m_202111
+base_m_202112
+base_m_202201
+base_m_202202
+base_m_202203
+base_m_202204
+base_m_202205
+base_m_202206
+base_m_202207
+base_m_202208
+base_m_202209
+base_m_202210
+base_m_202211
+base_m_202212
+base_m_202301
+base_m_202302
+base_m_202303
+base_m_202304
+base_m_202305
+base_m_202306
+base_m_202307
+base_m_tmp
+base_m_tmp_1
+biz_cai_lc_balance
+biz_inf_push_log
+biz_mdm_estimating_record
+biz_mdm_fail_record
+biz_mdm_run_status
+biz_mdm_run_status_tmp
+biz_mdm_success_temp
+biz_mdm_vee_exception
+biz_pub_data_apparent_md
+biz_pub_data_apparent_md_m
+biz_pub_data_av_ext_md_m
+biz_pub_data_av_md_m
+biz_pub_data_base_c
+biz_pub_data_base_d
+biz_pub_data_base_m
+biz_pub_data_current
+biz_pub_data_d_energy_c
+biz_pub_data_d_energy_d
+biz_pub_data_d_energy_m
+biz_pub_data_ed_flow_d
+biz_pub_data_ed_flow_m
+biz_pub_data_event
+biz_pub_data_event_bak
+biz_pub_data_f_energy_c
+biz_pub_data_f_energy_d
+biz_pub_data_f_energy_ext_c
+biz_pub_data_f_energy_ext_d
+biz_pub_data_f_energy_ext_m
+biz_pub_data_f_energy_m
+biz_pub_data_f_energy_phase_c
+biz_pub_data_f_energy_phase_d
+biz_pub_data_f_energy_phase_m
+biz_pub_data_f_ext_md_d
+biz_pub_data_f_ext_md_m
+biz_pub_data_f_md_c
+biz_pub_data_f_md_d
+biz_pub_data_f_md_m
+biz_pub_data_f_power_tou
+biz_pub_data_f_power_tou_tmp_1
+biz_pub_data_forward_power
+biz_pub_data_harmonic_c_i
+biz_pub_data_harmonic_c_v
+biz_pub_data_harmonic_i
+biz_pub_data_harmonic_v
+biz_pub_data_network_mgt_d
+biz_pub_data_other_d
+biz_pub_data_other_load
+biz_pub_data_other_m
+biz_pub_data_power_factor
+biz_pub_data_power_factor_m
+biz_pub_data_q_energy_c
+biz_pub_data_q_energy_d
+biz_pub_data_q_energy_ext_c
+biz_pub_data_q_energy_ext_d
+biz_pub_data_q_energy_ext_m
+biz_pub_data_q_energy_m
+biz_pub_data_r_energy_c
+biz_pub_data_r_energy_d
+biz_pub_data_r_energy_ext_c
+biz_pub_data_r_energy_ext_d
+biz_pub_data_r_energy_ext_m
+biz_pub_data_r_energy_m
+biz_pub_data_r_ext_md_d
+biz_pub_data_r_ext_md_m
+biz_pub_data_r_md_c
+biz_pub_data_r_md_d
+biz_pub_data_r_md_m
+biz_pub_data_reverse_power
+biz_pub_data_signal
+biz_pub_data_t_energy_c
+biz_pub_data_t_energy_c_temp
+biz_pub_data_t_energy_d
+biz_pub_data_t_energy_m
+biz_pub_data_transformer_c
+biz_pub_data_transformer_d
+biz_pub_data_transformer_m
+biz_pub_data_ui_angle
+biz_pub_data_vending_d
+biz_pub_data_voltage
+biz_pub_data_water_gas
+biz_pub_data_water_gas_d
+biz_pub_data_water_gas_m
+biz_pub_dataedit_log
+biz_pub_report_raw_day
+biz_pub_report_raw_day_temp
+biz_pub_report_raw_month
+biz_pub_report_raw_month_temp
+biz_pub_st_current
+biz_pub_st_data_transformer
+biz_pub_st_f_energy_c
+biz_pub_st_f_energy_d
+biz_pub_st_f_energy_ext_c
+biz_pub_st_f_energy_m
+biz_pub_st_f_energy_phase_c
+biz_pub_st_forward_power
+biz_pub_st_power_factor
+biz_pub_st_q_energy_c
+biz_pub_st_q_energy_d
+biz_pub_st_r_energy_c
+biz_pub_st_r_energy_d
+biz_pub_st_r_energy_m
+biz_pub_st_reverse_power
+biz_pub_st_t_energy_c
+biz_pub_st_t_energy_c_temp
+biz_pub_st_t_energy_d
+biz_pub_st_t_energy_m
+biz_pub_st_transformer_d
+biz_pub_st_transformer_m
+biz_pub_st_voltage
+biz_pub_sys_bu_ana_info
+biz_pub_sys_event_ana
+current_202112
+current_202201
+current_202202
+current_202203
+current_202204
+current_202205
+current_202206
+current_202207
+current_202208
+current_202209
+current_202210
+current_202211
+current_202212
+current_202301
+current_202302
+current_202303
+current_202304
+current_202305
+current_202306
+current_202307
+current_202308
+current_202309
+current_202310
+current_202311
+current_202312
+current_202401
+current_202402
+current_202403
+current_202404
+current_202405
+current_202406
+current_202407
+current_202408
+current_202409
+current_202410
+current_202411
+current_202412
+current_202501
+current_202502
+current_202503
+current_202504
+current_202505
+current_202506
+current_tmp_1
+elec_code_1f_energy_c
+elec_code_1r_energy_c
+elec_code_1t_energy_c
+elec_code_d_1f_energy_d
+elec_code_d_1r_energy_d
+elec_code_d_1t_energy_d
+elec_code_df_energy_d
+elec_code_df_energy_ext_d
+elec_code_dr_energy_d
+elec_code_dr_energy_ext_d
+elec_code_dt_energy_d
+elec_code_m_1f_energy_ext_m
+elec_code_m_1f_energy_m
+elec_code_m_1r_energy_ext_m
+elec_code_m_1r_energy_m
+elec_code_m_1t_energy_m
+elec_code_mf_energy_m
+elec_code_mr_energy_ext_m
+elec_code_mr_energy_m
+elec_code_mt_energy_m
+elec_codef_energy_c
+elec_codeq_energy_c
+elec_coder_energy_c
+elec_codet_energy_c
+event_1event
+event_201907
+event_tmp
+event_tmp_1
+eventevent
+f_energy_c_202112
+f_energy_c_202201
+f_energy_c_202202
+f_energy_c_202203
+f_energy_c_202204
+f_energy_c_202205
+f_energy_c_202206
+f_energy_c_202207
+f_energy_c_202208
+f_energy_c_202209
+f_energy_c_202210
+f_energy_c_202211
+f_energy_c_202212
+f_energy_c_202301
+f_energy_c_202302
+f_energy_c_202303
+f_energy_c_202304
+f_energy_c_202305
+f_energy_c_202306
+f_energy_c_202307
+f_energy_c_202308
+f_energy_c_202309
+f_energy_c_202310
+f_energy_c_202311
+f_energy_c_202312
+f_energy_c_202401
+f_energy_c_202402
+f_energy_c_202403
+f_energy_c_202404
+f_energy_c_202405
+f_energy_c_202406
+f_energy_c_202407
+f_energy_c_202408
+f_energy_c_202409
+f_energy_c_202410
+f_energy_c_202411
+f_energy_c_202412
+f_energy_c_202501
+f_energy_c_202502
+f_energy_c_202503
+f_energy_c_202504
+f_energy_c_202505
+f_energy_c_202506
+f_energy_c_tmp_1
+f_energy_d_202101
+f_energy_d_202102
+f_energy_d_202103
+f_energy_d_202104
+f_energy_d_202105
+f_energy_d_202106
+f_energy_d_202107
+f_energy_d_202108
+f_energy_d_202109
+f_energy_d_202110
+f_energy_d_202111
+f_energy_d_202112
+f_energy_d_202201
+f_energy_d_202202
+f_energy_d_202203
+f_energy_d_202204
+f_energy_d_202205
+f_energy_d_202206
+f_energy_d_202207
+f_energy_d_202208
+f_energy_d_202209
+f_energy_d_202210
+f_energy_d_202211
+f_energy_d_202212
+f_energy_d_202301
+f_energy_d_202302
+f_energy_d_202303
+f_energy_d_202304
+f_energy_d_202305
+f_energy_d_202306
+f_energy_d_202307
+f_energy_d_202308
+f_energy_d_202309
+f_energy_d_202310
+f_energy_d_202311
+f_energy_d_202312
+f_energy_d_202401
+f_energy_d_202402
+f_energy_d_202403
+f_energy_d_202404
+f_energy_d_202405
+f_energy_d_202406
+f_energy_d_202407
+f_energy_d_tmp
+f_energy_d_tmp_1
+f_energy_ext_c_202112
+f_energy_ext_c_202201
+f_energy_ext_c_202202
+f_energy_ext_c_202203
+f_energy_ext_c_202204
+f_energy_ext_c_202205
+f_energy_ext_c_202206
+f_energy_ext_c_202207
+f_energy_ext_c_202208
+f_energy_ext_c_202209
+f_energy_ext_c_202210
+f_energy_ext_c_202211
+f_energy_ext_c_202212
+f_energy_ext_c_202301
+f_energy_ext_c_202302
+f_energy_ext_c_202303
+f_energy_ext_c_202304
+f_energy_ext_c_202305
+f_energy_ext_c_202306
+f_energy_ext_c_202307
+f_energy_ext_c_202308
+f_energy_ext_c_202309
+f_energy_ext_c_202310
+f_energy_ext_c_202311
+f_energy_ext_c_202312
+f_energy_ext_c_202401
+f_energy_ext_c_202402
+f_energy_ext_c_202403
+f_energy_ext_c_202404
+f_energy_ext_c_202405
+f_energy_ext_c_202406
+f_energy_ext_c_202407
+f_energy_ext_c_202408
+f_energy_ext_c_202409
+f_energy_ext_c_202410
+f_energy_ext_c_202411
+f_energy_ext_c_202412
+f_energy_ext_c_202501
+f_energy_ext_c_202502
+f_energy_ext_c_202503
+f_energy_ext_c_202504
+f_energy_ext_c_202505
+f_energy_ext_c_202506
+f_energy_ext_c_tmp_1
+f_energy_ext_d_202101
+f_energy_ext_d_202102
+f_energy_ext_d_202103
+f_energy_ext_d_202104
+f_energy_ext_d_202105
+f_energy_ext_d_202106
+f_energy_ext_d_202107
+f_energy_ext_d_202108
+f_energy_ext_d_202109
+f_energy_ext_d_202110
+f_energy_ext_d_202111
+f_energy_ext_d_202112
+f_energy_ext_d_202201
+f_energy_ext_d_202202
+f_energy_ext_d_202203
+f_energy_ext_d_202204
+f_energy_ext_d_202205
+f_energy_ext_d_202206
+f_energy_ext_d_202207
+f_energy_ext_d_202208
+f_energy_ext_d_202209
+f_energy_ext_d_202210
+f_energy_ext_d_202211
+f_energy_ext_d_202212
+f_energy_ext_d_202301
+f_energy_ext_d_202302
+f_energy_ext_d_202303
+f_energy_ext_d_202304
+f_energy_ext_d_202305
+f_energy_ext_d_202306
+f_energy_ext_d_202307
+f_energy_ext_d_202308
+f_energy_ext_d_202309
+f_energy_ext_d_202310
+f_energy_ext_d_202311
+f_energy_ext_d_202312
+f_energy_ext_d_202401
+f_energy_ext_d_202402
+f_energy_ext_d_202403
+f_energy_ext_d_202404
+f_energy_ext_d_202405
+f_energy_ext_d_202406
+f_energy_ext_d_202407
+f_energy_ext_d_tmp
+f_energy_ext_d_tmp_1
+f_energy_ext_m_202001
+f_energy_ext_m_202002
+f_energy_ext_m_202003
+f_energy_ext_m_202004
+f_energy_ext_m_202005
+f_energy_ext_m_202006
+f_energy_ext_m_202007
+f_energy_ext_m_202008
+f_energy_ext_m_202009
+f_energy_ext_m_202010
+f_energy_ext_m_202011
+f_energy_ext_m_202012
+f_energy_ext_m_202101
+f_energy_ext_m_202102
+f_energy_ext_m_202103
+f_energy_ext_m_202104
+f_energy_ext_m_202105
+f_energy_ext_m_202106
+f_energy_ext_m_202107
+f_energy_ext_m_202108
+f_energy_ext_m_202109
+f_energy_ext_m_202110
+f_energy_ext_m_202111
+f_energy_ext_m_202112
+f_energy_ext_m_202201
+f_energy_ext_m_202202
+f_energy_ext_m_202203
+f_energy_ext_m_202204
+f_energy_ext_m_202205
+f_energy_ext_m_202206
+f_energy_ext_m_202207
+f_energy_ext_m_202208
+f_energy_ext_m_202209
+f_energy_ext_m_202210
+f_energy_ext_m_202211
+f_energy_ext_m_202212
+f_energy_ext_m_202301
+f_energy_ext_m_202302
+f_energy_ext_m_202303
+f_energy_ext_m_202304
+f_energy_ext_m_202305
+f_energy_ext_m_202306
+f_energy_ext_m_202307
+f_energy_ext_m_tmp
+f_energy_ext_m_tmp_1
+f_energy_m_202001
+f_energy_m_202002
+f_energy_m_202003
+f_energy_m_202004
+f_energy_m_202005
+f_energy_m_202006
+f_energy_m_202007
+f_energy_m_202008
+f_energy_m_202009
+f_energy_m_202010
+f_energy_m_202011
+f_energy_m_202012
+f_energy_m_202101
+f_energy_m_202102
+f_energy_m_202103
+f_energy_m_202104
+f_energy_m_202105
+f_energy_m_202106
+f_energy_m_202107
+f_energy_m_202108
+f_energy_m_202109
+f_energy_m_202110
+f_energy_m_202111
+f_energy_m_202112
+f_energy_m_202201
+f_energy_m_202202
+f_energy_m_202203
+f_energy_m_202204
+f_energy_m_202205
+f_energy_m_202206
+f_energy_m_202207
+f_energy_m_202208
+f_energy_m_202209
+f_energy_m_202210
+f_energy_m_202211
+f_energy_m_202212
+f_energy_m_202301
+f_energy_m_202302
+f_energy_m_202303
+f_energy_m_202304
+f_energy_m_202305
+f_energy_m_202306
+f_energy_m_202307
+f_energy_m_tmp
+f_energy_m_tmp_1
+f_energy_phase_c_202112
+f_energy_phase_c_202201
+f_energy_phase_c_202202
+f_energy_phase_c_202203
+f_energy_phase_c_202204
+f_energy_phase_c_202205
+f_energy_phase_c_202206
+f_energy_phase_c_202207
+f_energy_phase_c_202208
+f_energy_phase_c_202209
+f_energy_phase_c_202210
+f_energy_phase_c_202211
+f_energy_phase_c_202212
+f_energy_phase_c_202301
+f_energy_phase_c_202302
+f_energy_phase_c_202303
+f_energy_phase_c_202304
+f_energy_phase_c_202305
+f_energy_phase_c_202306
+f_energy_phase_c_202307
+f_energy_phase_c_202308
+f_energy_phase_c_202309
+f_energy_phase_c_202310
+f_energy_phase_c_202311
+f_energy_phase_c_202312
+f_energy_phase_c_202401
+f_energy_phase_c_202402
+f_energy_phase_c_202403
+f_energy_phase_c_202404
+f_energy_phase_c_202405
+f_energy_phase_c_202406
+f_energy_phase_c_202407
+f_energy_phase_c_202408
+f_energy_phase_c_202409
+f_energy_phase_c_202410
+f_energy_phase_c_202411
+f_energy_phase_c_202412
+f_energy_phase_c_202501
+f_energy_phase_c_202502
+f_energy_phase_c_202503
+f_energy_phase_c_202504
+f_energy_phase_c_202505
+f_energy_phase_c_202506
+f_energy_phase_c_tmp_1
+f_energy_phase_d_202101
+f_energy_phase_d_202102
+f_energy_phase_d_202103
+f_energy_phase_d_202104
+f_energy_phase_d_202105
+f_energy_phase_d_202106
+f_energy_phase_d_202107
+f_energy_phase_d_202108
+f_energy_phase_d_202109
+f_energy_phase_d_202110
+f_energy_phase_d_202111
+f_energy_phase_d_202112
+f_energy_phase_d_202201
+f_energy_phase_d_202202
+f_energy_phase_d_202203
+f_energy_phase_d_202204
+f_energy_phase_d_202205
+f_energy_phase_d_202206
+f_energy_phase_d_202207
+f_energy_phase_d_202208
+f_energy_phase_d_202209
+f_energy_phase_d_202210
+f_energy_phase_d_202211
+f_energy_phase_d_202212
+f_energy_phase_d_202301
+f_energy_phase_d_202302
+f_energy_phase_d_202303
+f_energy_phase_d_202304
+f_energy_phase_d_202305
+f_energy_phase_d_202306
+f_energy_phase_d_202307
+f_energy_phase_d_202308
+f_energy_phase_d_202309
+f_energy_phase_d_202310
+f_energy_phase_d_202311
+f_energy_phase_d_202312
+f_energy_phase_d_202401
+f_energy_phase_d_202402
+f_energy_phase_d_202403
+f_energy_phase_d_202404
+f_energy_phase_d_202405
+f_energy_phase_d_202406
+f_energy_phase_d_202407
+f_energy_phase_d_tmp
+f_energy_phase_d_tmp_1
+f_energy_phase_m_202001
+f_energy_phase_m_202002
+f_energy_phase_m_202003
+f_energy_phase_m_202004
+f_energy_phase_m_202005
+f_energy_phase_m_202006
+f_energy_phase_m_202007
+f_energy_phase_m_202008
+f_energy_phase_m_202009
+f_energy_phase_m_202010
+f_energy_phase_m_202011
+f_energy_phase_m_202012
+f_energy_phase_m_202101
+f_energy_phase_m_202102
+f_energy_phase_m_202103
+f_energy_phase_m_202104
+f_energy_phase_m_202105
+f_energy_phase_m_202106
+f_energy_phase_m_202107
+f_energy_phase_m_202108
+f_energy_phase_m_202109
+f_energy_phase_m_202110
+f_energy_phase_m_202111
+f_energy_phase_m_202112
+f_energy_phase_m_202201
+f_energy_phase_m_202202
+f_energy_phase_m_202203
+f_energy_phase_m_202204
+f_energy_phase_m_202205
+f_energy_phase_m_202206
+f_energy_phase_m_202207
+f_energy_phase_m_202208
+f_energy_phase_m_202209
+f_energy_phase_m_202210
+f_energy_phase_m_202211
+f_energy_phase_m_202212
+f_energy_phase_m_202301
+f_energy_phase_m_202302
+f_energy_phase_m_202303
+f_energy_phase_m_202304
+f_energy_phase_m_202305
+f_energy_phase_m_202306
+f_energy_phase_m_202307
+f_energy_phase_m_tmp
+f_energy_phase_m_tmp_1
+f_ext_md_m_202001
+f_ext_md_m_202002
+f_ext_md_m_202003
+f_ext_md_m_202004
+f_ext_md_m_202005
+f_ext_md_m_202006
+f_ext_md_m_202007
+f_ext_md_m_202008
+f_ext_md_m_202009
+f_ext_md_m_202010
+f_ext_md_m_202011
+f_ext_md_m_202012
+f_ext_md_m_202101
+f_ext_md_m_202102
+f_ext_md_m_202103
+f_ext_md_m_202104
+f_ext_md_m_202105
+f_ext_md_m_202106
+f_ext_md_m_202107
+f_ext_md_m_202108
+f_ext_md_m_202109
+f_ext_md_m_202110
+f_ext_md_m_202111
+f_ext_md_m_202112
+f_ext_md_m_202201
+f_ext_md_m_202202
+f_ext_md_m_202203
+f_ext_md_m_202204
+f_ext_md_m_202205
+f_ext_md_m_202206
+f_ext_md_m_202207
+f_ext_md_m_202208
+f_ext_md_m_202209
+f_ext_md_m_202210
+f_ext_md_m_202211
+f_ext_md_m_202212
+f_ext_md_m_202301
+f_ext_md_m_202302
+f_ext_md_m_202303
+f_ext_md_m_202304
+f_ext_md_m_202305
+f_ext_md_m_202306
+f_ext_md_m_202307
+f_ext_md_m_tmp
+f_ext_md_m_tmp_1
+f_md_d_tmp_1
+f_md_m_202001
+f_md_m_202002
+f_md_m_202003
+f_md_m_202004
+f_md_m_202005
+f_md_m_202006
+f_md_m_202007
+f_md_m_202008
+f_md_m_202009
+f_md_m_202010
+f_md_m_202011
+f_md_m_202012
+f_md_m_202101
+f_md_m_202102
+f_md_m_202103
+f_md_m_202104
+f_md_m_202105
+f_md_m_202106
+f_md_m_202107
+f_md_m_202108
+f_md_m_202109
+f_md_m_202110
+f_md_m_202111
+f_md_m_202112
+f_md_m_202201
+f_md_m_202202
+f_md_m_202203
+f_md_m_202204
+f_md_m_202205
+f_md_m_202206
+f_md_m_202207
+f_md_m_202208
+f_md_m_202209
+f_md_m_202210
+f_md_m_202211
+f_md_m_202212
+f_md_m_202301
+f_md_m_202302
+f_md_m_202303
+f_md_m_202304
+f_md_m_202305
+f_md_m_202306
+f_md_m_202307
+f_md_m_tmp
+f_md_m_tmp_1
+f_power_tou_202112
+f_power_tou_202201
+f_power_tou_202202
+f_power_tou_202203
+f_power_tou_202204
+f_power_tou_202205
+f_power_tou_202206
+f_power_tou_202207
+f_power_tou_202208
+f_power_tou_202209
+f_power_tou_202210
+f_power_tou_202211
+f_power_tou_202212
+f_power_tou_202301
+f_power_tou_202302
+f_power_tou_202303
+f_power_tou_202304
+f_power_tou_202305
+f_power_tou_202306
+f_power_tou_202307
+f_power_tou_202308
+f_power_tou_202309
+f_power_tou_202310
+f_power_tou_202311
+f_power_tou_202312
+f_power_tou_202401
+f_power_tou_202402
+f_power_tou_202403
+f_power_tou_202404
+f_power_tou_202405
+f_power_tou_202406
+f_power_tou_202407
+f_power_tou_202408
+f_power_tou_202409
+f_power_tou_202410
+f_power_tou_202411
+f_power_tou_202412
+f_power_tou_202501
+f_power_tou_202502
+f_power_tou_202503
+f_power_tou_202504
+f_power_tou_202505
+f_power_tou_202506
+forward_power_202012
+forward_power_202101
+forward_power_202102
+forward_power_202103
+forward_power_202104
+forward_power_202105
+forward_power_202106
+forward_power_202107
+forward_power_202108
+forward_power_202109
+forward_power_202110
+forward_power_202111
+forward_power_202112
+forward_power_202201
+forward_power_202202
+forward_power_202203
+forward_power_202204
+forward_power_202205
+forward_power_202206
+forward_power_202207
+forward_power_202208
+forward_power_202209
+forward_power_202210
+forward_power_202211
+forward_power_202212
+forward_power_202301
+forward_power_202302
+forward_power_202303
+forward_power_202304
+forward_power_202305
+forward_power_202306
+forward_power_202307
+forward_power_202308
+forward_power_202309
+forward_power_202310
+forward_power_202311
+forward_power_202312
+forward_power_202401
+forward_power_202402
+forward_power_202403
+forward_power_202404
+forward_power_202405
+forward_power_202406
+forward_power_tmp_1
+max_demand_d_1f_md_d
+max_demand_d_1r_md_d
+max_demand_df_md_d
+max_demand_dr_md_d
+max_demand_m_1f_ext_md_m
+max_demand_m_1f_md_m
+max_demand_m_1r_ext_md_m
+max_demand_m_1r_md_m
+max_demand_mf_md_m
+max_demand_mr_md_m
+other_d_202101
+other_d_202102
+other_d_202103
+other_d_202104
+other_d_202105
+other_d_202106
+other_d_202107
+other_d_202108
+other_d_202109
+other_d_202110
+other_d_202111
+other_d_202112
+other_d_202201
+other_d_202202
+other_d_202203
+other_d_202204
+other_d_202205
+other_d_202206
+other_d_202207
+other_d_202208
+other_d_202209
+other_d_202210
+other_d_202211
+other_d_202212
+other_d_202301
+other_d_202302
+other_d_202303
+other_d_202304
+other_d_202305
+other_d_202306
+other_d_202307
+other_d_202308
+other_d_202309
+other_d_202310
+other_d_202311
+other_d_202312
+other_d_202401
+other_d_202402
+other_d_202403
+other_d_202404
+other_d_202405
+other_d_202406
+other_d_202407
+other_d_tmp
+other_d_tmp_1
+other_load_202201
+other_load_202202
+other_load_202203
+other_load_202204
+other_load_202205
+other_load_202206
+other_load_202207
+other_load_202208
+other_load_202209
+other_load_202210
+other_load_202211
+other_load_202212
+other_load_202301
+other_load_202302
+other_load_202303
+other_load_202304
+other_load_202305
+other_load_202306
+other_load_202307
+other_load_202308
+other_load_202309
+other_load_202310
+other_load_202311
+other_load_202312
+other_load_202401
+other_load_202402
+other_load_202403
+other_load_202404
+other_load_202405
+other_load_202406
+other_load_202407
+other_load_202408
+other_load_202409
+other_load_202410
+other_load_202411
+other_load_202412
+other_load_202501
+other_load_202502
+other_load_202503
+other_load_202504
+other_load_202505
+other_load_202506
+other_load_202507
+other_load_tmp
+other_load_tmp_1
+other_m_202001
+other_m_202002
+other_m_202003
+other_m_202004
+other_m_202005
+other_m_202006
+other_m_202007
+other_m_202008
+other_m_202009
+other_m_202010
+other_m_202011
+other_m_202012
+other_m_202101
+other_m_202102
+other_m_202103
+other_m_202104
+other_m_202105
+other_m_202106
+other_m_202107
+other_m_202108
+other_m_202109
+other_m_202110
+other_m_202111
+other_m_202112
+other_m_202201
+other_m_202202
+other_m_202203
+other_m_202204
+other_m_202205
+other_m_202206
+other_m_202207
+other_m_202208
+other_m_202209
+other_m_202210
+other_m_202211
+other_m_202212
+other_m_202301
+other_m_202302
+other_m_202303
+other_m_202304
+other_m_202305
+other_m_202306
+other_m_202307
+other_m_tmp
+other_m_tmp_1
+power_factor_202112
+power_factor_202201
+power_factor_202202
+power_factor_202203
+power_factor_202204
+power_factor_202205
+power_factor_202206
+power_factor_202207
+power_factor_202208
+power_factor_202209
+power_factor_202210
+power_factor_202211
+power_factor_202212
+power_factor_202301
+power_factor_202302
+power_factor_202303
+power_factor_202304
+power_factor_202305
+power_factor_202306
+power_factor_202307
+power_factor_202308
+power_factor_202309
+power_factor_202310
+power_factor_202311
+power_factor_202312
+power_factor_202401
+power_factor_202402
+power_factor_202403
+power_factor_202404
+power_factor_202405
+power_factor_202406
+power_factor_202407
+power_factor_202408
+power_factor_202409
+power_factor_202410
+power_factor_202411
+power_factor_202412
+power_factor_202501
+power_factor_202502
+power_factor_202503
+power_factor_202504
+power_factor_202505
+power_factor_202506
+power_factor_tmp_1
+prepay_d_1other_d
+prepay_m_1other_m
+pvc_i_1current
+pvc_i_1other_load
+pvc_icurrent
+pvc_iother_load
+pvc_other_1other_load
+pvc_other_1ui_angle
+pvc_otherother_load
+pvc_otherui_angle
+pvc_p_1forward_power
+pvc_p_1other_load
+pvc_p_1reverse_power
+pvc_p_factor_1other_load
+pvc_p_factor_1power_factor
+pvc_p_factorother_load
+pvc_p_factorpower_factor
+pvc_pforward_power
+pvc_pother_load
+pvc_preverse_power
+pvc_u_1other_load
+pvc_u_1voltage
+pvc_uother_load
+pvc_uvoltage
+q_energy_c_202112
+q_energy_c_202201
+q_energy_c_202202
+q_energy_c_202203
+q_energy_c_202204
+q_energy_c_202205
+q_energy_c_202206
+q_energy_c_202207
+q_energy_c_202208
+q_energy_c_202209
+q_energy_c_202210
+q_energy_c_202211
+q_energy_c_202212
+q_energy_c_202301
+q_energy_c_202302
+q_energy_c_202303
+q_energy_c_202304
+q_energy_c_202305
+q_energy_c_202306
+q_energy_c_202307
+q_energy_c_202308
+q_energy_c_202309
+q_energy_c_202310
+q_energy_c_202311
+q_energy_c_202312
+q_energy_c_202401
+q_energy_c_202402
+q_energy_c_202403
+q_energy_c_202404
+q_energy_c_202405
+q_energy_c_202406
+q_energy_c_202407
+q_energy_c_202408
+q_energy_c_202409
+q_energy_c_202410
+q_energy_c_202411
+q_energy_c_202412
+q_energy_c_202501
+q_energy_c_202502
+q_energy_c_202503
+q_energy_c_202504
+q_energy_c_202505
+q_energy_c_202506
+q_energy_c_tmp_1
+q_energy_d_202101
+q_energy_d_202102
+q_energy_d_202103
+q_energy_d_202104
+q_energy_d_202105
+q_energy_d_202106
+q_energy_d_202107
+q_energy_d_202108
+q_energy_d_202109
+q_energy_d_202110
+q_energy_d_202111
+q_energy_d_202112
+q_energy_d_202201
+q_energy_d_202202
+q_energy_d_202203
+q_energy_d_202204
+q_energy_d_202205
+q_energy_d_202206
+q_energy_d_202207
+q_energy_d_202208
+q_energy_d_202209
+q_energy_d_202210
+q_energy_d_202211
+q_energy_d_202212
+q_energy_d_202301
+q_energy_d_202302
+q_energy_d_202303
+q_energy_d_202304
+q_energy_d_202305
+q_energy_d_202306
+q_energy_d_202307
+q_energy_d_202308
+q_energy_d_202309
+q_energy_d_202310
+q_energy_d_202311
+q_energy_d_202312
+q_energy_d_202401
+q_energy_d_202402
+q_energy_d_202403
+q_energy_d_202404
+q_energy_d_202405
+q_energy_d_202406
+q_energy_d_202407
+q_energy_d_tmp
+q_energy_d_tmp_1
+q_energy_ext_c_202112
+q_energy_ext_c_202201
+q_energy_ext_c_202202
+q_energy_ext_c_202203
+q_energy_ext_c_202204
+q_energy_ext_c_202205
+q_energy_ext_c_202206
+q_energy_ext_c_202207
+q_energy_ext_c_202208
+q_energy_ext_c_202209
+q_energy_ext_c_202210
+q_energy_ext_c_202211
+q_energy_ext_c_202212
+q_energy_ext_c_202301
+q_energy_ext_c_202302
+q_energy_ext_c_202303
+q_energy_ext_c_202304
+q_energy_ext_c_202305
+q_energy_ext_c_202306
+q_energy_ext_c_202307
+q_energy_ext_c_202308
+q_energy_ext_c_202309
+q_energy_ext_c_202310
+q_energy_ext_c_202311
+q_energy_ext_c_202312
+q_energy_ext_c_202401
+q_energy_ext_c_202402
+q_energy_ext_c_202403
+q_energy_ext_c_202404
+q_energy_ext_c_202405
+q_energy_ext_c_202406
+q_energy_ext_c_202407
+q_energy_ext_c_202408
+q_energy_ext_c_202409
+q_energy_ext_c_202410
+q_energy_ext_c_202411
+q_energy_ext_c_202412
+q_energy_ext_c_202501
+q_energy_ext_c_202502
+q_energy_ext_c_202503
+q_energy_ext_c_202504
+q_energy_ext_c_202505
+q_energy_ext_c_202506
+q_energy_ext_c_tmp_1
+q_energy_ext_d_202101
+q_energy_ext_d_202102
+q_energy_ext_d_202103
+q_energy_ext_d_202104
+q_energy_ext_d_202105
+q_energy_ext_d_202106
+q_energy_ext_d_202107
+q_energy_ext_d_202108
+q_energy_ext_d_202109
+q_energy_ext_d_202110
+q_energy_ext_d_202111
+q_energy_ext_d_202112
+q_energy_ext_d_202201
+q_energy_ext_d_202202
+q_energy_ext_d_202203
+q_energy_ext_d_202204
+q_energy_ext_d_202205
+q_energy_ext_d_202206
+q_energy_ext_d_202207
+q_energy_ext_d_202208
+q_energy_ext_d_202209
+q_energy_ext_d_202210
+q_energy_ext_d_202211
+q_energy_ext_d_202212
+q_energy_ext_d_202301
+q_energy_ext_d_202302
+q_energy_ext_d_202303
+q_energy_ext_d_202304
+q_energy_ext_d_202305
+q_energy_ext_d_202306
+q_energy_ext_d_202307
+q_energy_ext_d_202308
+q_energy_ext_d_202309
+q_energy_ext_d_202310
+q_energy_ext_d_202311
+q_energy_ext_d_202312
+q_energy_ext_d_202401
+q_energy_ext_d_202402
+q_energy_ext_d_202403
+q_energy_ext_d_202404
+q_energy_ext_d_202405
+q_energy_ext_d_202406
+q_energy_ext_d_202407
+q_energy_ext_d_tmp
+q_energy_ext_d_tmp_1
+q_energy_ext_m_202001
+q_energy_ext_m_202002
+q_energy_ext_m_202003
+q_energy_ext_m_202004
+q_energy_ext_m_202005
+q_energy_ext_m_202006
+q_energy_ext_m_202007
+q_energy_ext_m_202008
+q_energy_ext_m_202009
+q_energy_ext_m_202010
+q_energy_ext_m_202011
+q_energy_ext_m_202012
+q_energy_ext_m_202101
+q_energy_ext_m_202102
+q_energy_ext_m_202103
+q_energy_ext_m_202104
+q_energy_ext_m_202105
+q_energy_ext_m_202106
+q_energy_ext_m_202107
+q_energy_ext_m_202108
+q_energy_ext_m_202109
+q_energy_ext_m_202110
+q_energy_ext_m_202111
+q_energy_ext_m_202112
+q_energy_ext_m_202201
+q_energy_ext_m_202202
+q_energy_ext_m_202203
+q_energy_ext_m_202204
+q_energy_ext_m_202205
+q_energy_ext_m_202206
+q_energy_ext_m_202207
+q_energy_ext_m_202208
+q_energy_ext_m_202209
+q_energy_ext_m_202210
+q_energy_ext_m_202211
+q_energy_ext_m_202212
+q_energy_ext_m_202301
+q_energy_ext_m_202302
+q_energy_ext_m_202303
+q_energy_ext_m_202304
+q_energy_ext_m_202305
+q_energy_ext_m_202306
+q_energy_ext_m_202307
+q_energy_ext_m_tmp
+q_energy_ext_m_tmp_1
+q_energy_m_202001
+q_energy_m_202002
+q_energy_m_202003
+q_energy_m_202004
+q_energy_m_202005
+q_energy_m_202006
+q_energy_m_202007
+q_energy_m_202008
+q_energy_m_202009
+q_energy_m_202010
+q_energy_m_202011
+q_energy_m_202012
+q_energy_m_202101
+q_energy_m_202102
+q_energy_m_202103
+q_energy_m_202104
+q_energy_m_202105
+q_energy_m_202106
+q_energy_m_202107
+q_energy_m_202108
+q_energy_m_202109
+q_energy_m_202110
+q_energy_m_202111
+q_energy_m_202112
+q_energy_m_202201
+q_energy_m_202202
+q_energy_m_202203
+q_energy_m_202204
+q_energy_m_202205
+q_energy_m_202206
+q_energy_m_202207
+q_energy_m_202208
+q_energy_m_202209
+q_energy_m_202210
+q_energy_m_202211
+q_energy_m_202212
+q_energy_m_202301
+q_energy_m_202302
+q_energy_m_202303
+q_energy_m_202304
+q_energy_m_202305
+q_energy_m_202306
+q_energy_m_202307
+q_energy_m_tmp
+q_energy_m_tmp_1
+r_energy_c_202112
+r_energy_c_202201
+r_energy_c_202202
+r_energy_c_202203
+r_energy_c_202204
+r_energy_c_202205
+r_energy_c_202206
+r_energy_c_202207
+r_energy_c_202208
+r_energy_c_202209
+r_energy_c_202210
+r_energy_c_202211
+r_energy_c_202212
+r_energy_c_202301
+r_energy_c_202302
+r_energy_c_202303
+r_energy_c_202304
+r_energy_c_202305
+r_energy_c_202306
+r_energy_c_202307
+r_energy_c_202308
+r_energy_c_202309
+r_energy_c_202310
+r_energy_c_202311
+r_energy_c_202312
+r_energy_c_202401
+r_energy_c_202402
+r_energy_c_202403
+r_energy_c_202404
+r_energy_c_202405
+r_energy_c_202406
+r_energy_c_202407
+r_energy_c_202408
+r_energy_c_202409
+r_energy_c_202410
+r_energy_c_202411
+r_energy_c_202412
+r_energy_c_202501
+r_energy_c_202502
+r_energy_c_202503
+r_energy_c_202504
+r_energy_c_202505
+r_energy_c_202506
+r_energy_c_tmp_1
+r_energy_d_202101
+r_energy_d_202102
+r_energy_d_202103
+r_energy_d_202104
+r_energy_d_202105
+r_energy_d_202106
+r_energy_d_202107
+r_energy_d_202108
+r_energy_d_202109
+r_energy_d_202110
+r_energy_d_202111
+r_energy_d_202112
+r_energy_d_202201
+r_energy_d_202202
+r_energy_d_202203
+r_energy_d_202204
+r_energy_d_202205
+r_energy_d_202206
+r_energy_d_202207
+r_energy_d_202208
+r_energy_d_202209
+r_energy_d_202210
+r_energy_d_202211
+r_energy_d_202212
+r_energy_d_202301
+r_energy_d_202302
+r_energy_d_202303
+r_energy_d_202304
+r_energy_d_202305
+r_energy_d_202306
+r_energy_d_202307
+r_energy_d_202308
+r_energy_d_202309
+r_energy_d_202310
+r_energy_d_202311
+r_energy_d_202312
+r_energy_d_202401
+r_energy_d_202402
+r_energy_d_202403
+r_energy_d_202404
+r_energy_d_202405
+r_energy_d_202406
+r_energy_d_202407
+r_energy_d_tmp
+r_energy_d_tmp_1
+r_energy_ext_c_202112
+r_energy_ext_c_202201
+r_energy_ext_c_202202
+r_energy_ext_c_202203
+r_energy_ext_c_202204
+r_energy_ext_c_202205
+r_energy_ext_c_202206
+r_energy_ext_c_202207
+r_energy_ext_c_202208
+r_energy_ext_c_202209
+r_energy_ext_c_202210
+r_energy_ext_c_202211
+r_energy_ext_c_202212
+r_energy_ext_c_202301
+r_energy_ext_c_202302
+r_energy_ext_c_202303
+r_energy_ext_c_202304
+r_energy_ext_c_202305
+r_energy_ext_c_202306
+r_energy_ext_c_202307
+r_energy_ext_c_202308
+r_energy_ext_c_202309
+r_energy_ext_c_202310
+r_energy_ext_c_202311
+r_energy_ext_c_202312
+r_energy_ext_c_202401
+r_energy_ext_c_202402
+r_energy_ext_c_202403
+r_energy_ext_c_202404
+r_energy_ext_c_202405
+r_energy_ext_c_202406
+r_energy_ext_c_202407
+r_energy_ext_c_202408
+r_energy_ext_c_202409
+r_energy_ext_c_202410
+r_energy_ext_c_202411
+r_energy_ext_c_202412
+r_energy_ext_c_202501
+r_energy_ext_c_202502
+r_energy_ext_c_202503
+r_energy_ext_c_202504
+r_energy_ext_c_202505
+r_energy_ext_c_202506
+r_energy_ext_c_tmp_1
+r_energy_ext_d_202101
+r_energy_ext_d_202102
+r_energy_ext_d_202103
+r_energy_ext_d_202104
+r_energy_ext_d_202105
+r_energy_ext_d_202106
+r_energy_ext_d_202107
+r_energy_ext_d_202108
+r_energy_ext_d_202109
+r_energy_ext_d_202110
+r_energy_ext_d_202111
+r_energy_ext_d_202112
+r_energy_ext_d_202201
+r_energy_ext_d_202202
+r_energy_ext_d_202203
+r_energy_ext_d_202204
+r_energy_ext_d_202205
+r_energy_ext_d_202206
+r_energy_ext_d_202207
+r_energy_ext_d_202208
+r_energy_ext_d_202209
+r_energy_ext_d_202210
+r_energy_ext_d_202211
+r_energy_ext_d_202212
+r_energy_ext_d_202301
+r_energy_ext_d_202302
+r_energy_ext_d_202303
+r_energy_ext_d_202304
+r_energy_ext_d_202305
+r_energy_ext_d_202306
+r_energy_ext_d_202307
+r_energy_ext_d_202308
+r_energy_ext_d_202309
+r_energy_ext_d_202310
+r_energy_ext_d_202311
+r_energy_ext_d_202312
+r_energy_ext_d_202401
+r_energy_ext_d_202402
+r_energy_ext_d_202403
+r_energy_ext_d_202404
+r_energy_ext_d_202405
+r_energy_ext_d_202406
+r_energy_ext_d_202407
+r_energy_ext_d_tmp
+r_energy_ext_d_tmp_1
+r_energy_ext_m_202001
+r_energy_ext_m_202002
+r_energy_ext_m_202003
+r_energy_ext_m_202004
+r_energy_ext_m_202005
+r_energy_ext_m_202006
+r_energy_ext_m_202007
+r_energy_ext_m_202008
+r_energy_ext_m_202009
+r_energy_ext_m_202010
+r_energy_ext_m_202011
+r_energy_ext_m_202012
+r_energy_ext_m_202101
+r_energy_ext_m_202102
+r_energy_ext_m_202103
+r_energy_ext_m_202104
+r_energy_ext_m_202105
+r_energy_ext_m_202106
+r_energy_ext_m_202107
+r_energy_ext_m_202108
+r_energy_ext_m_202109
+r_energy_ext_m_202110
+r_energy_ext_m_202111
+r_energy_ext_m_202112
+r_energy_ext_m_202201
+r_energy_ext_m_202202
+r_energy_ext_m_202203
+r_energy_ext_m_202204
+r_energy_ext_m_202205
+r_energy_ext_m_202206
+r_energy_ext_m_202207
+r_energy_ext_m_202208
+r_energy_ext_m_202209
+r_energy_ext_m_202210
+r_energy_ext_m_202211
+r_energy_ext_m_202212
+r_energy_ext_m_202301
+r_energy_ext_m_202302
+r_energy_ext_m_202303
+r_energy_ext_m_202304
+r_energy_ext_m_202305
+r_energy_ext_m_202306
+r_energy_ext_m_202307
+r_energy_ext_m_tmp
+r_energy_ext_m_tmp_1
+r_energy_m_202001
+r_energy_m_202002
+r_energy_m_202003
+r_energy_m_202004
+r_energy_m_202005
+r_energy_m_202006
+r_energy_m_202007
+r_energy_m_202008
+r_energy_m_202009
+r_energy_m_202010
+r_energy_m_202011
+r_energy_m_202012
+r_energy_m_202101
+r_energy_m_202102
+r_energy_m_202103
+r_energy_m_202104
+r_energy_m_202105
+r_energy_m_202106
+r_energy_m_202107
+r_energy_m_202108
+r_energy_m_202109
+r_energy_m_202110
+r_energy_m_202111
+r_energy_m_202112
+r_energy_m_202201
+r_energy_m_202202
+r_energy_m_202203
+r_energy_m_202204
+r_energy_m_202205
+r_energy_m_202206
+r_energy_m_202207
+r_energy_m_202208
+r_energy_m_202209
+r_energy_m_202210
+r_energy_m_202211
+r_energy_m_202212
+r_energy_m_202301
+r_energy_m_202302
+r_energy_m_202303
+r_energy_m_202304
+r_energy_m_202305
+r_energy_m_202306
+r_energy_m_202307
+r_energy_m_tmp
+r_energy_m_tmp_1
+r_ext_md_m_202001
+r_ext_md_m_202002
+r_ext_md_m_202003
+r_ext_md_m_202004
+r_ext_md_m_202005
+r_ext_md_m_202006
+r_ext_md_m_202007
+r_ext_md_m_202008
+r_ext_md_m_202009
+r_ext_md_m_202010
+r_ext_md_m_202011
+r_ext_md_m_202012
+r_ext_md_m_202101
+r_ext_md_m_202102
+r_ext_md_m_202103
+r_ext_md_m_202104
+r_ext_md_m_202105
+r_ext_md_m_202106
+r_ext_md_m_202107
+r_ext_md_m_202108
+r_ext_md_m_202109
+r_ext_md_m_202110
+r_ext_md_m_202111
+r_ext_md_m_202112
+r_ext_md_m_202201
+r_ext_md_m_202202
+r_ext_md_m_202203
+r_ext_md_m_202204
+r_ext_md_m_202205
+r_ext_md_m_202206
+r_ext_md_m_202207
+r_ext_md_m_202208
+r_ext_md_m_202209
+r_ext_md_m_202210
+r_ext_md_m_202211
+r_ext_md_m_202212
+r_ext_md_m_202301
+r_ext_md_m_202302
+r_ext_md_m_202303
+r_ext_md_m_202304
+r_ext_md_m_202305
+r_ext_md_m_202306
+r_ext_md_m_202307
+r_ext_md_m_tmp
+r_ext_md_m_tmp_1
+r_md_m_202001
+r_md_m_202002
+r_md_m_202003
+r_md_m_202004
+r_md_m_202005
+r_md_m_202006
+r_md_m_202007
+r_md_m_202008
+r_md_m_202009
+r_md_m_202010
+r_md_m_202011
+r_md_m_202012
+r_md_m_202101
+r_md_m_202102
+r_md_m_202103
+r_md_m_202104
+r_md_m_202105
+r_md_m_202106
+r_md_m_202107
+r_md_m_202108
+r_md_m_202109
+r_md_m_202110
+r_md_m_202111
+r_md_m_202112
+r_md_m_202201
+r_md_m_202202
+r_md_m_202203
+r_md_m_202204
+r_md_m_202205
+r_md_m_202206
+r_md_m_202207
+r_md_m_202208
+r_md_m_202209
+r_md_m_202210
+r_md_m_202211
+r_md_m_202212
+r_md_m_202301
+r_md_m_202302
+r_md_m_202303
+r_md_m_202304
+r_md_m_202305
+r_md_m_202306
+r_md_m_202307
+r_md_m_tmp
+r_md_m_tmp_1
+reverse_power_202112
+reverse_power_202201
+reverse_power_202202
+reverse_power_202203
+reverse_power_202204
+reverse_power_202205
+reverse_power_202206
+reverse_power_202207
+reverse_power_202208
+reverse_power_202209
+reverse_power_202210
+reverse_power_202211
+reverse_power_202212
+reverse_power_202301
+reverse_power_202302
+reverse_power_202303
+reverse_power_202304
+reverse_power_202305
+reverse_power_202306
+reverse_power_202307
+reverse_power_202308
+reverse_power_202309
+reverse_power_202310
+reverse_power_202311
+reverse_power_202312
+reverse_power_202401
+reverse_power_202402
+reverse_power_202403
+reverse_power_202404
+reverse_power_202405
+reverse_power_202406
+reverse_power_202407
+reverse_power_202408
+reverse_power_202409
+reverse_power_202410
+reverse_power_202411
+reverse_power_202412
+reverse_power_202501
+reverse_power_202502
+reverse_power_202503
+reverse_power_202504
+reverse_power_202505
+reverse_power_202506
+reverse_power_tmp_1
+signal_202112
+signal_202201
+signal_202202
+signal_202203
+signal_202204
+signal_202205
+signal_202206
+signal_202207
+signal_202208
+signal_202209
+signal_202210
+signal_202211
+signal_202212
+signal_202301
+signal_202302
+signal_202303
+signal_202304
+signal_202305
+signal_202306
+signal_202307
+signal_202308
+signal_202309
+signal_202310
+signal_202311
+signal_202312
+signal_202401
+signal_202402
+signal_202403
+signal_202404
+signal_202405
+signal_202406
+signal_202407
+signal_202408
+signal_202409
+signal_202410
+signal_202411
+signal_202412
+signal_202501
+signal_202502
+signal_202503
+signal_202504
+signal_202505
+signal_202506
+signal_strength_1signal
+signal_strengthsignal
+signal_tmp_1
+transformer_c_202112
+transformer_c_202201
+transformer_c_202202
+transformer_c_202203
+transformer_c_202204
+transformer_c_202205
+transformer_c_202206
+transformer_c_202207
+transformer_c_202208
+transformer_c_202209
+transformer_c_202210
+transformer_c_202211
+transformer_c_202212
+transformer_c_202301
+transformer_c_202302
+transformer_c_202303
+transformer_c_202304
+transformer_c_202305
+transformer_c_202306
+transformer_c_202307
+transformer_c_202308
+transformer_c_202309
+transformer_c_202310
+transformer_c_202311
+transformer_c_202312
+transformer_c_202401
+transformer_c_202402
+transformer_c_202403
+transformer_c_202404
+transformer_c_202405
+transformer_c_202406
+transformer_c_202407
+transformer_c_202408
+transformer_c_202409
+transformer_c_202410
+transformer_c_202411
+transformer_c_202412
+transformer_c_202501
+transformer_c_202502
+transformer_c_202503
+transformer_c_202504
+transformer_c_202505
+transformer_c_202506
+transformer_c_tmp_1
+transformer_d_202101
+transformer_d_202102
+transformer_d_202103
+transformer_d_202104
+transformer_d_202105
+transformer_d_202106
+transformer_d_202107
+transformer_d_202108
+transformer_d_202109
+transformer_d_202110
+transformer_d_202111
+transformer_d_202112
+transformer_d_202201
+transformer_d_202202
+transformer_d_202203
+transformer_d_202204
+transformer_d_202205
+transformer_d_202206
+transformer_d_202207
+transformer_d_202208
+transformer_d_202209
+transformer_d_202210
+transformer_d_202211
+transformer_d_202212
+transformer_d_202301
+transformer_d_202302
+transformer_d_202303
+transformer_d_202304
+transformer_d_202305
+transformer_d_202306
+transformer_d_202307
+transformer_d_202308
+transformer_d_202309
+transformer_d_202310
+transformer_d_202311
+transformer_d_202312
+transformer_d_202401
+transformer_d_202402
+transformer_d_202403
+transformer_d_202404
+transformer_d_202405
+transformer_d_202406
+transformer_d_202407
+transformer_d_tmp
+transformer_d_tmp_1
+transformer_m_202001
+transformer_m_202002
+transformer_m_202003
+transformer_m_202004
+transformer_m_202005
+transformer_m_202006
+transformer_m_202007
+transformer_m_202008
+transformer_m_202009
+transformer_m_202010
+transformer_m_202011
+transformer_m_202012
+transformer_m_202101
+transformer_m_202102
+transformer_m_202103
+transformer_m_202104
+transformer_m_202105
+transformer_m_202106
+transformer_m_202107
+transformer_m_202108
+transformer_m_202109
+transformer_m_202110
+transformer_m_202111
+transformer_m_202112
+transformer_m_202201
+transformer_m_202202
+transformer_m_202203
+transformer_m_202204
+transformer_m_202205
+transformer_m_202206
+transformer_m_202207
+transformer_m_202208
+transformer_m_202209
+transformer_m_202210
+transformer_m_202211
+transformer_m_202212
+transformer_m_202301
+transformer_m_202302
+transformer_m_202303
+transformer_m_202304
+transformer_m_202305
+transformer_m_202306
+transformer_m_202307
+transformer_m_tmp
+transformer_m_tmp_1
+v_trans_exception_info
+vending_d_202101
+vending_d_202102
+vending_d_202103
+vending_d_202104
+vending_d_202105
+vending_d_202106
+vending_d_202107
+vending_d_202108
+vending_d_202109
+vending_d_202110
+vending_d_202111
+vending_d_202112
+vending_d_202201
+vending_d_202202
+vending_d_202203
+vending_d_202204
+vending_d_202205
+vending_d_202206
+vending_d_202207
+vending_d_202208
+vending_d_202209
+vending_d_202210
+vending_d_202211
+vending_d_202212
+vending_d_202301
+vending_d_202302
+vending_d_202303
+vending_d_202304
+vending_d_202305
+vending_d_202306
+vending_d_202307
+vending_d_202308
+vending_d_202309
+vending_d_202310
+vending_d_202311
+vending_d_202312
+vending_d_202401
+vending_d_202402
+vending_d_202403
+vending_d_202404
+vending_d_202405
+vending_d_202406
+vending_d_202407
+vending_d_tmp
+vending_d_tmp_1
+view_billingdata_hesco
+view_dataquery_byqtsts
+view_dataquery_dl
+view_dataquery_ec_eskom
+view_dataquery_ed_eskom
+view_dataquery_em_eskom
+view_dataquery_fhtx
+view_dataquery_fxdl_c
+view_dataquery_fxdl_d
+view_dataquery_fxdl_m
+view_dataquery_other_c
+view_dataquery_other_d
+view_dataquery_other_m
+view_dataquery_other_pf_m
+view_dataquery_other_prepay_m
+view_dataquery_water_gas_d
+view_dataquery_water_gas_m
+view_dataquery_ygzdn_c
+view_dataquery_ygzdn_d
+view_dataquery_ygzdn_m
+view_dataquery_zdl_c
+view_dataquery_zdl_d
+view_dataquery_zdl_m
+view_dataquery_zxdl_c
+view_dataquery_zxdl_d
+view_dataquery_zxdl_m
+view_raw_data_c
+view_raw_data_d
+voltage_202112
+voltage_202201
+voltage_202202
+voltage_202203
+voltage_202204
+voltage_202205
+voltage_202206
+voltage_202207
+voltage_202208
+voltage_202209
+voltage_202210
+voltage_202211
+voltage_202212
+voltage_202301
+voltage_202302
+voltage_202303
+voltage_202304
+voltage_202305
+voltage_202306
+voltage_202307
+voltage_202308
+voltage_202309
+voltage_202310
+voltage_202311
+voltage_202312
+voltage_202401
+voltage_202402
+voltage_202403
+voltage_202404
+voltage_202405
+voltage_202406
+voltage_202407
+voltage_202408
+voltage_202409
+voltage_202410
+voltage_202411
+voltage_202412
+voltage_202501
+voltage_202502
+voltage_202503
+voltage_202504
+voltage_202505
+voltage_202506
+voltage_tmp_1
+warter_gas_d_tmp_1
+warter_gas_tmp_1
+
+=== 2. Таблицы с METER_ID ===
+a_data_catalogue
+a_equip_meter
+a_equip_meter_back
+a_equip_meter_hes
+a_equip_meter_status
+a_equip_meter_vending
+a_equip_meter_water
+a_equipment_hhu_meter
+a_meter_info_changed
+a_meter_info_changed_detail
+biz_kms_meter_upd_log
+biz_kms_meter_update_status
+hes_auto_device_task
+hes_auto_device_task_log
+hes_auto_task_current
+hes_auto_task_faile_detail
+hes_d_nbiot_device_map
+hes_data_card_special_m
+hes_data_card_special_m_1
+hes_data_comm_traffic_d
+hes_data_comm_traffic_d_1
+hes_data_comm_traffic_m
+hes_data_comm_traffic_m_1
+hes_data_elec_code
+hes_data_elec_code_1
+hes_data_elec_code_d
+hes_data_elec_code_d_1
+hes_data_elec_code_m
+hes_data_elec_code_m_1
+hes_data_harmonic
+hes_data_harmonic_1
+hes_data_harmonic_d
+hes_data_harmonic_d_1
+hes_data_harmonic_m
+hes_data_harmonic_m_1
+hes_data_max_demand
+hes_data_max_demand_1
+hes_data_max_demand_d
+hes_data_max_demand_d_1
+hes_data_max_demand_m
+hes_data_max_demand_m_1
+hes_data_prepay_d
+hes_data_prepay_d_1
+hes_data_prepay_m
+hes_data_prepay_m_1
+hes_data_pvc_i
+hes_data_pvc_i_1
+hes_data_pvc_other
+hes_data_pvc_other_1
+hes_data_pvc_p
+hes_data_pvc_p_1
+hes_data_pvc_p_factor
+hes_data_pvc_p_factor_1
+hes_data_pvc_u
+hes_data_pvc_u_1
+hes_data_signal_strength
+hes_data_signal_strength_1
+hes_data_vqr_d
+hes_data_vqr_d_1
+hes_data_vqr_m
+hes_data_vqr_m_1
+hes_datd_harmonic
+hes_log_alarm_cur_status
+hes_log_alarm_status_detail
+hes_log_meter_visuals
+hes_log_pre_charge
+hes_log_relay_cur_status
+hes_log_relay_status_detail
+hes_log_sdzx
+hes_meterbox_meter
+hes_stat_curve_reading_detail
+hes_stat_daily_reading_detail
+hes_stat_reading_rate
+hhu_manual_meter_status
+view_billingdata_hesco
+view_dataquery_angle
+view_dataquery_bill_ideco
+view_dataquery_byqtsts
+view_dataquery_dl
+view_dataquery_dnsz
+view_dataquery_dnz_c
+view_dataquery_ec_eskom
+view_dataquery_ed_eskom
+view_dataquery_em_eskom
+view_dataquery_fhtx
+view_dataquery_fxdl_c
+view_dataquery_fxdl_d
+view_dataquery_fxdl_m
+view_dataquery_fxdnz_d
+view_dataquery_fxdnz_m
+view_dataquery_fxxl
+view_dataquery_fxxl_d
+view_dataquery_jzqll_d
+view_dataquery_jzqll_m
+view_dataquery_other_c
+view_dataquery_other_d
+view_dataquery_other_m
+view_dataquery_other_pf_m
+view_dataquery_other_prepay_m
+view_dataquery_registration
+view_dataquery_sxxwg_c
+view_dataquery_sxxwg_d
+view_dataquery_sxxwg_m
+view_dataquery_water_gas_d
+view_dataquery_water_gas_m
+view_dataquery_wlglxx
+view_dataquery_xb_c
+view_dataquery_xb_hl_c
+view_dataquery_xb_hl_v
+view_dataquery_xb_v
+view_dataquery_xl
+view_dataquery_ygzdn_c
+view_dataquery_ygzdn_d
+view_dataquery_ygzdn_m
+view_dataquery_zdl_c
+view_dataquery_zdl_d
+view_dataquery_zdl_m
+view_dataquery_zxdl_c
+view_dataquery_zxdl_d
+view_dataquery_zxdl_m
+view_dataquery_zxdnz_c
+view_dataquery_zxdnz_d
+view_dataquery_zxdnz_m
+view_dataquery_zxxl
+view_dataquery_zxxl_c
+view_dataquery_zxxl_d
+view_dcu_find_meters
+view_hes_m_meter
+
+=== 3. Таблицы с DEVICE_ID ===
+a_equip_nbiot_imei
+biz_pub_sys_bulk_cmd_temp
+biz_pub_sys_bulk_object
+hes_command_log_bulk
+hes_d_coll_task_plan
+hes_data_audit_task
+hes_log_device_message
+hes_log_device_message_1
+hes_log_device_online_history
+hes_log_device_online_state
+hes_log_no_archives_device
+hes_log_record_device_state
+hes_log_sync_time
+hes_log_uaa_event
+hes_subscribe_evet_device
+hes_subscribe_evet_log
+hes_upgrade_last_version
+hes_upgrade_record
+hes_upgrade_status
+inf_log_transaction_status
+
+=== 4. Таблицы, содержащие оба поля DATA_ID и METER_ID ===
+Таблица apparent_md_m_202001 содержит только ['DATA_ID']
+Таблица apparent_md_m_202002 содержит только ['DATA_ID']
+Таблица apparent_md_m_202003 содержит только ['DATA_ID']
+Таблица apparent_md_m_202004 содержит только ['DATA_ID']
+Таблица apparent_md_m_202005 содержит только ['DATA_ID']
+Таблица apparent_md_m_202006 содержит только ['DATA_ID']
+Таблица apparent_md_m_202007 содержит только ['DATA_ID']
+Таблица apparent_md_m_202008 содержит только ['DATA_ID']
+Таблица apparent_md_m_202009 содержит только ['DATA_ID']
+Таблица apparent_md_m_202010 содержит только ['DATA_ID']
+Таблица apparent_md_m_202011 содержит только ['DATA_ID']
+Таблица apparent_md_m_202012 содержит только ['DATA_ID']
+Таблица apparent_md_m_202101 содержит только ['DATA_ID']
+Таблица apparent_md_m_202102 содержит только ['DATA_ID']
+Таблица apparent_md_m_202103 содержит только ['DATA_ID']
+Таблица apparent_md_m_202104 содержит только ['DATA_ID']
+Таблица apparent_md_m_202105 содержит только ['DATA_ID']
+Таблица apparent_md_m_202106 содержит только ['DATA_ID']
+Таблица apparent_md_m_202107 содержит только ['DATA_ID']
+Таблица apparent_md_m_202108 содержит только ['DATA_ID']
+Таблица apparent_md_m_202109 содержит только ['DATA_ID']
+Таблица apparent_md_m_202110 содержит только ['DATA_ID']
+Таблица apparent_md_m_202111 содержит только ['DATA_ID']
+Таблица apparent_md_m_202112 содержит только ['DATA_ID']
+Таблица apparent_md_m_202201 содержит только ['DATA_ID']
+Таблица apparent_md_m_202202 содержит только ['DATA_ID']
+Таблица apparent_md_m_202203 содержит только ['DATA_ID']
+Таблица apparent_md_m_202204 содержит только ['DATA_ID']
+Таблица apparent_md_m_202205 содержит только ['DATA_ID']
+Таблица apparent_md_m_202206 содержит только ['DATA_ID']
+Таблица apparent_md_m_202207 содержит только ['DATA_ID']
+Таблица apparent_md_m_202208 содержит только ['DATA_ID']
+Таблица apparent_md_m_202209 содержит только ['DATA_ID']
+Таблица apparent_md_m_202210 содержит только ['DATA_ID']
+Таблица apparent_md_m_202211 содержит только ['DATA_ID']
+Таблица apparent_md_m_202212 содержит только ['DATA_ID']
+Таблица apparent_md_m_202301 содержит только ['DATA_ID']
+Таблица apparent_md_m_202302 содержит только ['DATA_ID']
+Таблица apparent_md_m_202303 содержит только ['DATA_ID']
+Таблица apparent_md_m_202304 содержит только ['DATA_ID']
+Таблица apparent_md_m_202305 содержит только ['DATA_ID']
+Таблица apparent_md_m_202306 содержит только ['DATA_ID']
+Таблица apparent_md_m_202307 содержит только ['DATA_ID']
+Таблица apparent_md_m_tmp содержит только ['DATA_ID']
+Таблица apparent_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица apparent_md_tmp_1 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202001 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202002 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202003 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202004 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202005 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202006 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202007 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202008 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202009 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202010 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202011 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202012 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202101 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202102 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202103 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202104 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202105 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202106 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202107 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202108 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202109 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202110 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202111 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202112 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202201 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202202 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202203 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202204 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202205 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202206 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202207 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202208 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202209 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202210 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202211 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202212 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202301 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202302 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202303 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202304 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202305 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202306 содержит только ['DATA_ID']
+Таблица av_ext_md_m_202307 содержит только ['DATA_ID']
+Таблица av_ext_md_m_tmp содержит только ['DATA_ID']
+Таблица av_ext_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица av_md_m_202001 содержит только ['DATA_ID']
+Таблица av_md_m_202002 содержит только ['DATA_ID']
+Таблица av_md_m_202003 содержит только ['DATA_ID']
+Таблица av_md_m_202004 содержит только ['DATA_ID']
+Таблица av_md_m_202005 содержит только ['DATA_ID']
+Таблица av_md_m_202006 содержит только ['DATA_ID']
+Таблица av_md_m_202007 содержит только ['DATA_ID']
+Таблица av_md_m_202008 содержит только ['DATA_ID']
+Таблица av_md_m_202009 содержит только ['DATA_ID']
+Таблица av_md_m_202010 содержит только ['DATA_ID']
+Таблица av_md_m_202011 содержит только ['DATA_ID']
+Таблица av_md_m_202012 содержит только ['DATA_ID']
+Таблица av_md_m_202101 содержит только ['DATA_ID']
+Таблица av_md_m_202102 содержит только ['DATA_ID']
+Таблица av_md_m_202103 содержит только ['DATA_ID']
+Таблица av_md_m_202104 содержит только ['DATA_ID']
+Таблица av_md_m_202105 содержит только ['DATA_ID']
+Таблица av_md_m_202106 содержит только ['DATA_ID']
+Таблица av_md_m_202107 содержит только ['DATA_ID']
+Таблица av_md_m_202108 содержит только ['DATA_ID']
+Таблица av_md_m_202109 содержит только ['DATA_ID']
+Таблица av_md_m_202110 содержит только ['DATA_ID']
+Таблица av_md_m_202111 содержит только ['DATA_ID']
+Таблица av_md_m_202112 содержит только ['DATA_ID']
+Таблица av_md_m_202201 содержит только ['DATA_ID']
+Таблица av_md_m_202202 содержит только ['DATA_ID']
+Таблица av_md_m_202203 содержит только ['DATA_ID']
+Таблица av_md_m_202204 содержит только ['DATA_ID']
+Таблица av_md_m_202205 содержит только ['DATA_ID']
+Таблица av_md_m_202206 содержит только ['DATA_ID']
+Таблица av_md_m_202207 содержит только ['DATA_ID']
+Таблица av_md_m_202208 содержит только ['DATA_ID']
+Таблица av_md_m_202209 содержит только ['DATA_ID']
+Таблица av_md_m_202210 содержит только ['DATA_ID']
+Таблица av_md_m_202211 содержит только ['DATA_ID']
+Таблица av_md_m_202212 содержит только ['DATA_ID']
+Таблица av_md_m_202301 содержит только ['DATA_ID']
+Таблица av_md_m_202302 содержит только ['DATA_ID']
+Таблица av_md_m_202303 содержит только ['DATA_ID']
+Таблица av_md_m_202304 содержит только ['DATA_ID']
+Таблица av_md_m_202305 содержит только ['DATA_ID']
+Таблица av_md_m_202306 содержит только ['DATA_ID']
+Таблица av_md_m_202307 содержит только ['DATA_ID']
+Таблица av_md_m_tmp содержит только ['DATA_ID']
+Таблица av_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица a_data_catalogue содержит оба поля
+Таблица a_data_info_group содержит только ['DATA_ID']
+Таблица a_equipment_hhu_meter содержит только ['METER_ID']
+Таблица a_equip_meter содержит только ['METER_ID']
+Таблица a_equip_meter_back содержит только ['METER_ID']
+Таблица a_equip_meter_hes содержит только ['METER_ID']
+Таблица a_equip_meter_status содержит только ['METER_ID']
+Таблица a_equip_meter_vending содержит только ['METER_ID']
+Таблица a_equip_meter_water содержит только ['METER_ID']
+Таблица a_meter_info_changed содержит только ['METER_ID']
+Таблица a_meter_info_changed_detail содержит только ['METER_ID']
+Таблица base_c_202112 содержит только ['DATA_ID']
+Таблица base_c_202201 содержит только ['DATA_ID']
+Таблица base_c_202202 содержит только ['DATA_ID']
+Таблица base_c_202203 содержит только ['DATA_ID']
+Таблица base_c_202204 содержит только ['DATA_ID']
+Таблица base_c_202205 содержит только ['DATA_ID']
+Таблица base_c_202206 содержит только ['DATA_ID']
+Таблица base_c_202207 содержит только ['DATA_ID']
+Таблица base_c_202208 содержит только ['DATA_ID']
+Таблица base_c_202209 содержит только ['DATA_ID']
+Таблица base_c_202210 содержит только ['DATA_ID']
+Таблица base_c_202211 содержит только ['DATA_ID']
+Таблица base_c_202212 содержит только ['DATA_ID']
+Таблица base_c_202301 содержит только ['DATA_ID']
+Таблица base_c_202302 содержит только ['DATA_ID']
+Таблица base_c_202303 содержит только ['DATA_ID']
+Таблица base_c_202304 содержит только ['DATA_ID']
+Таблица base_c_202305 содержит только ['DATA_ID']
+Таблица base_c_202306 содержит только ['DATA_ID']
+Таблица base_c_202307 содержит только ['DATA_ID']
+Таблица base_c_202308 содержит только ['DATA_ID']
+Таблица base_c_202309 содержит только ['DATA_ID']
+Таблица base_c_202310 содержит только ['DATA_ID']
+Таблица base_c_202311 содержит только ['DATA_ID']
+Таблица base_c_202312 содержит только ['DATA_ID']
+Таблица base_c_202401 содержит только ['DATA_ID']
+Таблица base_c_202402 содержит только ['DATA_ID']
+Таблица base_c_202403 содержит только ['DATA_ID']
+Таблица base_c_202404 содержит только ['DATA_ID']
+Таблица base_c_202405 содержит только ['DATA_ID']
+Таблица base_c_202406 содержит только ['DATA_ID']
+Таблица base_c_202407 содержит только ['DATA_ID']
+Таблица base_c_202408 содержит только ['DATA_ID']
+Таблица base_c_202409 содержит только ['DATA_ID']
+Таблица base_c_202410 содержит только ['DATA_ID']
+Таблица base_c_202411 содержит только ['DATA_ID']
+Таблица base_c_202412 содержит только ['DATA_ID']
+Таблица base_c_202501 содержит только ['DATA_ID']
+Таблица base_c_202502 содержит только ['DATA_ID']
+Таблица base_c_202503 содержит только ['DATA_ID']
+Таблица base_c_202504 содержит только ['DATA_ID']
+Таблица base_c_202505 содержит только ['DATA_ID']
+Таблица base_c_202506 содержит только ['DATA_ID']
+Таблица base_c_tmp_1 содержит только ['DATA_ID']
+Таблица base_d_202101 содержит только ['DATA_ID']
+Таблица base_d_202102 содержит только ['DATA_ID']
+Таблица base_d_202103 содержит только ['DATA_ID']
+Таблица base_d_202104 содержит только ['DATA_ID']
+Таблица base_d_202105 содержит только ['DATA_ID']
+Таблица base_d_202106 содержит только ['DATA_ID']
+Таблица base_d_202107 содержит только ['DATA_ID']
+Таблица base_d_202108 содержит только ['DATA_ID']
+Таблица base_d_202109 содержит только ['DATA_ID']
+Таблица base_d_202110 содержит только ['DATA_ID']
+Таблица base_d_202111 содержит только ['DATA_ID']
+Таблица base_d_202112 содержит только ['DATA_ID']
+Таблица base_d_202201 содержит только ['DATA_ID']
+Таблица base_d_202202 содержит только ['DATA_ID']
+Таблица base_d_202203 содержит только ['DATA_ID']
+Таблица base_d_202204 содержит только ['DATA_ID']
+Таблица base_d_202205 содержит только ['DATA_ID']
+Таблица base_d_202206 содержит только ['DATA_ID']
+Таблица base_d_202207 содержит только ['DATA_ID']
+Таблица base_d_202208 содержит только ['DATA_ID']
+Таблица base_d_202209 содержит только ['DATA_ID']
+Таблица base_d_202210 содержит только ['DATA_ID']
+Таблица base_d_202211 содержит только ['DATA_ID']
+Таблица base_d_202212 содержит только ['DATA_ID']
+Таблица base_d_202301 содержит только ['DATA_ID']
+Таблица base_d_202302 содержит только ['DATA_ID']
+Таблица base_d_202303 содержит только ['DATA_ID']
+Таблица base_d_202304 содержит только ['DATA_ID']
+Таблица base_d_202305 содержит только ['DATA_ID']
+Таблица base_d_202306 содержит только ['DATA_ID']
+Таблица base_d_202307 содержит только ['DATA_ID']
+Таблица base_d_202308 содержит только ['DATA_ID']
+Таблица base_d_202309 содержит только ['DATA_ID']
+Таблица base_d_202310 содержит только ['DATA_ID']
+Таблица base_d_202311 содержит только ['DATA_ID']
+Таблица base_d_202312 содержит только ['DATA_ID']
+Таблица base_d_202401 содержит только ['DATA_ID']
+Таблица base_d_202402 содержит только ['DATA_ID']
+Таблица base_d_202403 содержит только ['DATA_ID']
+Таблица base_d_202404 содержит только ['DATA_ID']
+Таблица base_d_202405 содержит только ['DATA_ID']
+Таблица base_d_202406 содержит только ['DATA_ID']
+Таблица base_d_202407 содержит только ['DATA_ID']
+Таблица base_d_tmp содержит только ['DATA_ID']
+Таблица base_d_tmp_1 содержит только ['DATA_ID']
+Таблица base_m_202001 содержит только ['DATA_ID']
+Таблица base_m_202002 содержит только ['DATA_ID']
+Таблица base_m_202003 содержит только ['DATA_ID']
+Таблица base_m_202004 содержит только ['DATA_ID']
+Таблица base_m_202005 содержит только ['DATA_ID']
+Таблица base_m_202006 содержит только ['DATA_ID']
+Таблица base_m_202007 содержит только ['DATA_ID']
+Таблица base_m_202008 содержит только ['DATA_ID']
+Таблица base_m_202009 содержит только ['DATA_ID']
+Таблица base_m_202010 содержит только ['DATA_ID']
+Таблица base_m_202011 содержит только ['DATA_ID']
+Таблица base_m_202012 содержит только ['DATA_ID']
+Таблица base_m_202101 содержит только ['DATA_ID']
+Таблица base_m_202102 содержит только ['DATA_ID']
+Таблица base_m_202103 содержит только ['DATA_ID']
+Таблица base_m_202104 содержит только ['DATA_ID']
+Таблица base_m_202105 содержит только ['DATA_ID']
+Таблица base_m_202106 содержит только ['DATA_ID']
+Таблица base_m_202107 содержит только ['DATA_ID']
+Таблица base_m_202108 содержит только ['DATA_ID']
+Таблица base_m_202109 содержит только ['DATA_ID']
+Таблица base_m_202110 содержит только ['DATA_ID']
+Таблица base_m_202111 содержит только ['DATA_ID']
+Таблица base_m_202112 содержит только ['DATA_ID']
+Таблица base_m_202201 содержит только ['DATA_ID']
+Таблица base_m_202202 содержит только ['DATA_ID']
+Таблица base_m_202203 содержит только ['DATA_ID']
+Таблица base_m_202204 содержит только ['DATA_ID']
+Таблица base_m_202205 содержит только ['DATA_ID']
+Таблица base_m_202206 содержит только ['DATA_ID']
+Таблица base_m_202207 содержит только ['DATA_ID']
+Таблица base_m_202208 содержит только ['DATA_ID']
+Таблица base_m_202209 содержит только ['DATA_ID']
+Таблица base_m_202210 содержит только ['DATA_ID']
+Таблица base_m_202211 содержит только ['DATA_ID']
+Таблица base_m_202212 содержит только ['DATA_ID']
+Таблица base_m_202301 содержит только ['DATA_ID']
+Таблица base_m_202302 содержит только ['DATA_ID']
+Таблица base_m_202303 содержит только ['DATA_ID']
+Таблица base_m_202304 содержит только ['DATA_ID']
+Таблица base_m_202305 содержит только ['DATA_ID']
+Таблица base_m_202306 содержит только ['DATA_ID']
+Таблица base_m_202307 содержит только ['DATA_ID']
+Таблица base_m_tmp содержит только ['DATA_ID']
+Таблица base_m_tmp_1 содержит только ['DATA_ID']
+Таблица biz_cai_lc_balance содержит только ['DATA_ID']
+Таблица biz_inf_push_log содержит только ['DATA_ID']
+Таблица biz_kms_meter_update_status содержит только ['METER_ID']
+Таблица biz_kms_meter_upd_log содержит только ['METER_ID']
+Таблица biz_mdm_estimating_record содержит только ['DATA_ID']
+Таблица biz_mdm_fail_record содержит только ['DATA_ID']
+Таблица biz_mdm_run_status содержит только ['DATA_ID']
+Таблица biz_mdm_run_status_tmp содержит только ['data_id']
+Таблица biz_mdm_success_temp содержит только ['DATA_ID']
+Таблица biz_mdm_vee_exception содержит только ['DATA_ID']
+Таблица biz_pub_dataedit_log содержит только ['DATA_ID']
+Таблица biz_pub_data_apparent_md содержит только ['DATA_ID']
+Таблица biz_pub_data_apparent_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_av_ext_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_av_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_base_c содержит только ['DATA_ID']
+Таблица biz_pub_data_base_d содержит только ['DATA_ID']
+Таблица biz_pub_data_base_m содержит только ['DATA_ID']
+Таблица biz_pub_data_current содержит только ['DATA_ID']
+Таблица biz_pub_data_d_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_data_d_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_data_d_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_data_ed_flow_d содержит только ['DATA_ID']
+Таблица biz_pub_data_ed_flow_m содержит только ['DATA_ID']
+Таблица biz_pub_data_event содержит только ['DATA_ID']
+Таблица biz_pub_data_event_bak содержит только ['DATA_ID']
+Таблица biz_pub_data_forward_power содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_ext_c содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_ext_d содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_ext_m содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_phase_c содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_phase_d содержит только ['DATA_ID']
+Таблица biz_pub_data_f_energy_phase_m содержит только ['DATA_ID']
+Таблица biz_pub_data_f_ext_md_d содержит только ['DATA_ID']
+Таблица biz_pub_data_f_ext_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_f_md_c содержит только ['DATA_ID']
+Таблица biz_pub_data_f_md_d содержит только ['DATA_ID']
+Таблица biz_pub_data_f_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_f_power_tou содержит только ['data_id']
+Таблица biz_pub_data_f_power_tou_tmp_1 содержит только ['data_id']
+Таблица biz_pub_data_harmonic_c_i содержит только ['data_id']
+Таблица biz_pub_data_harmonic_c_v содержит только ['data_id']
+Таблица biz_pub_data_harmonic_i содержит только ['DATA_ID']
+Таблица biz_pub_data_harmonic_v содержит только ['DATA_ID']
+Таблица biz_pub_data_network_mgt_d содержит только ['DATA_ID']
+Таблица biz_pub_data_other_d содержит только ['DATA_ID']
+Таблица biz_pub_data_other_load содержит только ['DATA_ID']
+Таблица biz_pub_data_other_m содержит только ['DATA_ID']
+Таблица biz_pub_data_power_factor содержит только ['DATA_ID']
+Таблица biz_pub_data_power_factor_m содержит только ['DATA_ID']
+Таблица biz_pub_data_q_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_data_q_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_data_q_energy_ext_c содержит только ['DATA_ID']
+Таблица biz_pub_data_q_energy_ext_d содержит только ['DATA_ID']
+Таблица biz_pub_data_q_energy_ext_m содержит только ['DATA_ID']
+Таблица biz_pub_data_q_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_data_reverse_power содержит только ['DATA_ID']
+Таблица biz_pub_data_r_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_data_r_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_data_r_energy_ext_c содержит только ['DATA_ID']
+Таблица biz_pub_data_r_energy_ext_d содержит только ['DATA_ID']
+Таблица biz_pub_data_r_energy_ext_m содержит только ['DATA_ID']
+Таблица biz_pub_data_r_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_data_r_ext_md_d содержит только ['DATA_ID']
+Таблица biz_pub_data_r_ext_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_r_md_c содержит только ['DATA_ID']
+Таблица biz_pub_data_r_md_d содержит только ['DATA_ID']
+Таблица biz_pub_data_r_md_m содержит только ['DATA_ID']
+Таблица biz_pub_data_signal содержит только ['DATA_ID']
+Таблица biz_pub_data_transformer_c содержит только ['DATA_ID']
+Таблица biz_pub_data_transformer_d содержит только ['DATA_ID']
+Таблица biz_pub_data_transformer_m содержит только ['DATA_ID']
+Таблица biz_pub_data_t_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_data_t_energy_c_temp содержит только ['DATA_ID']
+Таблица biz_pub_data_t_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_data_t_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_data_ui_angle содержит только ['data_id']
+Таблица biz_pub_data_vending_d содержит только ['DATA_ID']
+Таблица biz_pub_data_voltage содержит только ['DATA_ID']
+Таблица biz_pub_data_water_gas содержит только ['DATA_ID']
+Таблица biz_pub_data_water_gas_d содержит только ['DATA_ID']
+Таблица biz_pub_data_water_gas_m содержит только ['DATA_ID']
+Таблица biz_pub_report_raw_day содержит только ['DATA_ID']
+Таблица biz_pub_report_raw_day_temp содержит только ['DATA_ID']
+Таблица biz_pub_report_raw_month содержит только ['DATA_ID']
+Таблица biz_pub_report_raw_month_temp содержит только ['DATA_ID']
+Таблица biz_pub_st_current содержит только ['DATA_ID']
+Таблица biz_pub_st_data_transformer содержит только ['DATA_ID']
+Таблица biz_pub_st_forward_power содержит только ['DATA_ID']
+Таблица biz_pub_st_f_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_st_f_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_st_f_energy_ext_c содержит только ['DATA_ID']
+Таблица biz_pub_st_f_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_st_f_energy_phase_c содержит только ['DATA_ID']
+Таблица biz_pub_st_power_factor содержит только ['DATA_ID']
+Таблица biz_pub_st_q_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_st_q_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_st_reverse_power содержит только ['DATA_ID']
+Таблица biz_pub_st_r_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_st_r_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_st_r_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_st_transformer_d содержит только ['DATA_ID']
+Таблица biz_pub_st_transformer_m содержит только ['DATA_ID']
+Таблица biz_pub_st_t_energy_c содержит только ['DATA_ID']
+Таблица biz_pub_st_t_energy_c_temp содержит только ['DATA_ID']
+Таблица biz_pub_st_t_energy_d содержит только ['DATA_ID']
+Таблица biz_pub_st_t_energy_m содержит только ['DATA_ID']
+Таблица biz_pub_st_voltage содержит только ['DATA_ID']
+Таблица biz_pub_sys_bu_ana_info содержит только ['DATA_ID']
+Таблица biz_pub_sys_event_ana содержит только ['DATA_ID']
+Таблица current_202112 содержит только ['DATA_ID']
+Таблица current_202201 содержит только ['DATA_ID']
+Таблица current_202202 содержит только ['DATA_ID']
+Таблица current_202203 содержит только ['DATA_ID']
+Таблица current_202204 содержит только ['DATA_ID']
+Таблица current_202205 содержит только ['DATA_ID']
+Таблица current_202206 содержит только ['DATA_ID']
+Таблица current_202207 содержит только ['DATA_ID']
+Таблица current_202208 содержит только ['DATA_ID']
+Таблица current_202209 содержит только ['DATA_ID']
+Таблица current_202210 содержит только ['DATA_ID']
+Таблица current_202211 содержит только ['DATA_ID']
+Таблица current_202212 содержит только ['DATA_ID']
+Таблица current_202301 содержит только ['DATA_ID']
+Таблица current_202302 содержит только ['DATA_ID']
+Таблица current_202303 содержит только ['DATA_ID']
+Таблица current_202304 содержит только ['DATA_ID']
+Таблица current_202305 содержит только ['DATA_ID']
+Таблица current_202306 содержит только ['DATA_ID']
+Таблица current_202307 содержит только ['DATA_ID']
+Таблица current_202308 содержит только ['DATA_ID']
+Таблица current_202309 содержит только ['DATA_ID']
+Таблица current_202310 содержит только ['DATA_ID']
+Таблица current_202311 содержит только ['DATA_ID']
+Таблица current_202312 содержит только ['DATA_ID']
+Таблица current_202401 содержит только ['DATA_ID']
+Таблица current_202402 содержит только ['DATA_ID']
+Таблица current_202403 содержит только ['DATA_ID']
+Таблица current_202404 содержит только ['DATA_ID']
+Таблица current_202405 содержит только ['DATA_ID']
+Таблица current_202406 содержит только ['DATA_ID']
+Таблица current_202407 содержит только ['DATA_ID']
+Таблица current_202408 содержит только ['DATA_ID']
+Таблица current_202409 содержит только ['DATA_ID']
+Таблица current_202410 содержит только ['DATA_ID']
+Таблица current_202411 содержит только ['DATA_ID']
+Таблица current_202412 содержит только ['DATA_ID']
+Таблица current_202501 содержит только ['DATA_ID']
+Таблица current_202502 содержит только ['DATA_ID']
+Таблица current_202503 содержит только ['DATA_ID']
+Таблица current_202504 содержит только ['DATA_ID']
+Таблица current_202505 содержит только ['DATA_ID']
+Таблица current_202506 содержит только ['DATA_ID']
+Таблица current_tmp_1 содержит только ['DATA_ID']
+Таблица elec_codef_energy_c содержит только ['DATA_ID']
+Таблица elec_codeq_energy_c содержит только ['DATA_ID']
+Таблица elec_coder_energy_c содержит только ['DATA_ID']
+Таблица elec_codet_energy_c содержит только ['DATA_ID']
+Таблица elec_code_1f_energy_c содержит только ['DATA_ID']
+Таблица elec_code_1r_energy_c содержит только ['DATA_ID']
+Таблица elec_code_1t_energy_c содержит только ['DATA_ID']
+Таблица elec_code_df_energy_d содержит только ['DATA_ID']
+Таблица elec_code_df_energy_ext_d содержит только ['DATA_ID']
+Таблица elec_code_dr_energy_d содержит только ['DATA_ID']
+Таблица elec_code_dr_energy_ext_d содержит только ['DATA_ID']
+Таблица elec_code_dt_energy_d содержит только ['DATA_ID']
+Таблица elec_code_d_1f_energy_d содержит только ['DATA_ID']
+Таблица elec_code_d_1r_energy_d содержит только ['DATA_ID']
+Таблица elec_code_d_1t_energy_d содержит только ['DATA_ID']
+Таблица elec_code_mf_energy_m содержит только ['DATA_ID']
+Таблица elec_code_mr_energy_ext_m содержит только ['DATA_ID']
+Таблица elec_code_mr_energy_m содержит только ['DATA_ID']
+Таблица elec_code_mt_energy_m содержит только ['DATA_ID']
+Таблица elec_code_m_1f_energy_ext_m содержит только ['DATA_ID']
+Таблица elec_code_m_1f_energy_m содержит только ['DATA_ID']
+Таблица elec_code_m_1r_energy_ext_m содержит только ['DATA_ID']
+Таблица elec_code_m_1r_energy_m содержит только ['DATA_ID']
+Таблица elec_code_m_1t_energy_m содержит только ['DATA_ID']
+Таблица eventevent содержит только ['DATA_ID']
+Таблица event_1event содержит только ['DATA_ID']
+Таблица event_201907 содержит только ['DATA_ID']
+Таблица event_tmp содержит только ['DATA_ID']
+Таблица event_tmp_1 содержит только ['DATA_ID']
+Таблица forward_power_202012 содержит только ['DATA_ID']
+Таблица forward_power_202101 содержит только ['DATA_ID']
+Таблица forward_power_202102 содержит только ['DATA_ID']
+Таблица forward_power_202103 содержит только ['DATA_ID']
+Таблица forward_power_202104 содержит только ['DATA_ID']
+Таблица forward_power_202105 содержит только ['DATA_ID']
+Таблица forward_power_202106 содержит только ['DATA_ID']
+Таблица forward_power_202107 содержит только ['DATA_ID']
+Таблица forward_power_202108 содержит только ['DATA_ID']
+Таблица forward_power_202109 содержит только ['DATA_ID']
+Таблица forward_power_202110 содержит только ['DATA_ID']
+Таблица forward_power_202111 содержит только ['DATA_ID']
+Таблица forward_power_202112 содержит только ['DATA_ID']
+Таблица forward_power_202201 содержит только ['DATA_ID']
+Таблица forward_power_202202 содержит только ['DATA_ID']
+Таблица forward_power_202203 содержит только ['DATA_ID']
+Таблица forward_power_202204 содержит только ['DATA_ID']
+Таблица forward_power_202205 содержит только ['DATA_ID']
+Таблица forward_power_202206 содержит только ['DATA_ID']
+Таблица forward_power_202207 содержит только ['DATA_ID']
+Таблица forward_power_202208 содержит только ['DATA_ID']
+Таблица forward_power_202209 содержит только ['DATA_ID']
+Таблица forward_power_202210 содержит только ['DATA_ID']
+Таблица forward_power_202211 содержит только ['DATA_ID']
+Таблица forward_power_202212 содержит только ['DATA_ID']
+Таблица forward_power_202301 содержит только ['DATA_ID']
+Таблица forward_power_202302 содержит только ['DATA_ID']
+Таблица forward_power_202303 содержит только ['DATA_ID']
+Таблица forward_power_202304 содержит только ['DATA_ID']
+Таблица forward_power_202305 содержит только ['DATA_ID']
+Таблица forward_power_202306 содержит только ['DATA_ID']
+Таблица forward_power_202307 содержит только ['DATA_ID']
+Таблица forward_power_202308 содержит только ['DATA_ID']
+Таблица forward_power_202309 содержит только ['DATA_ID']
+Таблица forward_power_202310 содержит только ['DATA_ID']
+Таблица forward_power_202311 содержит только ['DATA_ID']
+Таблица forward_power_202312 содержит только ['DATA_ID']
+Таблица forward_power_202401 содержит только ['DATA_ID']
+Таблица forward_power_202402 содержит только ['DATA_ID']
+Таблица forward_power_202403 содержит только ['DATA_ID']
+Таблица forward_power_202404 содержит только ['DATA_ID']
+Таблица forward_power_202405 содержит только ['DATA_ID']
+Таблица forward_power_202406 содержит только ['DATA_ID']
+Таблица forward_power_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_c_202112 содержит только ['DATA_ID']
+Таблица f_energy_c_202201 содержит только ['DATA_ID']
+Таблица f_energy_c_202202 содержит только ['DATA_ID']
+Таблица f_energy_c_202203 содержит только ['DATA_ID']
+Таблица f_energy_c_202204 содержит только ['DATA_ID']
+Таблица f_energy_c_202205 содержит только ['DATA_ID']
+Таблица f_energy_c_202206 содержит только ['DATA_ID']
+Таблица f_energy_c_202207 содержит только ['DATA_ID']
+Таблица f_energy_c_202208 содержит только ['DATA_ID']
+Таблица f_energy_c_202209 содержит только ['DATA_ID']
+Таблица f_energy_c_202210 содержит только ['DATA_ID']
+Таблица f_energy_c_202211 содержит только ['DATA_ID']
+Таблица f_energy_c_202212 содержит только ['DATA_ID']
+Таблица f_energy_c_202301 содержит только ['DATA_ID']
+Таблица f_energy_c_202302 содержит только ['DATA_ID']
+Таблица f_energy_c_202303 содержит только ['DATA_ID']
+Таблица f_energy_c_202304 содержит только ['DATA_ID']
+Таблица f_energy_c_202305 содержит только ['DATA_ID']
+Таблица f_energy_c_202306 содержит только ['DATA_ID']
+Таблица f_energy_c_202307 содержит только ['DATA_ID']
+Таблица f_energy_c_202308 содержит только ['DATA_ID']
+Таблица f_energy_c_202309 содержит только ['DATA_ID']
+Таблица f_energy_c_202310 содержит только ['DATA_ID']
+Таблица f_energy_c_202311 содержит только ['DATA_ID']
+Таблица f_energy_c_202312 содержит только ['DATA_ID']
+Таблица f_energy_c_202401 содержит только ['DATA_ID']
+Таблица f_energy_c_202402 содержит только ['DATA_ID']
+Таблица f_energy_c_202403 содержит только ['DATA_ID']
+Таблица f_energy_c_202404 содержит только ['DATA_ID']
+Таблица f_energy_c_202405 содержит только ['DATA_ID']
+Таблица f_energy_c_202406 содержит только ['DATA_ID']
+Таблица f_energy_c_202407 содержит только ['DATA_ID']
+Таблица f_energy_c_202408 содержит только ['DATA_ID']
+Таблица f_energy_c_202409 содержит только ['DATA_ID']
+Таблица f_energy_c_202410 содержит только ['DATA_ID']
+Таблица f_energy_c_202411 содержит только ['DATA_ID']
+Таблица f_energy_c_202412 содержит только ['DATA_ID']
+Таблица f_energy_c_202501 содержит только ['DATA_ID']
+Таблица f_energy_c_202502 содержит только ['DATA_ID']
+Таблица f_energy_c_202503 содержит только ['DATA_ID']
+Таблица f_energy_c_202504 содержит только ['DATA_ID']
+Таблица f_energy_c_202505 содержит только ['DATA_ID']
+Таблица f_energy_c_202506 содержит только ['DATA_ID']
+Таблица f_energy_c_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_d_202101 содержит только ['DATA_ID']
+Таблица f_energy_d_202102 содержит только ['DATA_ID']
+Таблица f_energy_d_202103 содержит только ['DATA_ID']
+Таблица f_energy_d_202104 содержит только ['DATA_ID']
+Таблица f_energy_d_202105 содержит только ['DATA_ID']
+Таблица f_energy_d_202106 содержит только ['DATA_ID']
+Таблица f_energy_d_202107 содержит только ['DATA_ID']
+Таблица f_energy_d_202108 содержит только ['DATA_ID']
+Таблица f_energy_d_202109 содержит только ['DATA_ID']
+Таблица f_energy_d_202110 содержит только ['DATA_ID']
+Таблица f_energy_d_202111 содержит только ['DATA_ID']
+Таблица f_energy_d_202112 содержит только ['DATA_ID']
+Таблица f_energy_d_202201 содержит только ['DATA_ID']
+Таблица f_energy_d_202202 содержит только ['DATA_ID']
+Таблица f_energy_d_202203 содержит только ['DATA_ID']
+Таблица f_energy_d_202204 содержит только ['DATA_ID']
+Таблица f_energy_d_202205 содержит только ['DATA_ID']
+Таблица f_energy_d_202206 содержит только ['DATA_ID']
+Таблица f_energy_d_202207 содержит только ['DATA_ID']
+Таблица f_energy_d_202208 содержит только ['DATA_ID']
+Таблица f_energy_d_202209 содержит только ['DATA_ID']
+Таблица f_energy_d_202210 содержит только ['DATA_ID']
+Таблица f_energy_d_202211 содержит только ['DATA_ID']
+Таблица f_energy_d_202212 содержит только ['DATA_ID']
+Таблица f_energy_d_202301 содержит только ['DATA_ID']
+Таблица f_energy_d_202302 содержит только ['DATA_ID']
+Таблица f_energy_d_202303 содержит только ['DATA_ID']
+Таблица f_energy_d_202304 содержит только ['DATA_ID']
+Таблица f_energy_d_202305 содержит только ['DATA_ID']
+Таблица f_energy_d_202306 содержит только ['DATA_ID']
+Таблица f_energy_d_202307 содержит только ['DATA_ID']
+Таблица f_energy_d_202308 содержит только ['DATA_ID']
+Таблица f_energy_d_202309 содержит только ['DATA_ID']
+Таблица f_energy_d_202310 содержит только ['DATA_ID']
+Таблица f_energy_d_202311 содержит только ['DATA_ID']
+Таблица f_energy_d_202312 содержит только ['DATA_ID']
+Таблица f_energy_d_202401 содержит только ['DATA_ID']
+Таблица f_energy_d_202402 содержит только ['DATA_ID']
+Таблица f_energy_d_202403 содержит только ['DATA_ID']
+Таблица f_energy_d_202404 содержит только ['DATA_ID']
+Таблица f_energy_d_202405 содержит только ['DATA_ID']
+Таблица f_energy_d_202406 содержит только ['DATA_ID']
+Таблица f_energy_d_202407 содержит только ['DATA_ID']
+Таблица f_energy_d_tmp содержит только ['DATA_ID']
+Таблица f_energy_d_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202112 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202201 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202202 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202203 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202204 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202205 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202206 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202207 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202208 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202209 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202210 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202211 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202212 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202301 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202302 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202303 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202304 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202305 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202306 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202307 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202308 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202309 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202310 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202311 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202312 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202401 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202402 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202403 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202404 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202405 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202406 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202407 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202408 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202409 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202410 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202411 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202412 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202501 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202502 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202503 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202504 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202505 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_202506 содержит только ['DATA_ID']
+Таблица f_energy_ext_c_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202101 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202102 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202103 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202104 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202105 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202106 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202107 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202108 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202109 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202110 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202111 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202112 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202201 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202202 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202203 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202204 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202205 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202206 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202207 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202208 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202209 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202210 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202211 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202212 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202301 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202302 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202303 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202304 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202305 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202306 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202307 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202308 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202309 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202310 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202311 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202312 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202401 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202402 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202403 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202404 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202405 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202406 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_202407 содержит только ['DATA_ID']
+Таблица f_energy_ext_d_tmp содержит только ['DATA_ID']
+Таблица f_energy_ext_d_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202001 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202002 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202003 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202004 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202005 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202006 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202007 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202008 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202009 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202010 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202011 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202012 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202101 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202102 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202103 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202104 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202105 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202106 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202107 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202108 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202109 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202110 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202111 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202112 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202201 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202202 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202203 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202204 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202205 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202206 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202207 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202208 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202209 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202210 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202211 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202212 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202301 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202302 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202303 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202304 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202305 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202306 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_202307 содержит только ['DATA_ID']
+Таблица f_energy_ext_m_tmp содержит только ['DATA_ID']
+Таблица f_energy_ext_m_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_m_202001 содержит только ['DATA_ID']
+Таблица f_energy_m_202002 содержит только ['DATA_ID']
+Таблица f_energy_m_202003 содержит только ['DATA_ID']
+Таблица f_energy_m_202004 содержит только ['DATA_ID']
+Таблица f_energy_m_202005 содержит только ['DATA_ID']
+Таблица f_energy_m_202006 содержит только ['DATA_ID']
+Таблица f_energy_m_202007 содержит только ['DATA_ID']
+Таблица f_energy_m_202008 содержит только ['DATA_ID']
+Таблица f_energy_m_202009 содержит только ['DATA_ID']
+Таблица f_energy_m_202010 содержит только ['DATA_ID']
+Таблица f_energy_m_202011 содержит только ['DATA_ID']
+Таблица f_energy_m_202012 содержит только ['DATA_ID']
+Таблица f_energy_m_202101 содержит только ['DATA_ID']
+Таблица f_energy_m_202102 содержит только ['DATA_ID']
+Таблица f_energy_m_202103 содержит только ['DATA_ID']
+Таблица f_energy_m_202104 содержит только ['DATA_ID']
+Таблица f_energy_m_202105 содержит только ['DATA_ID']
+Таблица f_energy_m_202106 содержит только ['DATA_ID']
+Таблица f_energy_m_202107 содержит только ['DATA_ID']
+Таблица f_energy_m_202108 содержит только ['DATA_ID']
+Таблица f_energy_m_202109 содержит только ['DATA_ID']
+Таблица f_energy_m_202110 содержит только ['DATA_ID']
+Таблица f_energy_m_202111 содержит только ['DATA_ID']
+Таблица f_energy_m_202112 содержит только ['DATA_ID']
+Таблица f_energy_m_202201 содержит только ['DATA_ID']
+Таблица f_energy_m_202202 содержит только ['DATA_ID']
+Таблица f_energy_m_202203 содержит только ['DATA_ID']
+Таблица f_energy_m_202204 содержит только ['DATA_ID']
+Таблица f_energy_m_202205 содержит только ['DATA_ID']
+Таблица f_energy_m_202206 содержит только ['DATA_ID']
+Таблица f_energy_m_202207 содержит только ['DATA_ID']
+Таблица f_energy_m_202208 содержит только ['DATA_ID']
+Таблица f_energy_m_202209 содержит только ['DATA_ID']
+Таблица f_energy_m_202210 содержит только ['DATA_ID']
+Таблица f_energy_m_202211 содержит только ['DATA_ID']
+Таблица f_energy_m_202212 содержит только ['DATA_ID']
+Таблица f_energy_m_202301 содержит только ['DATA_ID']
+Таблица f_energy_m_202302 содержит только ['DATA_ID']
+Таблица f_energy_m_202303 содержит только ['DATA_ID']
+Таблица f_energy_m_202304 содержит только ['DATA_ID']
+Таблица f_energy_m_202305 содержит только ['DATA_ID']
+Таблица f_energy_m_202306 содержит только ['DATA_ID']
+Таблица f_energy_m_202307 содержит только ['DATA_ID']
+Таблица f_energy_m_tmp содержит только ['DATA_ID']
+Таблица f_energy_m_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202112 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202201 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202202 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202203 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202204 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202205 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202206 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202207 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202208 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202209 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202210 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202211 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202212 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202301 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202302 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202303 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202304 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202305 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202306 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202307 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202308 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202309 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202310 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202311 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202312 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202401 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202402 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202403 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202404 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202405 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202406 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202407 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202408 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202409 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202410 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202411 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202412 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202501 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202502 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202503 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202504 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202505 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_202506 содержит только ['DATA_ID']
+Таблица f_energy_phase_c_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202101 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202102 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202103 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202104 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202105 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202106 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202107 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202108 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202109 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202110 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202111 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202112 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202201 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202202 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202203 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202204 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202205 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202206 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202207 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202208 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202209 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202210 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202211 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202212 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202301 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202302 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202303 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202304 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202305 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202306 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202307 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202308 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202309 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202310 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202311 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202312 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202401 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202402 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202403 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202404 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202405 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202406 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_202407 содержит только ['DATA_ID']
+Таблица f_energy_phase_d_tmp содержит только ['DATA_ID']
+Таблица f_energy_phase_d_tmp_1 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202001 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202002 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202003 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202004 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202005 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202006 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202007 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202008 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202009 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202010 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202011 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202012 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202101 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202102 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202103 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202104 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202105 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202106 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202107 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202108 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202109 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202110 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202111 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202112 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202201 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202202 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202203 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202204 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202205 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202206 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202207 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202208 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202209 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202210 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202211 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202212 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202301 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202302 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202303 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202304 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202305 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202306 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_202307 содержит только ['DATA_ID']
+Таблица f_energy_phase_m_tmp содержит только ['DATA_ID']
+Таблица f_energy_phase_m_tmp_1 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202001 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202002 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202003 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202004 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202005 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202006 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202007 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202008 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202009 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202010 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202011 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202012 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202101 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202102 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202103 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202104 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202105 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202106 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202107 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202108 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202109 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202110 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202111 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202112 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202201 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202202 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202203 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202204 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202205 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202206 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202207 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202208 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202209 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202210 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202211 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202212 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202301 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202302 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202303 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202304 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202305 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202306 содержит только ['DATA_ID']
+Таблица f_ext_md_m_202307 содержит только ['DATA_ID']
+Таблица f_ext_md_m_tmp содержит только ['DATA_ID']
+Таблица f_ext_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица f_md_d_tmp_1 содержит только ['DATA_ID']
+Таблица f_md_m_202001 содержит только ['DATA_ID']
+Таблица f_md_m_202002 содержит только ['DATA_ID']
+Таблица f_md_m_202003 содержит только ['DATA_ID']
+Таблица f_md_m_202004 содержит только ['DATA_ID']
+Таблица f_md_m_202005 содержит только ['DATA_ID']
+Таблица f_md_m_202006 содержит только ['DATA_ID']
+Таблица f_md_m_202007 содержит только ['DATA_ID']
+Таблица f_md_m_202008 содержит только ['DATA_ID']
+Таблица f_md_m_202009 содержит только ['DATA_ID']
+Таблица f_md_m_202010 содержит только ['DATA_ID']
+Таблица f_md_m_202011 содержит только ['DATA_ID']
+Таблица f_md_m_202012 содержит только ['DATA_ID']
+Таблица f_md_m_202101 содержит только ['DATA_ID']
+Таблица f_md_m_202102 содержит только ['DATA_ID']
+Таблица f_md_m_202103 содержит только ['DATA_ID']
+Таблица f_md_m_202104 содержит только ['DATA_ID']
+Таблица f_md_m_202105 содержит только ['DATA_ID']
+Таблица f_md_m_202106 содержит только ['DATA_ID']
+Таблица f_md_m_202107 содержит только ['DATA_ID']
+Таблица f_md_m_202108 содержит только ['DATA_ID']
+Таблица f_md_m_202109 содержит только ['DATA_ID']
+Таблица f_md_m_202110 содержит только ['DATA_ID']
+Таблица f_md_m_202111 содержит только ['DATA_ID']
+Таблица f_md_m_202112 содержит только ['DATA_ID']
+Таблица f_md_m_202201 содержит только ['DATA_ID']
+Таблица f_md_m_202202 содержит только ['DATA_ID']
+Таблица f_md_m_202203 содержит только ['DATA_ID']
+Таблица f_md_m_202204 содержит только ['DATA_ID']
+Таблица f_md_m_202205 содержит только ['DATA_ID']
+Таблица f_md_m_202206 содержит только ['DATA_ID']
+Таблица f_md_m_202207 содержит только ['DATA_ID']
+Таблица f_md_m_202208 содержит только ['DATA_ID']
+Таблица f_md_m_202209 содержит только ['DATA_ID']
+Таблица f_md_m_202210 содержит только ['DATA_ID']
+Таблица f_md_m_202211 содержит только ['DATA_ID']
+Таблица f_md_m_202212 содержит только ['DATA_ID']
+Таблица f_md_m_202301 содержит только ['DATA_ID']
+Таблица f_md_m_202302 содержит только ['DATA_ID']
+Таблица f_md_m_202303 содержит только ['DATA_ID']
+Таблица f_md_m_202304 содержит только ['DATA_ID']
+Таблица f_md_m_202305 содержит только ['DATA_ID']
+Таблица f_md_m_202306 содержит только ['DATA_ID']
+Таблица f_md_m_202307 содержит только ['DATA_ID']
+Таблица f_md_m_tmp содержит только ['DATA_ID']
+Таблица f_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица f_power_tou_202112 содержит только ['data_id']
+Таблица f_power_tou_202201 содержит только ['data_id']
+Таблица f_power_tou_202202 содержит только ['data_id']
+Таблица f_power_tou_202203 содержит только ['data_id']
+Таблица f_power_tou_202204 содержит только ['data_id']
+Таблица f_power_tou_202205 содержит только ['data_id']
+Таблица f_power_tou_202206 содержит только ['data_id']
+Таблица f_power_tou_202207 содержит только ['data_id']
+Таблица f_power_tou_202208 содержит только ['data_id']
+Таблица f_power_tou_202209 содержит только ['data_id']
+Таблица f_power_tou_202210 содержит только ['data_id']
+Таблица f_power_tou_202211 содержит только ['data_id']
+Таблица f_power_tou_202212 содержит только ['data_id']
+Таблица f_power_tou_202301 содержит только ['data_id']
+Таблица f_power_tou_202302 содержит только ['data_id']
+Таблица f_power_tou_202303 содержит только ['data_id']
+Таблица f_power_tou_202304 содержит только ['data_id']
+Таблица f_power_tou_202305 содержит только ['data_id']
+Таблица f_power_tou_202306 содержит только ['data_id']
+Таблица f_power_tou_202307 содержит только ['data_id']
+Таблица f_power_tou_202308 содержит только ['data_id']
+Таблица f_power_tou_202309 содержит только ['data_id']
+Таблица f_power_tou_202310 содержит только ['data_id']
+Таблица f_power_tou_202311 содержит только ['data_id']
+Таблица f_power_tou_202312 содержит только ['data_id']
+Таблица f_power_tou_202401 содержит только ['data_id']
+Таблица f_power_tou_202402 содержит только ['data_id']
+Таблица f_power_tou_202403 содержит только ['data_id']
+Таблица f_power_tou_202404 содержит только ['data_id']
+Таблица f_power_tou_202405 содержит только ['data_id']
+Таблица f_power_tou_202406 содержит только ['data_id']
+Таблица f_power_tou_202407 содержит только ['data_id']
+Таблица f_power_tou_202408 содержит только ['data_id']
+Таблица f_power_tou_202409 содержит только ['data_id']
+Таблица f_power_tou_202410 содержит только ['data_id']
+Таблица f_power_tou_202411 содержит только ['data_id']
+Таблица f_power_tou_202412 содержит только ['data_id']
+Таблица f_power_tou_202501 содержит только ['data_id']
+Таблица f_power_tou_202502 содержит только ['data_id']
+Таблица f_power_tou_202503 содержит только ['data_id']
+Таблица f_power_tou_202504 содержит только ['data_id']
+Таблица f_power_tou_202505 содержит только ['data_id']
+Таблица f_power_tou_202506 содержит только ['data_id']
+Таблица hes_auto_device_task содержит только ['METER_ID']
+Таблица hes_auto_device_task_log содержит только ['METER_ID']
+Таблица hes_auto_task_current содержит только ['meter_id']
+Таблица hes_auto_task_faile_detail содержит только ['METER_ID']
+Таблица hes_data_card_special_m содержит только ['meter_id']
+Таблица hes_data_card_special_m_1 содержит только ['meter_id']
+Таблица hes_data_comm_traffic_d содержит только ['meter_id']
+Таблица hes_data_comm_traffic_d_1 содержит только ['meter_id']
+Таблица hes_data_comm_traffic_m содержит только ['meter_id']
+Таблица hes_data_comm_traffic_m_1 содержит только ['meter_id']
+Таблица hes_data_elec_code содержит только ['meter_id']
+Таблица hes_data_elec_code_1 содержит только ['meter_id']
+Таблица hes_data_elec_code_d содержит только ['meter_id']
+Таблица hes_data_elec_code_d_1 содержит только ['meter_id']
+Таблица hes_data_elec_code_m содержит только ['meter_id']
+Таблица hes_data_elec_code_m_1 содержит только ['meter_id']
+Таблица hes_data_harmonic содержит только ['meter_id']
+Таблица hes_data_harmonic_1 содержит только ['meter_id']
+Таблица hes_data_harmonic_d содержит только ['meter_id']
+Таблица hes_data_harmonic_d_1 содержит только ['meter_id']
+Таблица hes_data_harmonic_m содержит только ['meter_id']
+Таблица hes_data_harmonic_m_1 содержит только ['meter_id']
+Таблица hes_data_max_demand содержит только ['meter_id']
+Таблица hes_data_max_demand_1 содержит только ['meter_id']
+Таблица hes_data_max_demand_d содержит только ['meter_id']
+Таблица hes_data_max_demand_d_1 содержит только ['meter_id']
+Таблица hes_data_max_demand_m содержит только ['meter_id']
+Таблица hes_data_max_demand_m_1 содержит только ['meter_id']
+Таблица hes_data_prepay_d содержит только ['meter_id']
+Таблица hes_data_prepay_d_1 содержит только ['meter_id']
+Таблица hes_data_prepay_m содержит только ['meter_id']
+Таблица hes_data_prepay_m_1 содержит только ['meter_id']
+Таблица hes_data_pvc_i содержит только ['meter_id']
+Таблица hes_data_pvc_i_1 содержит только ['meter_id']
+Таблица hes_data_pvc_other содержит только ['meter_id']
+Таблица hes_data_pvc_other_1 содержит только ['meter_id']
+Таблица hes_data_pvc_p содержит только ['meter_id']
+Таблица hes_data_pvc_p_1 содержит только ['meter_id']
+Таблица hes_data_pvc_p_factor содержит только ['meter_id']
+Таблица hes_data_pvc_p_factor_1 содержит только ['meter_id']
+Таблица hes_data_pvc_u содержит только ['meter_id']
+Таблица hes_data_pvc_u_1 содержит только ['meter_id']
+Таблица hes_data_signal_strength содержит только ['meter_id']
+Таблица hes_data_signal_strength_1 содержит только ['meter_id']
+Таблица hes_data_vqr_d содержит только ['meter_id']
+Таблица hes_data_vqr_d_1 содержит только ['meter_id']
+Таблица hes_data_vqr_m содержит только ['meter_id']
+Таблица hes_data_vqr_m_1 содержит только ['meter_id']
+Таблица hes_datd_harmonic содержит только ['METER_ID']
+Таблица hes_d_nbiot_device_map содержит только ['METER_ID']
+Таблица hes_log_alarm_cur_status содержит только ['METER_ID']
+Таблица hes_log_alarm_status_detail содержит только ['METER_ID']
+Таблица hes_log_meter_visuals содержит только ['METER_ID']
+Таблица hes_log_pre_charge содержит только ['METER_ID']
+Таблица hes_log_relay_cur_status содержит только ['METER_ID']
+Таблица hes_log_relay_status_detail содержит только ['METER_ID']
+Таблица hes_log_sdzx содержит только ['METER_ID']
+Таблица hes_meterbox_meter содержит только ['METER_ID']
+Таблица hes_stat_curve_reading_detail содержит только ['METER_ID']
+Таблица hes_stat_daily_reading_detail содержит только ['METER_ID']
+Таблица hes_stat_reading_rate содержит только ['METER_ID']
+Таблица hhu_manual_meter_status содержит только ['METER_ID']
+Таблица max_demand_df_md_d содержит только ['DATA_ID']
+Таблица max_demand_dr_md_d содержит только ['DATA_ID']
+Таблица max_demand_d_1f_md_d содержит только ['DATA_ID']
+Таблица max_demand_d_1r_md_d содержит только ['DATA_ID']
+Таблица max_demand_mf_md_m содержит только ['DATA_ID']
+Таблица max_demand_mr_md_m содержит только ['DATA_ID']
+Таблица max_demand_m_1f_ext_md_m содержит только ['DATA_ID']
+Таблица max_demand_m_1f_md_m содержит только ['DATA_ID']
+Таблица max_demand_m_1r_ext_md_m содержит только ['DATA_ID']
+Таблица max_demand_m_1r_md_m содержит только ['DATA_ID']
+Таблица other_d_202101 содержит только ['DATA_ID']
+Таблица other_d_202102 содержит только ['DATA_ID']
+Таблица other_d_202103 содержит только ['DATA_ID']
+Таблица other_d_202104 содержит только ['DATA_ID']
+Таблица other_d_202105 содержит только ['DATA_ID']
+Таблица other_d_202106 содержит только ['DATA_ID']
+Таблица other_d_202107 содержит только ['DATA_ID']
+Таблица other_d_202108 содержит только ['DATA_ID']
+Таблица other_d_202109 содержит только ['DATA_ID']
+Таблица other_d_202110 содержит только ['DATA_ID']
+Таблица other_d_202111 содержит только ['DATA_ID']
+Таблица other_d_202112 содержит только ['DATA_ID']
+Таблица other_d_202201 содержит только ['DATA_ID']
+Таблица other_d_202202 содержит только ['DATA_ID']
+Таблица other_d_202203 содержит только ['DATA_ID']
+Таблица other_d_202204 содержит только ['DATA_ID']
+Таблица other_d_202205 содержит только ['DATA_ID']
+Таблица other_d_202206 содержит только ['DATA_ID']
+Таблица other_d_202207 содержит только ['DATA_ID']
+Таблица other_d_202208 содержит только ['DATA_ID']
+Таблица other_d_202209 содержит только ['DATA_ID']
+Таблица other_d_202210 содержит только ['DATA_ID']
+Таблица other_d_202211 содержит только ['DATA_ID']
+Таблица other_d_202212 содержит только ['DATA_ID']
+Таблица other_d_202301 содержит только ['DATA_ID']
+Таблица other_d_202302 содержит только ['DATA_ID']
+Таблица other_d_202303 содержит только ['DATA_ID']
+Таблица other_d_202304 содержит только ['DATA_ID']
+Таблица other_d_202305 содержит только ['DATA_ID']
+Таблица other_d_202306 содержит только ['DATA_ID']
+Таблица other_d_202307 содержит только ['DATA_ID']
+Таблица other_d_202308 содержит только ['DATA_ID']
+Таблица other_d_202309 содержит только ['DATA_ID']
+Таблица other_d_202310 содержит только ['DATA_ID']
+Таблица other_d_202311 содержит только ['DATA_ID']
+Таблица other_d_202312 содержит только ['DATA_ID']
+Таблица other_d_202401 содержит только ['DATA_ID']
+Таблица other_d_202402 содержит только ['DATA_ID']
+Таблица other_d_202403 содержит только ['DATA_ID']
+Таблица other_d_202404 содержит только ['DATA_ID']
+Таблица other_d_202405 содержит только ['DATA_ID']
+Таблица other_d_202406 содержит только ['DATA_ID']
+Таблица other_d_202407 содержит только ['DATA_ID']
+Таблица other_d_tmp содержит только ['DATA_ID']
+Таблица other_d_tmp_1 содержит только ['DATA_ID']
+Таблица other_load_202201 содержит только ['DATA_ID']
+Таблица other_load_202202 содержит только ['DATA_ID']
+Таблица other_load_202203 содержит только ['DATA_ID']
+Таблица other_load_202204 содержит только ['DATA_ID']
+Таблица other_load_202205 содержит только ['DATA_ID']
+Таблица other_load_202206 содержит только ['DATA_ID']
+Таблица other_load_202207 содержит только ['DATA_ID']
+Таблица other_load_202208 содержит только ['DATA_ID']
+Таблица other_load_202209 содержит только ['DATA_ID']
+Таблица other_load_202210 содержит только ['DATA_ID']
+Таблица other_load_202211 содержит только ['DATA_ID']
+Таблица other_load_202212 содержит только ['DATA_ID']
+Таблица other_load_202301 содержит только ['DATA_ID']
+Таблица other_load_202302 содержит только ['DATA_ID']
+Таблица other_load_202303 содержит только ['DATA_ID']
+Таблица other_load_202304 содержит только ['DATA_ID']
+Таблица other_load_202305 содержит только ['DATA_ID']
+Таблица other_load_202306 содержит только ['DATA_ID']
+Таблица other_load_202307 содержит только ['DATA_ID']
+Таблица other_load_202308 содержит только ['DATA_ID']
+Таблица other_load_202309 содержит только ['DATA_ID']
+Таблица other_load_202310 содержит только ['DATA_ID']
+Таблица other_load_202311 содержит только ['DATA_ID']
+Таблица other_load_202312 содержит только ['DATA_ID']
+Таблица other_load_202401 содержит только ['DATA_ID']
+Таблица other_load_202402 содержит только ['DATA_ID']
+Таблица other_load_202403 содержит только ['DATA_ID']
+Таблица other_load_202404 содержит только ['DATA_ID']
+Таблица other_load_202405 содержит только ['DATA_ID']
+Таблица other_load_202406 содержит только ['DATA_ID']
+Таблица other_load_202407 содержит только ['DATA_ID']
+Таблица other_load_202408 содержит только ['DATA_ID']
+Таблица other_load_202409 содержит только ['DATA_ID']
+Таблица other_load_202410 содержит только ['DATA_ID']
+Таблица other_load_202411 содержит только ['DATA_ID']
+Таблица other_load_202412 содержит только ['DATA_ID']
+Таблица other_load_202501 содержит только ['DATA_ID']
+Таблица other_load_202502 содержит только ['DATA_ID']
+Таблица other_load_202503 содержит только ['DATA_ID']
+Таблица other_load_202504 содержит только ['DATA_ID']
+Таблица other_load_202505 содержит только ['DATA_ID']
+Таблица other_load_202506 содержит только ['DATA_ID']
+Таблица other_load_202507 содержит только ['DATA_ID']
+Таблица other_load_tmp содержит только ['DATA_ID']
+Таблица other_load_tmp_1 содержит только ['DATA_ID']
+Таблица other_m_202001 содержит только ['DATA_ID']
+Таблица other_m_202002 содержит только ['DATA_ID']
+Таблица other_m_202003 содержит только ['DATA_ID']
+Таблица other_m_202004 содержит только ['DATA_ID']
+Таблица other_m_202005 содержит только ['DATA_ID']
+Таблица other_m_202006 содержит только ['DATA_ID']
+Таблица other_m_202007 содержит только ['DATA_ID']
+Таблица other_m_202008 содержит только ['DATA_ID']
+Таблица other_m_202009 содержит только ['DATA_ID']
+Таблица other_m_202010 содержит только ['DATA_ID']
+Таблица other_m_202011 содержит только ['DATA_ID']
+Таблица other_m_202012 содержит только ['DATA_ID']
+Таблица other_m_202101 содержит только ['DATA_ID']
+Таблица other_m_202102 содержит только ['DATA_ID']
+Таблица other_m_202103 содержит только ['DATA_ID']
+Таблица other_m_202104 содержит только ['DATA_ID']
+Таблица other_m_202105 содержит только ['DATA_ID']
+Таблица other_m_202106 содержит только ['DATA_ID']
+Таблица other_m_202107 содержит только ['DATA_ID']
+Таблица other_m_202108 содержит только ['DATA_ID']
+Таблица other_m_202109 содержит только ['DATA_ID']
+Таблица other_m_202110 содержит только ['DATA_ID']
+Таблица other_m_202111 содержит только ['DATA_ID']
+Таблица other_m_202112 содержит только ['DATA_ID']
+Таблица other_m_202201 содержит только ['DATA_ID']
+Таблица other_m_202202 содержит только ['DATA_ID']
+Таблица other_m_202203 содержит только ['DATA_ID']
+Таблица other_m_202204 содержит только ['DATA_ID']
+Таблица other_m_202205 содержит только ['DATA_ID']
+Таблица other_m_202206 содержит только ['DATA_ID']
+Таблица other_m_202207 содержит только ['DATA_ID']
+Таблица other_m_202208 содержит только ['DATA_ID']
+Таблица other_m_202209 содержит только ['DATA_ID']
+Таблица other_m_202210 содержит только ['DATA_ID']
+Таблица other_m_202211 содержит только ['DATA_ID']
+Таблица other_m_202212 содержит только ['DATA_ID']
+Таблица other_m_202301 содержит только ['DATA_ID']
+Таблица other_m_202302 содержит только ['DATA_ID']
+Таблица other_m_202303 содержит только ['DATA_ID']
+Таблица other_m_202304 содержит только ['DATA_ID']
+Таблица other_m_202305 содержит только ['DATA_ID']
+Таблица other_m_202306 содержит только ['DATA_ID']
+Таблица other_m_202307 содержит только ['DATA_ID']
+Таблица other_m_tmp содержит только ['DATA_ID']
+Таблица other_m_tmp_1 содержит только ['DATA_ID']
+Таблица power_factor_202112 содержит только ['DATA_ID']
+Таблица power_factor_202201 содержит только ['DATA_ID']
+Таблица power_factor_202202 содержит только ['DATA_ID']
+Таблица power_factor_202203 содержит только ['DATA_ID']
+Таблица power_factor_202204 содержит только ['DATA_ID']
+Таблица power_factor_202205 содержит только ['DATA_ID']
+Таблица power_factor_202206 содержит только ['DATA_ID']
+Таблица power_factor_202207 содержит только ['DATA_ID']
+Таблица power_factor_202208 содержит только ['DATA_ID']
+Таблица power_factor_202209 содержит только ['DATA_ID']
+Таблица power_factor_202210 содержит только ['DATA_ID']
+Таблица power_factor_202211 содержит только ['DATA_ID']
+Таблица power_factor_202212 содержит только ['DATA_ID']
+Таблица power_factor_202301 содержит только ['DATA_ID']
+Таблица power_factor_202302 содержит только ['DATA_ID']
+Таблица power_factor_202303 содержит только ['DATA_ID']
+Таблица power_factor_202304 содержит только ['DATA_ID']
+Таблица power_factor_202305 содержит только ['DATA_ID']
+Таблица power_factor_202306 содержит только ['DATA_ID']
+Таблица power_factor_202307 содержит только ['DATA_ID']
+Таблица power_factor_202308 содержит только ['DATA_ID']
+Таблица power_factor_202309 содержит только ['DATA_ID']
+Таблица power_factor_202310 содержит только ['DATA_ID']
+Таблица power_factor_202311 содержит только ['DATA_ID']
+Таблица power_factor_202312 содержит только ['DATA_ID']
+Таблица power_factor_202401 содержит только ['DATA_ID']
+Таблица power_factor_202402 содержит только ['DATA_ID']
+Таблица power_factor_202403 содержит только ['DATA_ID']
+Таблица power_factor_202404 содержит только ['DATA_ID']
+Таблица power_factor_202405 содержит только ['DATA_ID']
+Таблица power_factor_202406 содержит только ['DATA_ID']
+Таблица power_factor_202407 содержит только ['DATA_ID']
+Таблица power_factor_202408 содержит только ['DATA_ID']
+Таблица power_factor_202409 содержит только ['DATA_ID']
+Таблица power_factor_202410 содержит только ['DATA_ID']
+Таблица power_factor_202411 содержит только ['DATA_ID']
+Таблица power_factor_202412 содержит только ['DATA_ID']
+Таблица power_factor_202501 содержит только ['DATA_ID']
+Таблица power_factor_202502 содержит только ['DATA_ID']
+Таблица power_factor_202503 содержит только ['DATA_ID']
+Таблица power_factor_202504 содержит только ['DATA_ID']
+Таблица power_factor_202505 содержит только ['DATA_ID']
+Таблица power_factor_202506 содержит только ['DATA_ID']
+Таблица power_factor_tmp_1 содержит только ['DATA_ID']
+Таблица prepay_d_1other_d содержит только ['DATA_ID']
+Таблица prepay_m_1other_m содержит только ['DATA_ID']
+Таблица pvc_icurrent содержит только ['DATA_ID']
+Таблица pvc_iother_load содержит только ['DATA_ID']
+Таблица pvc_i_1current содержит только ['DATA_ID']
+Таблица pvc_i_1other_load содержит только ['DATA_ID']
+Таблица pvc_otherother_load содержит только ['DATA_ID']
+Таблица pvc_otherui_angle содержит только ['data_id']
+Таблица pvc_other_1other_load содержит только ['DATA_ID']
+Таблица pvc_other_1ui_angle содержит только ['data_id']
+Таблица pvc_pforward_power содержит только ['DATA_ID']
+Таблица pvc_pother_load содержит только ['DATA_ID']
+Таблица pvc_preverse_power содержит только ['DATA_ID']
+Таблица pvc_p_1forward_power содержит только ['DATA_ID']
+Таблица pvc_p_1other_load содержит только ['DATA_ID']
+Таблица pvc_p_1reverse_power содержит только ['DATA_ID']
+Таблица pvc_p_factorother_load содержит только ['DATA_ID']
+Таблица pvc_p_factorpower_factor содержит только ['DATA_ID']
+Таблица pvc_p_factor_1other_load содержит только ['DATA_ID']
+Таблица pvc_p_factor_1power_factor содержит только ['DATA_ID']
+Таблица pvc_uother_load содержит только ['DATA_ID']
+Таблица pvc_uvoltage содержит только ['DATA_ID']
+Таблица pvc_u_1other_load содержит только ['DATA_ID']
+Таблица pvc_u_1voltage содержит только ['DATA_ID']
+Таблица q_energy_c_202112 содержит только ['DATA_ID']
+Таблица q_energy_c_202201 содержит только ['DATA_ID']
+Таблица q_energy_c_202202 содержит только ['DATA_ID']
+Таблица q_energy_c_202203 содержит только ['DATA_ID']
+Таблица q_energy_c_202204 содержит только ['DATA_ID']
+Таблица q_energy_c_202205 содержит только ['DATA_ID']
+Таблица q_energy_c_202206 содержит только ['DATA_ID']
+Таблица q_energy_c_202207 содержит только ['DATA_ID']
+Таблица q_energy_c_202208 содержит только ['DATA_ID']
+Таблица q_energy_c_202209 содержит только ['DATA_ID']
+Таблица q_energy_c_202210 содержит только ['DATA_ID']
+Таблица q_energy_c_202211 содержит только ['DATA_ID']
+Таблица q_energy_c_202212 содержит только ['DATA_ID']
+Таблица q_energy_c_202301 содержит только ['DATA_ID']
+Таблица q_energy_c_202302 содержит только ['DATA_ID']
+Таблица q_energy_c_202303 содержит только ['DATA_ID']
+Таблица q_energy_c_202304 содержит только ['DATA_ID']
+Таблица q_energy_c_202305 содержит только ['DATA_ID']
+Таблица q_energy_c_202306 содержит только ['DATA_ID']
+Таблица q_energy_c_202307 содержит только ['DATA_ID']
+Таблица q_energy_c_202308 содержит только ['DATA_ID']
+Таблица q_energy_c_202309 содержит только ['DATA_ID']
+Таблица q_energy_c_202310 содержит только ['DATA_ID']
+Таблица q_energy_c_202311 содержит только ['DATA_ID']
+Таблица q_energy_c_202312 содержит только ['DATA_ID']
+Таблица q_energy_c_202401 содержит только ['DATA_ID']
+Таблица q_energy_c_202402 содержит только ['DATA_ID']
+Таблица q_energy_c_202403 содержит только ['DATA_ID']
+Таблица q_energy_c_202404 содержит только ['DATA_ID']
+Таблица q_energy_c_202405 содержит только ['DATA_ID']
+Таблица q_energy_c_202406 содержит только ['DATA_ID']
+Таблица q_energy_c_202407 содержит только ['DATA_ID']
+Таблица q_energy_c_202408 содержит только ['DATA_ID']
+Таблица q_energy_c_202409 содержит только ['DATA_ID']
+Таблица q_energy_c_202410 содержит только ['DATA_ID']
+Таблица q_energy_c_202411 содержит только ['DATA_ID']
+Таблица q_energy_c_202412 содержит только ['DATA_ID']
+Таблица q_energy_c_202501 содержит только ['DATA_ID']
+Таблица q_energy_c_202502 содержит только ['DATA_ID']
+Таблица q_energy_c_202503 содержит только ['DATA_ID']
+Таблица q_energy_c_202504 содержит только ['DATA_ID']
+Таблица q_energy_c_202505 содержит только ['DATA_ID']
+Таблица q_energy_c_202506 содержит только ['DATA_ID']
+Таблица q_energy_c_tmp_1 содержит только ['DATA_ID']
+Таблица q_energy_d_202101 содержит только ['DATA_ID']
+Таблица q_energy_d_202102 содержит только ['DATA_ID']
+Таблица q_energy_d_202103 содержит только ['DATA_ID']
+Таблица q_energy_d_202104 содержит только ['DATA_ID']
+Таблица q_energy_d_202105 содержит только ['DATA_ID']
+Таблица q_energy_d_202106 содержит только ['DATA_ID']
+Таблица q_energy_d_202107 содержит только ['DATA_ID']
+Таблица q_energy_d_202108 содержит только ['DATA_ID']
+Таблица q_energy_d_202109 содержит только ['DATA_ID']
+Таблица q_energy_d_202110 содержит только ['DATA_ID']
+Таблица q_energy_d_202111 содержит только ['DATA_ID']
+Таблица q_energy_d_202112 содержит только ['DATA_ID']
+Таблица q_energy_d_202201 содержит только ['DATA_ID']
+Таблица q_energy_d_202202 содержит только ['DATA_ID']
+Таблица q_energy_d_202203 содержит только ['DATA_ID']
+Таблица q_energy_d_202204 содержит только ['DATA_ID']
+Таблица q_energy_d_202205 содержит только ['DATA_ID']
+Таблица q_energy_d_202206 содержит только ['DATA_ID']
+Таблица q_energy_d_202207 содержит только ['DATA_ID']
+Таблица q_energy_d_202208 содержит только ['DATA_ID']
+Таблица q_energy_d_202209 содержит только ['DATA_ID']
+Таблица q_energy_d_202210 содержит только ['DATA_ID']
+Таблица q_energy_d_202211 содержит только ['DATA_ID']
+Таблица q_energy_d_202212 содержит только ['DATA_ID']
+Таблица q_energy_d_202301 содержит только ['DATA_ID']
+Таблица q_energy_d_202302 содержит только ['DATA_ID']
+Таблица q_energy_d_202303 содержит только ['DATA_ID']
+Таблица q_energy_d_202304 содержит только ['DATA_ID']
+Таблица q_energy_d_202305 содержит только ['DATA_ID']
+Таблица q_energy_d_202306 содержит только ['DATA_ID']
+Таблица q_energy_d_202307 содержит только ['DATA_ID']
+Таблица q_energy_d_202308 содержит только ['DATA_ID']
+Таблица q_energy_d_202309 содержит только ['DATA_ID']
+Таблица q_energy_d_202310 содержит только ['DATA_ID']
+Таблица q_energy_d_202311 содержит только ['DATA_ID']
+Таблица q_energy_d_202312 содержит только ['DATA_ID']
+Таблица q_energy_d_202401 содержит только ['DATA_ID']
+Таблица q_energy_d_202402 содержит только ['DATA_ID']
+Таблица q_energy_d_202403 содержит только ['DATA_ID']
+Таблица q_energy_d_202404 содержит только ['DATA_ID']
+Таблица q_energy_d_202405 содержит только ['DATA_ID']
+Таблица q_energy_d_202406 содержит только ['DATA_ID']
+Таблица q_energy_d_202407 содержит только ['DATA_ID']
+Таблица q_energy_d_tmp содержит только ['DATA_ID']
+Таблица q_energy_d_tmp_1 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202112 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202201 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202202 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202203 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202204 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202205 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202206 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202207 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202208 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202209 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202210 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202211 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202212 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202301 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202302 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202303 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202304 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202305 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202306 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202307 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202308 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202309 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202310 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202311 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202312 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202401 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202402 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202403 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202404 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202405 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202406 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202407 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202408 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202409 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202410 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202411 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202412 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202501 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202502 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202503 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202504 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202505 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_202506 содержит только ['DATA_ID']
+Таблица q_energy_ext_c_tmp_1 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202101 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202102 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202103 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202104 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202105 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202106 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202107 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202108 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202109 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202110 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202111 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202112 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202201 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202202 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202203 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202204 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202205 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202206 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202207 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202208 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202209 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202210 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202211 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202212 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202301 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202302 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202303 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202304 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202305 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202306 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202307 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202308 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202309 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202310 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202311 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202312 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202401 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202402 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202403 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202404 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202405 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202406 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_202407 содержит только ['DATA_ID']
+Таблица q_energy_ext_d_tmp содержит только ['DATA_ID']
+Таблица q_energy_ext_d_tmp_1 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202001 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202002 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202003 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202004 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202005 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202006 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202007 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202008 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202009 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202010 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202011 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202012 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202101 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202102 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202103 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202104 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202105 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202106 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202107 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202108 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202109 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202110 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202111 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202112 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202201 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202202 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202203 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202204 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202205 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202206 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202207 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202208 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202209 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202210 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202211 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202212 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202301 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202302 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202303 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202304 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202305 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202306 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_202307 содержит только ['DATA_ID']
+Таблица q_energy_ext_m_tmp содержит только ['DATA_ID']
+Таблица q_energy_ext_m_tmp_1 содержит только ['DATA_ID']
+Таблица q_energy_m_202001 содержит только ['DATA_ID']
+Таблица q_energy_m_202002 содержит только ['DATA_ID']
+Таблица q_energy_m_202003 содержит только ['DATA_ID']
+Таблица q_energy_m_202004 содержит только ['DATA_ID']
+Таблица q_energy_m_202005 содержит только ['DATA_ID']
+Таблица q_energy_m_202006 содержит только ['DATA_ID']
+Таблица q_energy_m_202007 содержит только ['DATA_ID']
+Таблица q_energy_m_202008 содержит только ['DATA_ID']
+Таблица q_energy_m_202009 содержит только ['DATA_ID']
+Таблица q_energy_m_202010 содержит только ['DATA_ID']
+Таблица q_energy_m_202011 содержит только ['DATA_ID']
+Таблица q_energy_m_202012 содержит только ['DATA_ID']
+Таблица q_energy_m_202101 содержит только ['DATA_ID']
+Таблица q_energy_m_202102 содержит только ['DATA_ID']
+Таблица q_energy_m_202103 содержит только ['DATA_ID']
+Таблица q_energy_m_202104 содержит только ['DATA_ID']
+Таблица q_energy_m_202105 содержит только ['DATA_ID']
+Таблица q_energy_m_202106 содержит только ['DATA_ID']
+Таблица q_energy_m_202107 содержит только ['DATA_ID']
+Таблица q_energy_m_202108 содержит только ['DATA_ID']
+Таблица q_energy_m_202109 содержит только ['DATA_ID']
+Таблица q_energy_m_202110 содержит только ['DATA_ID']
+Таблица q_energy_m_202111 содержит только ['DATA_ID']
+Таблица q_energy_m_202112 содержит только ['DATA_ID']
+Таблица q_energy_m_202201 содержит только ['DATA_ID']
+Таблица q_energy_m_202202 содержит только ['DATA_ID']
+Таблица q_energy_m_202203 содержит только ['DATA_ID']
+Таблица q_energy_m_202204 содержит только ['DATA_ID']
+Таблица q_energy_m_202205 содержит только ['DATA_ID']
+Таблица q_energy_m_202206 содержит только ['DATA_ID']
+Таблица q_energy_m_202207 содержит только ['DATA_ID']
+Таблица q_energy_m_202208 содержит только ['DATA_ID']
+Таблица q_energy_m_202209 содержит только ['DATA_ID']
+Таблица q_energy_m_202210 содержит только ['DATA_ID']
+Таблица q_energy_m_202211 содержит только ['DATA_ID']
+Таблица q_energy_m_202212 содержит только ['DATA_ID']
+Таблица q_energy_m_202301 содержит только ['DATA_ID']
+Таблица q_energy_m_202302 содержит только ['DATA_ID']
+Таблица q_energy_m_202303 содержит только ['DATA_ID']
+Таблица q_energy_m_202304 содержит только ['DATA_ID']
+Таблица q_energy_m_202305 содержит только ['DATA_ID']
+Таблица q_energy_m_202306 содержит только ['DATA_ID']
+Таблица q_energy_m_202307 содержит только ['DATA_ID']
+Таблица q_energy_m_tmp содержит только ['DATA_ID']
+Таблица q_energy_m_tmp_1 содержит только ['DATA_ID']
+Таблица reverse_power_202112 содержит только ['DATA_ID']
+Таблица reverse_power_202201 содержит только ['DATA_ID']
+Таблица reverse_power_202202 содержит только ['DATA_ID']
+Таблица reverse_power_202203 содержит только ['DATA_ID']
+Таблица reverse_power_202204 содержит только ['DATA_ID']
+Таблица reverse_power_202205 содержит только ['DATA_ID']
+Таблица reverse_power_202206 содержит только ['DATA_ID']
+Таблица reverse_power_202207 содержит только ['DATA_ID']
+Таблица reverse_power_202208 содержит только ['DATA_ID']
+Таблица reverse_power_202209 содержит только ['DATA_ID']
+Таблица reverse_power_202210 содержит только ['DATA_ID']
+Таблица reverse_power_202211 содержит только ['DATA_ID']
+Таблица reverse_power_202212 содержит только ['DATA_ID']
+Таблица reverse_power_202301 содержит только ['DATA_ID']
+Таблица reverse_power_202302 содержит только ['DATA_ID']
+Таблица reverse_power_202303 содержит только ['DATA_ID']
+Таблица reverse_power_202304 содержит только ['DATA_ID']
+Таблица reverse_power_202305 содержит только ['DATA_ID']
+Таблица reverse_power_202306 содержит только ['DATA_ID']
+Таблица reverse_power_202307 содержит только ['DATA_ID']
+Таблица reverse_power_202308 содержит только ['DATA_ID']
+Таблица reverse_power_202309 содержит только ['DATA_ID']
+Таблица reverse_power_202310 содержит только ['DATA_ID']
+Таблица reverse_power_202311 содержит только ['DATA_ID']
+Таблица reverse_power_202312 содержит только ['DATA_ID']
+Таблица reverse_power_202401 содержит только ['DATA_ID']
+Таблица reverse_power_202402 содержит только ['DATA_ID']
+Таблица reverse_power_202403 содержит только ['DATA_ID']
+Таблица reverse_power_202404 содержит только ['DATA_ID']
+Таблица reverse_power_202405 содержит только ['DATA_ID']
+Таблица reverse_power_202406 содержит только ['DATA_ID']
+Таблица reverse_power_202407 содержит только ['DATA_ID']
+Таблица reverse_power_202408 содержит только ['DATA_ID']
+Таблица reverse_power_202409 содержит только ['DATA_ID']
+Таблица reverse_power_202410 содержит только ['DATA_ID']
+Таблица reverse_power_202411 содержит только ['DATA_ID']
+Таблица reverse_power_202412 содержит только ['DATA_ID']
+Таблица reverse_power_202501 содержит только ['DATA_ID']
+Таблица reverse_power_202502 содержит только ['DATA_ID']
+Таблица reverse_power_202503 содержит только ['DATA_ID']
+Таблица reverse_power_202504 содержит только ['DATA_ID']
+Таблица reverse_power_202505 содержит только ['DATA_ID']
+Таблица reverse_power_202506 содержит только ['DATA_ID']
+Таблица reverse_power_tmp_1 содержит только ['DATA_ID']
+Таблица r_energy_c_202112 содержит только ['DATA_ID']
+Таблица r_energy_c_202201 содержит только ['DATA_ID']
+Таблица r_energy_c_202202 содержит только ['DATA_ID']
+Таблица r_energy_c_202203 содержит только ['DATA_ID']
+Таблица r_energy_c_202204 содержит только ['DATA_ID']
+Таблица r_energy_c_202205 содержит только ['DATA_ID']
+Таблица r_energy_c_202206 содержит только ['DATA_ID']
+Таблица r_energy_c_202207 содержит только ['DATA_ID']
+Таблица r_energy_c_202208 содержит только ['DATA_ID']
+Таблица r_energy_c_202209 содержит только ['DATA_ID']
+Таблица r_energy_c_202210 содержит только ['DATA_ID']
+Таблица r_energy_c_202211 содержит только ['DATA_ID']
+Таблица r_energy_c_202212 содержит только ['DATA_ID']
+Таблица r_energy_c_202301 содержит только ['DATA_ID']
+Таблица r_energy_c_202302 содержит только ['DATA_ID']
+Таблица r_energy_c_202303 содержит только ['DATA_ID']
+Таблица r_energy_c_202304 содержит только ['DATA_ID']
+Таблица r_energy_c_202305 содержит только ['DATA_ID']
+Таблица r_energy_c_202306 содержит только ['DATA_ID']
+Таблица r_energy_c_202307 содержит только ['DATA_ID']
+Таблица r_energy_c_202308 содержит только ['DATA_ID']
+Таблица r_energy_c_202309 содержит только ['DATA_ID']
+Таблица r_energy_c_202310 содержит только ['DATA_ID']
+Таблица r_energy_c_202311 содержит только ['DATA_ID']
+Таблица r_energy_c_202312 содержит только ['DATA_ID']
+Таблица r_energy_c_202401 содержит только ['DATA_ID']
+Таблица r_energy_c_202402 содержит только ['DATA_ID']
+Таблица r_energy_c_202403 содержит только ['DATA_ID']
+Таблица r_energy_c_202404 содержит только ['DATA_ID']
+Таблица r_energy_c_202405 содержит только ['DATA_ID']
+Таблица r_energy_c_202406 содержит только ['DATA_ID']
+Таблица r_energy_c_202407 содержит только ['DATA_ID']
+Таблица r_energy_c_202408 содержит только ['DATA_ID']
+Таблица r_energy_c_202409 содержит только ['DATA_ID']
+Таблица r_energy_c_202410 содержит только ['DATA_ID']
+Таблица r_energy_c_202411 содержит только ['DATA_ID']
+Таблица r_energy_c_202412 содержит только ['DATA_ID']
+Таблица r_energy_c_202501 содержит только ['DATA_ID']
+Таблица r_energy_c_202502 содержит только ['DATA_ID']
+Таблица r_energy_c_202503 содержит только ['DATA_ID']
+Таблица r_energy_c_202504 содержит только ['DATA_ID']
+Таблица r_energy_c_202505 содержит только ['DATA_ID']
+Таблица r_energy_c_202506 содержит только ['DATA_ID']
+Таблица r_energy_c_tmp_1 содержит только ['DATA_ID']
+Таблица r_energy_d_202101 содержит только ['DATA_ID']
+Таблица r_energy_d_202102 содержит только ['DATA_ID']
+Таблица r_energy_d_202103 содержит только ['DATA_ID']
+Таблица r_energy_d_202104 содержит только ['DATA_ID']
+Таблица r_energy_d_202105 содержит только ['DATA_ID']
+Таблица r_energy_d_202106 содержит только ['DATA_ID']
+Таблица r_energy_d_202107 содержит только ['DATA_ID']
+Таблица r_energy_d_202108 содержит только ['DATA_ID']
+Таблица r_energy_d_202109 содержит только ['DATA_ID']
+Таблица r_energy_d_202110 содержит только ['DATA_ID']
+Таблица r_energy_d_202111 содержит только ['DATA_ID']
+Таблица r_energy_d_202112 содержит только ['DATA_ID']
+Таблица r_energy_d_202201 содержит только ['DATA_ID']
+Таблица r_energy_d_202202 содержит только ['DATA_ID']
+Таблица r_energy_d_202203 содержит только ['DATA_ID']
+Таблица r_energy_d_202204 содержит только ['DATA_ID']
+Таблица r_energy_d_202205 содержит только ['DATA_ID']
+Таблица r_energy_d_202206 содержит только ['DATA_ID']
+Таблица r_energy_d_202207 содержит только ['DATA_ID']
+Таблица r_energy_d_202208 содержит только ['DATA_ID']
+Таблица r_energy_d_202209 содержит только ['DATA_ID']
+Таблица r_energy_d_202210 содержит только ['DATA_ID']
+Таблица r_energy_d_202211 содержит только ['DATA_ID']
+Таблица r_energy_d_202212 содержит только ['DATA_ID']
+Таблица r_energy_d_202301 содержит только ['DATA_ID']
+Таблица r_energy_d_202302 содержит только ['DATA_ID']
+Таблица r_energy_d_202303 содержит только ['DATA_ID']
+Таблица r_energy_d_202304 содержит только ['DATA_ID']
+Таблица r_energy_d_202305 содержит только ['DATA_ID']
+Таблица r_energy_d_202306 содержит только ['DATA_ID']
+Таблица r_energy_d_202307 содержит только ['DATA_ID']
+Таблица r_energy_d_202308 содержит только ['DATA_ID']
+Таблица r_energy_d_202309 содержит только ['DATA_ID']
+Таблица r_energy_d_202310 содержит только ['DATA_ID']
+Таблица r_energy_d_202311 содержит только ['DATA_ID']
+Таблица r_energy_d_202312 содержит только ['DATA_ID']
+Таблица r_energy_d_202401 содержит только ['DATA_ID']
+Таблица r_energy_d_202402 содержит только ['DATA_ID']
+Таблица r_energy_d_202403 содержит только ['DATA_ID']
+Таблица r_energy_d_202404 содержит только ['DATA_ID']
+Таблица r_energy_d_202405 содержит только ['DATA_ID']
+Таблица r_energy_d_202406 содержит только ['DATA_ID']
+Таблица r_energy_d_202407 содержит только ['DATA_ID']
+Таблица r_energy_d_tmp содержит только ['DATA_ID']
+Таблица r_energy_d_tmp_1 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202112 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202201 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202202 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202203 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202204 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202205 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202206 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202207 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202208 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202209 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202210 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202211 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202212 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202301 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202302 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202303 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202304 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202305 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202306 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202307 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202308 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202309 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202310 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202311 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202312 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202401 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202402 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202403 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202404 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202405 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202406 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202407 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202408 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202409 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202410 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202411 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202412 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202501 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202502 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202503 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202504 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202505 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_202506 содержит только ['DATA_ID']
+Таблица r_energy_ext_c_tmp_1 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202101 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202102 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202103 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202104 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202105 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202106 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202107 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202108 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202109 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202110 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202111 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202112 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202201 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202202 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202203 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202204 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202205 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202206 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202207 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202208 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202209 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202210 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202211 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202212 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202301 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202302 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202303 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202304 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202305 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202306 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202307 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202308 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202309 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202310 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202311 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202312 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202401 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202402 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202403 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202404 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202405 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202406 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_202407 содержит только ['DATA_ID']
+Таблица r_energy_ext_d_tmp содержит только ['DATA_ID']
+Таблица r_energy_ext_d_tmp_1 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202001 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202002 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202003 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202004 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202005 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202006 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202007 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202008 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202009 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202010 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202011 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202012 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202101 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202102 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202103 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202104 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202105 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202106 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202107 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202108 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202109 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202110 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202111 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202112 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202201 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202202 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202203 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202204 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202205 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202206 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202207 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202208 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202209 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202210 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202211 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202212 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202301 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202302 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202303 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202304 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202305 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202306 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_202307 содержит только ['DATA_ID']
+Таблица r_energy_ext_m_tmp содержит только ['DATA_ID']
+Таблица r_energy_ext_m_tmp_1 содержит только ['DATA_ID']
+Таблица r_energy_m_202001 содержит только ['DATA_ID']
+Таблица r_energy_m_202002 содержит только ['DATA_ID']
+Таблица r_energy_m_202003 содержит только ['DATA_ID']
+Таблица r_energy_m_202004 содержит только ['DATA_ID']
+Таблица r_energy_m_202005 содержит только ['DATA_ID']
+Таблица r_energy_m_202006 содержит только ['DATA_ID']
+Таблица r_energy_m_202007 содержит только ['DATA_ID']
+Таблица r_energy_m_202008 содержит только ['DATA_ID']
+Таблица r_energy_m_202009 содержит только ['DATA_ID']
+Таблица r_energy_m_202010 содержит только ['DATA_ID']
+Таблица r_energy_m_202011 содержит только ['DATA_ID']
+Таблица r_energy_m_202012 содержит только ['DATA_ID']
+Таблица r_energy_m_202101 содержит только ['DATA_ID']
+Таблица r_energy_m_202102 содержит только ['DATA_ID']
+Таблица r_energy_m_202103 содержит только ['DATA_ID']
+Таблица r_energy_m_202104 содержит только ['DATA_ID']
+Таблица r_energy_m_202105 содержит только ['DATA_ID']
+Таблица r_energy_m_202106 содержит только ['DATA_ID']
+Таблица r_energy_m_202107 содержит только ['DATA_ID']
+Таблица r_energy_m_202108 содержит только ['DATA_ID']
+Таблица r_energy_m_202109 содержит только ['DATA_ID']
+Таблица r_energy_m_202110 содержит только ['DATA_ID']
+Таблица r_energy_m_202111 содержит только ['DATA_ID']
+Таблица r_energy_m_202112 содержит только ['DATA_ID']
+Таблица r_energy_m_202201 содержит только ['DATA_ID']
+Таблица r_energy_m_202202 содержит только ['DATA_ID']
+Таблица r_energy_m_202203 содержит только ['DATA_ID']
+Таблица r_energy_m_202204 содержит только ['DATA_ID']
+Таблица r_energy_m_202205 содержит только ['DATA_ID']
+Таблица r_energy_m_202206 содержит только ['DATA_ID']
+Таблица r_energy_m_202207 содержит только ['DATA_ID']
+Таблица r_energy_m_202208 содержит только ['DATA_ID']
+Таблица r_energy_m_202209 содержит только ['DATA_ID']
+Таблица r_energy_m_202210 содержит только ['DATA_ID']
+Таблица r_energy_m_202211 содержит только ['DATA_ID']
+Таблица r_energy_m_202212 содержит только ['DATA_ID']
+Таблица r_energy_m_202301 содержит только ['DATA_ID']
+Таблица r_energy_m_202302 содержит только ['DATA_ID']
+Таблица r_energy_m_202303 содержит только ['DATA_ID']
+Таблица r_energy_m_202304 содержит только ['DATA_ID']
+Таблица r_energy_m_202305 содержит только ['DATA_ID']
+Таблица r_energy_m_202306 содержит только ['DATA_ID']
+Таблица r_energy_m_202307 содержит только ['DATA_ID']
+Таблица r_energy_m_tmp содержит только ['DATA_ID']
+Таблица r_energy_m_tmp_1 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202001 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202002 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202003 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202004 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202005 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202006 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202007 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202008 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202009 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202010 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202011 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202012 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202101 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202102 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202103 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202104 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202105 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202106 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202107 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202108 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202109 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202110 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202111 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202112 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202201 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202202 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202203 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202204 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202205 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202206 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202207 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202208 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202209 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202210 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202211 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202212 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202301 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202302 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202303 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202304 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202305 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202306 содержит только ['DATA_ID']
+Таблица r_ext_md_m_202307 содержит только ['DATA_ID']
+Таблица r_ext_md_m_tmp содержит только ['DATA_ID']
+Таблица r_ext_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица r_md_m_202001 содержит только ['DATA_ID']
+Таблица r_md_m_202002 содержит только ['DATA_ID']
+Таблица r_md_m_202003 содержит только ['DATA_ID']
+Таблица r_md_m_202004 содержит только ['DATA_ID']
+Таблица r_md_m_202005 содержит только ['DATA_ID']
+Таблица r_md_m_202006 содержит только ['DATA_ID']
+Таблица r_md_m_202007 содержит только ['DATA_ID']
+Таблица r_md_m_202008 содержит только ['DATA_ID']
+Таблица r_md_m_202009 содержит только ['DATA_ID']
+Таблица r_md_m_202010 содержит только ['DATA_ID']
+Таблица r_md_m_202011 содержит только ['DATA_ID']
+Таблица r_md_m_202012 содержит только ['DATA_ID']
+Таблица r_md_m_202101 содержит только ['DATA_ID']
+Таблица r_md_m_202102 содержит только ['DATA_ID']
+Таблица r_md_m_202103 содержит только ['DATA_ID']
+Таблица r_md_m_202104 содержит только ['DATA_ID']
+Таблица r_md_m_202105 содержит только ['DATA_ID']
+Таблица r_md_m_202106 содержит только ['DATA_ID']
+Таблица r_md_m_202107 содержит только ['DATA_ID']
+Таблица r_md_m_202108 содержит только ['DATA_ID']
+Таблица r_md_m_202109 содержит только ['DATA_ID']
+Таблица r_md_m_202110 содержит только ['DATA_ID']
+Таблица r_md_m_202111 содержит только ['DATA_ID']
+Таблица r_md_m_202112 содержит только ['DATA_ID']
+Таблица r_md_m_202201 содержит только ['DATA_ID']
+Таблица r_md_m_202202 содержит только ['DATA_ID']
+Таблица r_md_m_202203 содержит только ['DATA_ID']
+Таблица r_md_m_202204 содержит только ['DATA_ID']
+Таблица r_md_m_202205 содержит только ['DATA_ID']
+Таблица r_md_m_202206 содержит только ['DATA_ID']
+Таблица r_md_m_202207 содержит только ['DATA_ID']
+Таблица r_md_m_202208 содержит только ['DATA_ID']
+Таблица r_md_m_202209 содержит только ['DATA_ID']
+Таблица r_md_m_202210 содержит только ['DATA_ID']
+Таблица r_md_m_202211 содержит только ['DATA_ID']
+Таблица r_md_m_202212 содержит только ['DATA_ID']
+Таблица r_md_m_202301 содержит только ['DATA_ID']
+Таблица r_md_m_202302 содержит только ['DATA_ID']
+Таблица r_md_m_202303 содержит только ['DATA_ID']
+Таблица r_md_m_202304 содержит только ['DATA_ID']
+Таблица r_md_m_202305 содержит только ['DATA_ID']
+Таблица r_md_m_202306 содержит только ['DATA_ID']
+Таблица r_md_m_202307 содержит только ['DATA_ID']
+Таблица r_md_m_tmp содержит только ['DATA_ID']
+Таблица r_md_m_tmp_1 содержит только ['DATA_ID']
+Таблица signal_202112 содержит только ['DATA_ID']
+Таблица signal_202201 содержит только ['DATA_ID']
+Таблица signal_202202 содержит только ['DATA_ID']
+Таблица signal_202203 содержит только ['DATA_ID']
+Таблица signal_202204 содержит только ['DATA_ID']
+Таблица signal_202205 содержит только ['DATA_ID']
+Таблица signal_202206 содержит только ['DATA_ID']
+Таблица signal_202207 содержит только ['DATA_ID']
+Таблица signal_202208 содержит только ['DATA_ID']
+Таблица signal_202209 содержит только ['DATA_ID']
+Таблица signal_202210 содержит только ['DATA_ID']
+Таблица signal_202211 содержит только ['DATA_ID']
+Таблица signal_202212 содержит только ['DATA_ID']
+Таблица signal_202301 содержит только ['DATA_ID']
+Таблица signal_202302 содержит только ['DATA_ID']
+Таблица signal_202303 содержит только ['DATA_ID']
+Таблица signal_202304 содержит только ['DATA_ID']
+Таблица signal_202305 содержит только ['DATA_ID']
+Таблица signal_202306 содержит только ['DATA_ID']
+Таблица signal_202307 содержит только ['DATA_ID']
+Таблица signal_202308 содержит только ['DATA_ID']
+Таблица signal_202309 содержит только ['DATA_ID']
+Таблица signal_202310 содержит только ['DATA_ID']
+Таблица signal_202311 содержит только ['DATA_ID']
+Таблица signal_202312 содержит только ['DATA_ID']
+Таблица signal_202401 содержит только ['DATA_ID']
+Таблица signal_202402 содержит только ['DATA_ID']
+Таблица signal_202403 содержит только ['DATA_ID']
+Таблица signal_202404 содержит только ['DATA_ID']
+Таблица signal_202405 содержит только ['DATA_ID']
+Таблица signal_202406 содержит только ['DATA_ID']
+Таблица signal_202407 содержит только ['DATA_ID']
+Таблица signal_202408 содержит только ['DATA_ID']
+Таблица signal_202409 содержит только ['DATA_ID']
+Таблица signal_202410 содержит только ['DATA_ID']
+Таблица signal_202411 содержит только ['DATA_ID']
+Таблица signal_202412 содержит только ['DATA_ID']
+Таблица signal_202501 содержит только ['DATA_ID']
+Таблица signal_202502 содержит только ['DATA_ID']
+Таблица signal_202503 содержит только ['DATA_ID']
+Таблица signal_202504 содержит только ['DATA_ID']
+Таблица signal_202505 содержит только ['DATA_ID']
+Таблица signal_202506 содержит только ['DATA_ID']
+Таблица signal_strengthsignal содержит только ['DATA_ID']
+Таблица signal_strength_1signal содержит только ['DATA_ID']
+Таблица signal_tmp_1 содержит только ['DATA_ID']
+Таблица transformer_c_202112 содержит только ['DATA_ID']
+Таблица transformer_c_202201 содержит только ['DATA_ID']
+Таблица transformer_c_202202 содержит только ['DATA_ID']
+Таблица transformer_c_202203 содержит только ['DATA_ID']
+Таблица transformer_c_202204 содержит только ['DATA_ID']
+Таблица transformer_c_202205 содержит только ['DATA_ID']
+Таблица transformer_c_202206 содержит только ['DATA_ID']
+Таблица transformer_c_202207 содержит только ['DATA_ID']
+Таблица transformer_c_202208 содержит только ['DATA_ID']
+Таблица transformer_c_202209 содержит только ['DATA_ID']
+Таблица transformer_c_202210 содержит только ['DATA_ID']
+Таблица transformer_c_202211 содержит только ['DATA_ID']
+Таблица transformer_c_202212 содержит только ['DATA_ID']
+Таблица transformer_c_202301 содержит только ['DATA_ID']
+Таблица transformer_c_202302 содержит только ['DATA_ID']
+Таблица transformer_c_202303 содержит только ['DATA_ID']
+Таблица transformer_c_202304 содержит только ['DATA_ID']
+Таблица transformer_c_202305 содержит только ['DATA_ID']
+Таблица transformer_c_202306 содержит только ['DATA_ID']
+Таблица transformer_c_202307 содержит только ['DATA_ID']
+Таблица transformer_c_202308 содержит только ['DATA_ID']
+Таблица transformer_c_202309 содержит только ['DATA_ID']
+Таблица transformer_c_202310 содержит только ['DATA_ID']
+Таблица transformer_c_202311 содержит только ['DATA_ID']
+Таблица transformer_c_202312 содержит только ['DATA_ID']
+Таблица transformer_c_202401 содержит только ['DATA_ID']
+Таблица transformer_c_202402 содержит только ['DATA_ID']
+Таблица transformer_c_202403 содержит только ['DATA_ID']
+Таблица transformer_c_202404 содержит только ['DATA_ID']
+Таблица transformer_c_202405 содержит только ['DATA_ID']
+Таблица transformer_c_202406 содержит только ['DATA_ID']
+Таблица transformer_c_202407 содержит только ['DATA_ID']
+Таблица transformer_c_202408 содержит только ['DATA_ID']
+Таблица transformer_c_202409 содержит только ['DATA_ID']
+Таблица transformer_c_202410 содержит только ['DATA_ID']
+Таблица transformer_c_202411 содержит только ['DATA_ID']
+Таблица transformer_c_202412 содержит только ['DATA_ID']
+Таблица transformer_c_202501 содержит только ['DATA_ID']
+Таблица transformer_c_202502 содержит только ['DATA_ID']
+Таблица transformer_c_202503 содержит только ['DATA_ID']
+Таблица transformer_c_202504 содержит только ['DATA_ID']
+Таблица transformer_c_202505 содержит только ['DATA_ID']
+Таблица transformer_c_202506 содержит только ['DATA_ID']
+Таблица transformer_c_tmp_1 содержит только ['DATA_ID']
+Таблица transformer_d_202101 содержит только ['DATA_ID']
+Таблица transformer_d_202102 содержит только ['DATA_ID']
+Таблица transformer_d_202103 содержит только ['DATA_ID']
+Таблица transformer_d_202104 содержит только ['DATA_ID']
+Таблица transformer_d_202105 содержит только ['DATA_ID']
+Таблица transformer_d_202106 содержит только ['DATA_ID']
+Таблица transformer_d_202107 содержит только ['DATA_ID']
+Таблица transformer_d_202108 содержит только ['DATA_ID']
+Таблица transformer_d_202109 содержит только ['DATA_ID']
+Таблица transformer_d_202110 содержит только ['DATA_ID']
+Таблица transformer_d_202111 содержит только ['DATA_ID']
+Таблица transformer_d_202112 содержит только ['DATA_ID']
+Таблица transformer_d_202201 содержит только ['DATA_ID']
+Таблица transformer_d_202202 содержит только ['DATA_ID']
+Таблица transformer_d_202203 содержит только ['DATA_ID']
+Таблица transformer_d_202204 содержит только ['DATA_ID']
+Таблица transformer_d_202205 содержит только ['DATA_ID']
+Таблица transformer_d_202206 содержит только ['DATA_ID']
+Таблица transformer_d_202207 содержит только ['DATA_ID']
+Таблица transformer_d_202208 содержит только ['DATA_ID']
+Таблица transformer_d_202209 содержит только ['DATA_ID']
+Таблица transformer_d_202210 содержит только ['DATA_ID']
+Таблица transformer_d_202211 содержит только ['DATA_ID']
+Таблица transformer_d_202212 содержит только ['DATA_ID']
+Таблица transformer_d_202301 содержит только ['DATA_ID']
+Таблица transformer_d_202302 содержит только ['DATA_ID']
+Таблица transformer_d_202303 содержит только ['DATA_ID']
+Таблица transformer_d_202304 содержит только ['DATA_ID']
+Таблица transformer_d_202305 содержит только ['DATA_ID']
+Таблица transformer_d_202306 содержит только ['DATA_ID']
+Таблица transformer_d_202307 содержит только ['DATA_ID']
+Таблица transformer_d_202308 содержит только ['DATA_ID']
+Таблица transformer_d_202309 содержит только ['DATA_ID']
+Таблица transformer_d_202310 содержит только ['DATA_ID']
+Таблица transformer_d_202311 содержит только ['DATA_ID']
+Таблица transformer_d_202312 содержит только ['DATA_ID']
+Таблица transformer_d_202401 содержит только ['DATA_ID']
+Таблица transformer_d_202402 содержит только ['DATA_ID']
+Таблица transformer_d_202403 содержит только ['DATA_ID']
+Таблица transformer_d_202404 содержит только ['DATA_ID']
+Таблица transformer_d_202405 содержит только ['DATA_ID']
+Таблица transformer_d_202406 содержит только ['DATA_ID']
+Таблица transformer_d_202407 содержит только ['DATA_ID']
+Таблица transformer_d_tmp содержит только ['DATA_ID']
+Таблица transformer_d_tmp_1 содержит только ['DATA_ID']
+Таблица transformer_m_202001 содержит только ['DATA_ID']
+Таблица transformer_m_202002 содержит только ['DATA_ID']
+Таблица transformer_m_202003 содержит только ['DATA_ID']
+Таблица transformer_m_202004 содержит только ['DATA_ID']
+Таблица transformer_m_202005 содержит только ['DATA_ID']
+Таблица transformer_m_202006 содержит только ['DATA_ID']
+Таблица transformer_m_202007 содержит только ['DATA_ID']
+Таблица transformer_m_202008 содержит только ['DATA_ID']
+Таблица transformer_m_202009 содержит только ['DATA_ID']
+Таблица transformer_m_202010 содержит только ['DATA_ID']
+Таблица transformer_m_202011 содержит только ['DATA_ID']
+Таблица transformer_m_202012 содержит только ['DATA_ID']
+Таблица transformer_m_202101 содержит только ['DATA_ID']
+Таблица transformer_m_202102 содержит только ['DATA_ID']
+Таблица transformer_m_202103 содержит только ['DATA_ID']
+Таблица transformer_m_202104 содержит только ['DATA_ID']
+Таблица transformer_m_202105 содержит только ['DATA_ID']
+Таблица transformer_m_202106 содержит только ['DATA_ID']
+Таблица transformer_m_202107 содержит только ['DATA_ID']
+Таблица transformer_m_202108 содержит только ['DATA_ID']
+Таблица transformer_m_202109 содержит только ['DATA_ID']
+Таблица transformer_m_202110 содержит только ['DATA_ID']
+Таблица transformer_m_202111 содержит только ['DATA_ID']
+Таблица transformer_m_202112 содержит только ['DATA_ID']
+Таблица transformer_m_202201 содержит только ['DATA_ID']
+Таблица transformer_m_202202 содержит только ['DATA_ID']
+Таблица transformer_m_202203 содержит только ['DATA_ID']
+Таблица transformer_m_202204 содержит только ['DATA_ID']
+Таблица transformer_m_202205 содержит только ['DATA_ID']
+Таблица transformer_m_202206 содержит только ['DATA_ID']
+Таблица transformer_m_202207 содержит только ['DATA_ID']
+Таблица transformer_m_202208 содержит только ['DATA_ID']
+Таблица transformer_m_202209 содержит только ['DATA_ID']
+Таблица transformer_m_202210 содержит только ['DATA_ID']
+Таблица transformer_m_202211 содержит только ['DATA_ID']
+Таблица transformer_m_202212 содержит только ['DATA_ID']
+Таблица transformer_m_202301 содержит только ['DATA_ID']
+Таблица transformer_m_202302 содержит только ['DATA_ID']
+Таблица transformer_m_202303 содержит только ['DATA_ID']
+Таблица transformer_m_202304 содержит только ['DATA_ID']
+Таблица transformer_m_202305 содержит только ['DATA_ID']
+Таблица transformer_m_202306 содержит только ['DATA_ID']
+Таблица transformer_m_202307 содержит только ['DATA_ID']
+Таблица transformer_m_tmp содержит только ['DATA_ID']
+Таблица transformer_m_tmp_1 содержит только ['DATA_ID']
+Таблица vending_d_202101 содержит только ['DATA_ID']
+Таблица vending_d_202102 содержит только ['DATA_ID']
+Таблица vending_d_202103 содержит только ['DATA_ID']
+Таблица vending_d_202104 содержит только ['DATA_ID']
+Таблица vending_d_202105 содержит только ['DATA_ID']
+Таблица vending_d_202106 содержит только ['DATA_ID']
+Таблица vending_d_202107 содержит только ['DATA_ID']
+Таблица vending_d_202108 содержит только ['DATA_ID']
+Таблица vending_d_202109 содержит только ['DATA_ID']
+Таблица vending_d_202110 содержит только ['DATA_ID']
+Таблица vending_d_202111 содержит только ['DATA_ID']
+Таблица vending_d_202112 содержит только ['DATA_ID']
+Таблица vending_d_202201 содержит только ['DATA_ID']
+Таблица vending_d_202202 содержит только ['DATA_ID']
+Таблица vending_d_202203 содержит только ['DATA_ID']
+Таблица vending_d_202204 содержит только ['DATA_ID']
+Таблица vending_d_202205 содержит только ['DATA_ID']
+Таблица vending_d_202206 содержит только ['DATA_ID']
+Таблица vending_d_202207 содержит только ['DATA_ID']
+Таблица vending_d_202208 содержит только ['DATA_ID']
+Таблица vending_d_202209 содержит только ['DATA_ID']
+Таблица vending_d_202210 содержит только ['DATA_ID']
+Таблица vending_d_202211 содержит только ['DATA_ID']
+Таблица vending_d_202212 содержит только ['DATA_ID']
+Таблица vending_d_202301 содержит только ['DATA_ID']
+Таблица vending_d_202302 содержит только ['DATA_ID']
+Таблица vending_d_202303 содержит только ['DATA_ID']
+Таблица vending_d_202304 содержит только ['DATA_ID']
+Таблица vending_d_202305 содержит только ['DATA_ID']
+Таблица vending_d_202306 содержит только ['DATA_ID']
+Таблица vending_d_202307 содержит только ['DATA_ID']
+Таблица vending_d_202308 содержит только ['DATA_ID']
+Таблица vending_d_202309 содержит только ['DATA_ID']
+Таблица vending_d_202310 содержит только ['DATA_ID']
+Таблица vending_d_202311 содержит только ['DATA_ID']
+Таблица vending_d_202312 содержит только ['DATA_ID']
+Таблица vending_d_202401 содержит только ['DATA_ID']
+Таблица vending_d_202402 содержит только ['DATA_ID']
+Таблица vending_d_202403 содержит только ['DATA_ID']
+Таблица vending_d_202404 содержит только ['DATA_ID']
+Таблица vending_d_202405 содержит только ['DATA_ID']
+Таблица vending_d_202406 содержит только ['DATA_ID']
+Таблица vending_d_202407 содержит только ['DATA_ID']
+Таблица vending_d_tmp содержит только ['DATA_ID']
+Таблица vending_d_tmp_1 содержит только ['DATA_ID']
+Таблица view_billingdata_hesco содержит оба поля
+Таблица view_dataquery_angle содержит только ['METER_ID']
+Таблица view_dataquery_bill_ideco содержит только ['METER_ID']
+Таблица view_dataquery_byqtsts содержит оба поля
+Таблица view_dataquery_dl содержит оба поля
+Таблица view_dataquery_dnsz содержит только ['METER_ID']
+Таблица view_dataquery_dnz_c содержит только ['METER_ID']
+Таблица view_dataquery_ec_eskom содержит оба поля
+Таблица view_dataquery_ed_eskom содержит оба поля
+Таблица view_dataquery_em_eskom содержит оба поля
+Таблица view_dataquery_fhtx содержит оба поля
+Таблица view_dataquery_fxdl_c содержит оба поля
+Таблица view_dataquery_fxdl_d содержит оба поля
+Таблица view_dataquery_fxdl_m содержит оба поля
+Таблица view_dataquery_fxdnz_d содержит только ['METER_ID']
+Таблица view_dataquery_fxdnz_m содержит только ['METER_ID']
+Таблица view_dataquery_fxxl содержит только ['METER_ID']
+Таблица view_dataquery_fxxl_d содержит только ['METER_ID']
+Таблица view_dataquery_jzqll_d содержит только ['METER_ID']
+Таблица view_dataquery_jzqll_m содержит только ['METER_ID']
+Таблица view_dataquery_other_c содержит оба поля
+Таблица view_dataquery_other_d содержит оба поля
+Таблица view_dataquery_other_m содержит оба поля
+Таблица view_dataquery_other_pf_m содержит оба поля
+Таблица view_dataquery_other_prepay_m содержит оба поля
+Таблица view_dataquery_registration содержит только ['METER_ID']
+Таблица view_dataquery_sxxwg_c содержит только ['METER_ID']
+Таблица view_dataquery_sxxwg_d содержит только ['METER_ID']
+Таблица view_dataquery_sxxwg_m содержит только ['METER_ID']
+Таблица view_dataquery_water_gas_d содержит оба поля
+Таблица view_dataquery_water_gas_m содержит оба поля
+Таблица view_dataquery_wlglxx содержит только ['METER_ID']
+Таблица view_dataquery_xb_c содержит только ['METER_ID']
+Таблица view_dataquery_xb_hl_c содержит только ['METER_ID']
+Таблица view_dataquery_xb_hl_v содержит только ['METER_ID']
+Таблица view_dataquery_xb_v содержит только ['METER_ID']
+Таблица view_dataquery_xl содержит только ['METER_ID']
+Таблица view_dataquery_ygzdn_c содержит оба поля
+Таблица view_dataquery_ygzdn_d содержит оба поля
+Таблица view_dataquery_ygzdn_m содержит оба поля
+Таблица view_dataquery_zdl_c содержит оба поля
+Таблица view_dataquery_zdl_d содержит оба поля
+Таблица view_dataquery_zdl_m содержит оба поля
+Таблица view_dataquery_zxdl_c содержит оба поля
+Таблица view_dataquery_zxdl_d содержит оба поля
+Таблица view_dataquery_zxdl_m содержит оба поля
+Таблица view_dataquery_zxdnz_c содержит только ['METER_ID']
+Таблица view_dataquery_zxdnz_d содержит только ['METER_ID']
+Таблица view_dataquery_zxdnz_m содержит только ['METER_ID']
+Таблица view_dataquery_zxxl содержит только ['METER_ID']
+Таблица view_dataquery_zxxl_c содержит только ['METER_ID']
+Таблица view_dataquery_zxxl_d содержит только ['METER_ID']
+Таблица view_dcu_find_meters содержит только ['METER_ID']
+Таблица view_hes_m_meter содержит только ['meter_id']
+Таблица view_raw_data_c содержит только ['DATA_ID']
+Таблица view_raw_data_d содержит только ['DATA_ID']
+Таблица voltage_202112 содержит только ['DATA_ID']
+Таблица voltage_202201 содержит только ['DATA_ID']
+Таблица voltage_202202 содержит только ['DATA_ID']
+Таблица voltage_202203 содержит только ['DATA_ID']
+Таблица voltage_202204 содержит только ['DATA_ID']
+Таблица voltage_202205 содержит только ['DATA_ID']
+Таблица voltage_202206 содержит только ['DATA_ID']
+Таблица voltage_202207 содержит только ['DATA_ID']
+Таблица voltage_202208 содержит только ['DATA_ID']
+Таблица voltage_202209 содержит только ['DATA_ID']
+Таблица voltage_202210 содержит только ['DATA_ID']
+Таблица voltage_202211 содержит только ['DATA_ID']
+Таблица voltage_202212 содержит только ['DATA_ID']
+Таблица voltage_202301 содержит только ['DATA_ID']
+Таблица voltage_202302 содержит только ['DATA_ID']
+Таблица voltage_202303 содержит только ['DATA_ID']
+Таблица voltage_202304 содержит только ['DATA_ID']
+Таблица voltage_202305 содержит только ['DATA_ID']
+Таблица voltage_202306 содержит только ['DATA_ID']
+Таблица voltage_202307 содержит только ['DATA_ID']
+Таблица voltage_202308 содержит только ['DATA_ID']
+Таблица voltage_202309 содержит только ['DATA_ID']
+Таблица voltage_202310 содержит только ['DATA_ID']
+Таблица voltage_202311 содержит только ['DATA_ID']
+Таблица voltage_202312 содержит только ['DATA_ID']
+Таблица voltage_202401 содержит только ['DATA_ID']
+Таблица voltage_202402 содержит только ['DATA_ID']
+Таблица voltage_202403 содержит только ['DATA_ID']
+Таблица voltage_202404 содержит только ['DATA_ID']
+Таблица voltage_202405 содержит только ['DATA_ID']
+Таблица voltage_202406 содержит только ['DATA_ID']
+Таблица voltage_202407 содержит только ['DATA_ID']
+Таблица voltage_202408 содержит только ['DATA_ID']
+Таблица voltage_202409 содержит только ['DATA_ID']
+Таблица voltage_202410 содержит только ['DATA_ID']
+Таблица voltage_202411 содержит только ['DATA_ID']
+Таблица voltage_202412 содержит только ['DATA_ID']
+Таблица voltage_202501 содержит только ['DATA_ID']
+Таблица voltage_202502 содержит только ['DATA_ID']
+Таблица voltage_202503 содержит только ['DATA_ID']
+Таблица voltage_202504 содержит только ['DATA_ID']
+Таблица voltage_202505 содержит только ['DATA_ID']
+Таблица voltage_202506 содержит только ['DATA_ID']
+Таблица voltage_tmp_1 содержит только ['DATA_ID']
+Таблица v_trans_exception_info содержит только ['DATA_ID']
+Таблица warter_gas_d_tmp_1 содержит только ['DATA_ID']
+Таблица warter_gas_tmp_1 содержит только ['DATA_ID']
+
+=== 5. Структура biz_pub_data_base_mapping (если есть) ===
+=== biz_pub_data_base_mapping ===
+DATA_TABLE varchar(50)
+BASE_TABLE varchar(50)
+
+=== 6. Структура a_equip_enddevice ===
+ED_ID varchar(32)
+ORG_NO varchar(32)
+DEVICE_C varchar(5)
+PURPOSE varchar(5)
+DEVICETYPE_ID varchar(32)
+ASSET_NO varchar(50)
+LOGICAL_ADDRESS varchar(20)
+ED_MODEL varchar(20)
+AC_SAMPLING varchar(5)
+DIMENSION varchar(5)
+ADDRESS varchar(256)
+PROTOCOL varchar(2)
+COMMTYPE varchar(5)
+MANUFACTURER varchar(5)
+INSTALLATIONDATE datetime
+REMOVALDATE datetime
+LONGITUDE decimal(13,10)
+LATITUDE decimal(13,10)
+RUN_STATUS varchar(2)
+REG_TYPE varchar(4)
+SOCKET_SERVER_MODEL varchar(32)
+UNIT_ID varchar(30)
+\nПримеры a_equip_enddevice:
+('18737079', '105001001', '03', None, 'dcu', '67000204', '67000204', None, None, None, None, '16', '02', None, datetime.datetime(2023, 11, 17, 9, 2, 14), None, None, None, '02', None, None, None)
+
+=== 7. Структура hes_meterbox_meter ===
+METERBOX_ID varchar(32)
+METER_POSITION decimal(4,0)
+METER_ID varchar(32)
+HEADERMETER_MARK varchar(2)
+VIRTUAL_HEADERMETER_ID varchar(32)
+\nПримеры hes_meterbox_meter:
+
+=== 8. Попытка найти DATA_ID в a_equip_meter по разным полям ===
+Нет совпадений для 15088794
+Нет совпадений для 15088795
+Нет совпадений для 15088796
+Нет совпадений для 15088797
+Нет совпадений для 15088798
+
+Диагностика завершена.

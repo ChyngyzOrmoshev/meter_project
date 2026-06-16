@@ -17,8 +17,3 @@ readings_col.create_index(
 
 # Дополнительный индекс для быстрой сортировки по времени (используется в агрегациях)
 readings_col.create_index([("timestamp", DESCENDING)])
-
-
-sessions_col = db["sessions"]
-sessions_col.create_index("token", unique=True)
-sessions_col.create_index("expires_at", expireAfterSeconds=0)  # TTL
