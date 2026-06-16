@@ -99,7 +99,7 @@ def run_sanxing_synchronization():
                         if isinstance(dt_object, str):
                             try:
                                 dt_object = datetime.strptime(
-                                    dt_object.split("."), "%Y-%m-%d %H:%M:%S"
+                                    dt_object.split(".")[0], "%Y-%m-%d %H:%M:%S"
                                 )
                             except Exception:
                                 dt_object = datetime.now()
@@ -125,7 +125,7 @@ def run_sanxing_synchronization():
                                         "notes": "Авто-сбор: Sanxing_old",
                                     }
                                 },
-                                find_one + update_one,
+                                upsert=True,
                             )
                         )
 
@@ -147,5 +147,8 @@ if __name__ == "__main__":
     print("-" * 75)
 
     while True:
-        run_sanxing_synchronization()
-        time.sleep(600)  # Обход базы каждые 10 минут
+        try:
+            run_sanxing_synchronization()
+        except Exception as e:
+            print(f"❌ Необработанная ошибка: {e}. Перезапуск через 10 минут...")
+        time.sleep(600)

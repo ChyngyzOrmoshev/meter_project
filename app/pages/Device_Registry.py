@@ -144,44 +144,32 @@ if user_role in ["admin", "operator"]:
                         except Exception as e:
                             st.error(f"❌ Ошибка при сохранении прибора: {e}")
 
-
-
-
         elif add_type == "Группой (Массовый ввод)":
             from pymongo.errors import BulkWriteError
 
             with st.form("bulk_device_form", clear_on_submit=True):
-
                 b_selected_model_str = st.selectbox(
                     "Модель (и ток) для всей группы:",
                     all_models
                 )
-
                 b_status = st.selectbox(
                     "Статус для всей группы:",
                     ["active", "repair", "inactive"]
                 )
-
                 b_sns = st.text_area(
                     "Вставьте список заводских номеров (каждый с новой строки):"
                 )
-
-                submit = st.form_submit_button("Зарегистрировать группу")
+                submit = st.form_submit_button("Зарегистрировать")
 
                 if submit:
-
-                    sn_list = [
-                        s.strip()
-                        for s in b_sns.split("\n")
-                        if s.strip()
-                    ]
-
+                    sn_list = [s.strip() for s in b_sns.split("\n") if s.strip()]
                     if not sn_list:
                         st.error("Список пуст")
                         st.stop()
 
-                    unique_sn_list = list(dict.fromkeys(sn_list))
+                    unique_sn_list = list(dict.fromkeys(sn_list))  # сохраняем порядок
 
+                    # Извлекаем модель и ток
                     b_model_name = b_selected_model_str.split(" [")[0]
                     b_nominal_current = (
                         b_selected_model_str.split(" [")[1].replace("]", "")
@@ -189,7 +177,7 @@ if user_role in ["admin", "operator"]:
                         else ""
                     )
 
-                    # 🔥 ВАЖНО: ПРЕДПРОВЕРКА
+                    # Проверяем существующие в БД
                     existing = set(
                         devices_col.distinct(
                             "serial_number",
@@ -200,9 +188,8 @@ if user_role in ["admin", "operator"]:
                     new_sns = [s for s in unique_sn_list if s not in existing]
                     duplicates = [s for s in unique_sn_list if s in existing]
 
-                    # 👉 вставляем только новые
+                    # Вставляем новые
                     if new_sns:
-
                         docs = [
                             {
                                 "serial_number": sn,
@@ -213,19 +200,21 @@ if user_role in ["admin", "operator"]:
                             }
                             for sn in new_sns
                         ]
+                        try:
+                            result = devices_col.insert_many(docs)
+                            st.success(f"✅ Добавлено новых приборов: {len(result.inserted_ids)}")
+                        except BulkWriteError as e:
+                            st.error(f"Ошибка при вставке: {e.details}")
+                    else:
+                        if not duplicates:
+                            st.info("Нет номеров для добавления.")
+                        # Если нет новых, но есть дубликаты – покажем ниже
 
-                        result = devices_col.insert_many(docs)
-
-                        st.success(f"✅ Добавлено новых приборов: {len(result.inserted_ids)}")
-
-                    # 👉 показываем дубликаты
                     if duplicates:
-
-                        st.warning(f"⚠️ Уже существуют ({len(duplicates)}):")
-
+                        st.warning(f"⚠️ Следующие приборы уже зарегистрированы ({len(duplicates)} шт.):")
                         st.code("\n".join(duplicates))
 
-                    st.rerun()
+                    # Не вызываем st.rerun(), чтобы сообщения остались видимыми
 
 # --- Интерфейс фильтрации данных ---
 f1, f2, f3 = st.columns(3)

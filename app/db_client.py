@@ -7,22 +7,18 @@ models_col = db["meter_models"]
 devices_col = db["devices"]
 readings_col = db["readings"]
 
-devices_col.create_index(
-    [("serial_number", ASCENDING)],
-    unique=True
+# Уникальный индекс на серийный номер (устройства)
+devices_col.create_index([("serial_number", ASCENDING)], unique=True)
+
+# Уникальный составной индекс (серийник + временная метка) – гарантирует отсутствие дубликатов показаний
+readings_col.create_index(
+    [("serial_number", ASCENDING), ("timestamp", ASCENDING)], unique=True
 )
 
-readings_col.create_index(
-    [
-        ("serial_number", ASCENDING),
-        ("timestamp", ASCENDING)
-    ],
-    unique=True
-)
+# Дополнительный индекс для быстрой сортировки по времени (используется в агрегациях)
+readings_col.create_index([("timestamp", DESCENDING)])
 
-readings_col.create_index(
-    [
-        ("serial_number", ASCENDING),
-        ("timestamp", DESCENDING)
-    ]
-)
+
+sessions_col = db["sessions"]
+sessions_col.create_index("token", unique=True)
+sessions_col.create_index("expires_at", expireAfterSeconds=0)  # TTL

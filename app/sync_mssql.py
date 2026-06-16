@@ -114,7 +114,7 @@ def run_synchronization():
                                         "notes": "Авто-сбор: База cEnergo",
                                     }
                                 },
-                                find_one + update_one,
+                                upsert=True,
                             )
                         )
 
@@ -131,12 +131,13 @@ def run_synchronization():
 
 
 if __name__ == "__main__":
-    print(
-        "🤖 Робот автоматического сбора cEnergo запущен (Фильтр: Активная энергия А+)"
-    )
-    print("Синхронизация происходит в фоне каждые 10 минут. Окно нельзя закрывать.")
+    print("🤖 Робот автоматического сбора cEnergo запущен (Фильтр: Активная энергия А+)")
+    print("Синхронизация происходит в фоне каждые 10 минут.")
     print("-" * 75)
 
     while True:
-        run_synchronization()
-        time.sleep(600)  # Обход базы каждые 10 минут
+        try:
+            run_synchronization()
+        except Exception as e:
+            print(f"❌ Необработанная ошибка: {e}. Перезапуск через 10 минут...")
+        time.sleep(600)
