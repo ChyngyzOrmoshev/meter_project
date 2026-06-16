@@ -4,6 +4,7 @@ import pyodbc
 from datetime import datetime, timedelta
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
+from sync_common import update_sync_status
 
 # ИСПРАВЛЕНО: Файл лежит в той же папке app, убираем неверные пути
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,7 @@ def run_sanxing_synchronization():
     print(
         f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Запуск умной синхронизации Sanxing_old..."
     )
+    update_sync_status("Sanxing", "running")
 
     # Вытягиваем из MongoDB карту приборов: { 'серийник': 'номинальный_ток' }
     devices_cursor = devices_col.find(
@@ -39,6 +41,7 @@ def run_sanxing_synchronization():
 
     if not devices_map:
         print("⚠️ Синхронизация отменена: Реестр устройств (Devices) в MongoDB пуст!")
+        update_sync_status("Sanxing", "idle", records_processed=0)
         return
 
     # ИСПРАВЛЕНО: Драйвер SQL Server заменен на FreeTDS для работы под Linux
@@ -136,9 +139,11 @@ def run_sanxing_synchronization():
             print(
                 f"✅ Синхронизация завершена. Добавлено/Обновлено суточных показаний: {success_count} шт."
             )
+            update_sync_status("Sanxing", "success", records_processed=success_count)
 
     except Exception as e:
         print(f"❌ Ошибка во время синхронизации Sanxing: {e}")
+        update_sync_status("Sanxing", "error", error=str(e))
 
 
 if __name__ == "__main__":

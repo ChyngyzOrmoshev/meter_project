@@ -4,6 +4,7 @@ import pyodbc
 from datetime import datetime, timedelta
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
+from sync_common import update_sync_status
 
 # Загружаем настройки из cEnergo.env
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else '.'
@@ -22,6 +23,7 @@ readings_col = mongo_db["readings"]
 
 def run_sanrise_synchronization():
     print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Запуск умной синхронизации SunRise (Абсолютные кВт*ч)...")
+    update_sync_status("Sanrise", "running")
 
     # Берём список всех серийников, зарегистрированных в нашей веб-панели ИнфоЭнерго
     devices_cursor = devices_col.find({}, {"_id": 0, "serial_number": 1})
@@ -29,6 +31,7 @@ def run_sanrise_synchronization():
 
     if not registered_sns_set:
         print("⚠️ Синхронизация отменена: Реестр устройств (Devices) в MongoDB пуст!")
+        update_sync_status("Sanrise", "idle", records_processed=0)
         return
 
     conn_str = (
@@ -111,10 +114,12 @@ def run_sanrise_synchronization():
                     result = readings_col.bulk_write(mongo_ops, ordered=False)
                     success_count += result.upserted_count + result.modified_count
 
-            print(f"✅ Синхронизация завершена. Собрано абсолютных показаний SunRise: {success_count} шт.")
+            print(f"✅ Синхронизация завершена. Собрано показаний SunRise: {success_count} шт.")
+            update_sync_status("Sanrise", "success", records_processed=success_count)
 
     except Exception as e:
         print(f"❌ Ошибка во время синхронизации SunRise: {e}")
+        update_sync_status("Sanrise", "error", error=str(e))
 
 if __name__ == "__main__":
     print("🤖 Робот автоматического сбора SunRise (KWH_IMPORT_ABS) запущен.")

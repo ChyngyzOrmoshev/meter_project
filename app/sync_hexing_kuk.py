@@ -4,6 +4,7 @@ import mysql.connector
 from datetime import datetime, timedelta
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
+from sync_common import update_sync_status
 
 load_dotenv('/app/cEnergo.env')
 
@@ -20,11 +21,13 @@ readings_col = db['readings']
 
 def run_sync():
     print(f'🔄 [{datetime.now()}] Запуск синхронизации Hexing KUK (комбинированная энергия CA)...')
+    update_sync_status("Hexing KUK", "running")
 
     # Получаем все серийные номера из MongoDB
     devices_set = set(str(d['serial_number']).strip() for d in devices_col.find({}, {'serial_number': 1}))
     if not devices_set:
         print('⚠️ Реестр устройств пуст, синхронизация отменена.')
+        update_sync_status("Hexing KUK", "idle", records_processed=0)
         return
 
     # Подключаемся к MySQL
@@ -39,6 +42,7 @@ def run_sync():
         )
     except Exception as e:
         print(f'❌ Ошибка подключения к MySQL: {e}')
+        update_sync_status("Hexing KUK", "error", error=str(e))
         return
 
     cursor = conn.cursor()
@@ -110,6 +114,7 @@ def run_sync():
     cursor.close()
     conn.close()
     print(f'✅ Синхронизация Hexing KUK завершена. Обработано показаний: {total}')
+    update_sync_status("Hexing KUK", "success", records_processed=total)
 
 if __name__ == '__main__':
     print('🤖 Робот синхронизации Hexing KUK запущен. Интервал 10 минут.')

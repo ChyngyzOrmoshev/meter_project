@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
+from db_client import sync_status_col
 
 st.set_page_config(page_title="ИнфоЭнерго", page_icon="⚡", layout="wide")
 
@@ -67,6 +68,44 @@ with col2:
 with col1:
     st.title("⚡ ИнфоЭнерго")
     st.markdown(f"Добро пожаловать, **{st.session_state.username}** (роль: `{st.session_state.user_role}`)")
+    # === Блок статуса синхронизаторов ===
+    st.markdown("---")
+    st.subheader("🤖 Статус синхронизаторов")
+    statuses = list(sync_status_col.find({}, {"_id": 0}).sort("last_update", -1))
+    if statuses:
+        import pandas as pd
+        df_status = pd.DataFrame(statuses)
+        # Приводим время к локальному
+        df_status["last_update"] = pd.to_datetime(df_status["last_update"]).dt.strftime("%Y-%m-%d %H:%M:%S")
+        # Переименовываем колонки
+        df_status = df_status.rename(columns={
+            "robot_name": "Робот",
+            "status": "Статус",
+            "last_update": "Последнее обновление",
+            "records_processed": "Записей обработано",
+            "error": "Ошибка"
+        })
+        # Убедимся, что нужные колонки существуют (если нет – создаём)
+        if "Ошибка" not in df_status.columns:
+            df_status["Ошибка"] = ""
+        if "Записей обработано" not in df_status.columns:
+            df_status["Записей обработано"] = 0
+        # Функция для цветной индикации статуса
+        def color_status(val):
+            if val == "success":
+                return "🟢"
+            elif val == "running":
+                return "🟡"
+            elif val == "error":
+                return "🔴"
+            else:
+                return "⚪"
+        df_status["Статус"] = df_status["Статус"].apply(color_status) + " " + df_status["Статус"]
+        # Выводим таблицу
+        st.dataframe(df_status[["Робот", "Статус", "Последнее обновление", "Записей обработано", "Ошибка"]],
+                     use_container_width=True, hide_index=True)
+    else:
+        st.info("Статусы синхронизаторов пока не получены. Дождитесь первого запуска.")
 
 st.markdown("---")
 st.info("Выберите раздел в боковом меню.")

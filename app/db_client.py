@@ -17,3 +17,8 @@ readings_col.create_index(
 
 # Дополнительный индекс для быстрой сортировки по времени (используется в агрегациях)
 readings_col.create_index([("timestamp", DESCENDING)])
+
+# Коллекция статусов синхронизаторов
+sync_status_col = db["sync_status"]
+sync_status_col.create_index("robot_name", unique=True)
+sync_status_col.create_index("last_update", expireAfterSeconds=604800)  # храним записи неделю

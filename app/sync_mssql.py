@@ -4,6 +4,7 @@ import pyodbc
 from datetime import datetime, timedelta
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
+from sync_common import update_sync_status
 
 # В Docker переменные уже в системе, но оставим совместимость для локального запуска
 # ИСПРАВЛЕНО: Файл лежит в той же папке app, убираем переход на уровень вверх
@@ -28,6 +29,7 @@ def run_synchronization():
     print(
         f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Запуск синхронизации с cEnergo..."
     )
+    update_sync_status("cEnergo", "running")
 
     # Переводим список в ХЭШ-СЕТ (set) для мгновенного поиска O(1)
     registered_sns_set = {
@@ -35,6 +37,7 @@ def run_synchronization():
     }
     if not registered_sns_set:
         print("⚠️ Синхронизация отменена: Реестр устройств (Devices) в MongoDB пуст!")
+        update_sync_status("cEnergo", "idle", records_processed=0)
         return
 
     # ИСПРАВЛЕНО: Вместо Windows-названия драйвера используем стандартный Linux-драйвер FreeTDS
@@ -125,9 +128,11 @@ def run_synchronization():
             print(
                 f"✅ Синхронизация завершена. Обработано/Добавлено показаний А+: {success_count} шт."
             )
+            update_sync_status("cEnergo", "success", records_processed=success_count)
 
     except Exception as e:
         print(f"❌ Ошибка во время синхронизации: {e}")
+        update_sync_status("cEnergo", "error", error=str(e))
 
 
 if __name__ == "__main__":
