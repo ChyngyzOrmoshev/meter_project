@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from db_client import readings_col, devices_col  # Подключение к MongoDB
 from pymongo.errors import BulkWriteError
 from pymongo import UpdateOne
+import plotly.graph_objects as go
 
 # Настройка страницы во всю ширину экрана
 st.set_page_config(page_title="Сбор показаний", page_icon="📉", layout="wide")
@@ -35,16 +36,74 @@ st.markdown("---")
 # Достаем роль пользователя, если она нужна для фильтров или скрытия кнопок
 user_role = st.session_state.get("user_role", "user")
 
-# ==============================================================================
-# СЮДА ВСТАВЬТЕ ВЕСЬ ВАШ КОД ИЗ WEB_SITE.PY, КОТОРЫЙ ШЕЛ ПОСЛЕ СТРОКИ:
-# if page == "📉 Сбор показаний (Readings)":
-# ==============================================================================
-# Обязательно удалите саму строку проверки "if page == ..." 
-# и сдвиньте весь код влево (выделить всё -> Shift + Tab), чтобы убрать лишние отступы!
-# ==============================================================================
-# === РАЗДЕЛ 3: СБОР ПОКАЗАНИЙ (ФОРМЫ ВВОДА С ФИКСАЦИЕЙ ВРЕМЕНИ 00:00:00) ===
-# ==============================================================================
-# if page == "📉 Сбор показаний (Readings)":
+# # ====== ГРАФИК ПОКАЗАНИЙ ======
+
+# st.subheader("📈 График потребления")
+
+# # Получаем список серийных номеров для выбора (только те, у которых есть показания в MongoDB)
+# serial_numbers_with_readings = readings_col.distinct("serial_number")
+# if serial_numbers_with_readings:
+#     # Выбор счётчика
+#     selected_sn = st.selectbox("Выберите прибор:", serial_numbers_with_readings)
+    
+#     # Выбор периода
+#     col_period1, col_period2 = st.columns(2)
+#     with col_period1:
+#         start_date = st.date_input("Начало периода", datetime.now() - timedelta(days=30), key="graph_start")
+#     with col_period2:
+#         end_date = st.date_input("Конец периода", datetime.now(), key="graph_end")
+    
+#     if start_date <= end_date:
+#         # Запрос данных из MongoDB
+#         start_dt = datetime.combine(start_date, datetime.min.time())
+#         end_dt = datetime.combine(end_date, datetime.max.time())
+        
+#         # Используем агрегацию для группировки по дням (чтобы не было дубликатов часов)
+#         pipeline = [
+#             {"$match": {
+#                 "serial_number": selected_sn,
+#                 "timestamp": {"$gte": start_dt, "$lte": end_dt}
+#             }},
+#             {"$sort": {"timestamp": 1}},
+#             # Если данных много, можно сгруппировать по дням, чтобы избежать перегрузки
+#             # Но пока оставим все точки, пусть пользователь видит максимальную детализацию
+#         ]
+#         data = list(readings_col.aggregate(pipeline))
+        
+#         if data:
+#             # Преобразуем в DataFrame для удобства
+#             import pandas as pd
+#             df_graph = pd.DataFrame(data)
+#             df_graph = df_graph.sort_values("timestamp")
+            
+#             # Рисуем график с plotly
+#             import plotly.graph_objects as go
+#             fig = go.Figure()
+#             fig.add_trace(go.Scatter(
+#                 x=df_graph["timestamp"],
+#                 y=df_graph["reading_value"],
+#                 mode="lines+markers",
+#                 name="Показания",
+#                 line=dict(color="royalblue", width=2),
+#                 marker=dict(size=4)
+#             ))
+#             fig.update_layout(
+#                 title=f"Показания прибора {selected_sn}",
+#                 xaxis_title="Дата",
+#                 yaxis_title="Значение (кВт·ч)",
+#                 template="plotly_white",
+#                 hovermode="x unified",
+#                 height=400,
+#                 margin=dict(l=0, r=0, t=40, b=0)
+#             )
+#             st.plotly_chart(fig, use_container_width=True)
+#         else:
+#             st.info("Нет данных для выбранного периода.")
+#     else:
+#         st.error("Дата начала должна быть раньше даты окончания.")
+# else:
+#     st.info("Нет приборов с показаниями в системе.")
+
 st.subheader("Ввод текущих показаний и история")
 
 # Превращаем в set для мгновенного поиска O(1) при валидации массового ввода

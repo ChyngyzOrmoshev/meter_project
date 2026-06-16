@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 from db_client import sync_status_col
+from logger_config import logger
 
 st.set_page_config(page_title="ИнфоЭнерго", page_icon="⚡", layout="wide")
 
@@ -52,8 +53,10 @@ if not st.session_state.logged_in:
                 st.session_state.logged_in = True
                 st.session_state.user_role = USER_CREDENTIALS[username]["role"]
                 st.session_state.username = username
+                logger.info(f"Пользователь {username} вошёл в систему")
                 st.rerun()
             else:
+                logger.warning(f"Неудачная попытка входа для пользователя {username}")
                 st.error("Неверный логин или пароль")
     st.stop()
 
@@ -61,6 +64,7 @@ if not st.session_state.logged_in:
 col1, col2 = st.columns([6, 1])
 with col2:
     if st.button("Выйти"):
+        logger.info(f"Пользователь {st.session_state.username} вышел из системы")
         st.session_state.logged_in = False
         st.session_state.user_role = None
         st.session_state.username = None
@@ -75,9 +79,7 @@ with col1:
     if statuses:
         import pandas as pd
         df_status = pd.DataFrame(statuses)
-        # Приводим время к локальному
         df_status["last_update"] = pd.to_datetime(df_status["last_update"]).dt.strftime("%Y-%m-%d %H:%M:%S")
-        # Переименовываем колонки
         df_status = df_status.rename(columns={
             "robot_name": "Робот",
             "status": "Статус",
@@ -85,12 +87,10 @@ with col1:
             "records_processed": "Записей обработано",
             "error": "Ошибка"
         })
-        # Убедимся, что нужные колонки существуют (если нет – создаём)
         if "Ошибка" not in df_status.columns:
             df_status["Ошибка"] = ""
         if "Записей обработано" not in df_status.columns:
             df_status["Записей обработано"] = 0
-        # Функция для цветной индикации статуса
         def color_status(val):
             if val == "success":
                 return "🟢"
@@ -101,7 +101,6 @@ with col1:
             else:
                 return "⚪"
         df_status["Статус"] = df_status["Статус"].apply(color_status) + " " + df_status["Статус"]
-        # Выводим таблицу
         st.dataframe(df_status[["Робот", "Статус", "Последнее обновление", "Записей обработано", "Ошибка"]],
                      use_container_width=True, hide_index=True)
     else:

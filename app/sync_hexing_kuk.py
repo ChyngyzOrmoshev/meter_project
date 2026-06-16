@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
 from sync_common import update_sync_status
+from logger_config import logger
 
 load_dotenv('/app/cEnergo.env')
 
@@ -20,17 +21,15 @@ devices_col = db['devices']
 readings_col = db['readings']
 
 def run_sync():
-    print(f'🔄 [{datetime.now()}] Запуск синхронизации Hexing KUK (комбинированная энергия CA)...')
+    logger.info(f'🔄 [{datetime.now()}] Запуск синхронизации Hexing KUK (комбинированная энергия CA)...')
     update_sync_status("Hexing KUK", "running")
 
-    # Получаем все серийные номера из MongoDB
     devices_set = set(str(d['serial_number']).strip() for d in devices_col.find({}, {'serial_number': 1}))
     if not devices_set:
-        print('⚠️ Реестр устройств пуст, синхронизация отменена.')
+        logger.warning('⚠️ Реестр устройств пуст, синхронизация отменена.')
         update_sync_status("Hexing KUK", "idle", records_processed=0)
         return
 
-    # Подключаемся к MySQL
     try:
         conn = mysql.connector.connect(
             host=HEXING_HOST,
@@ -41,13 +40,12 @@ def run_sync():
             connect_timeout=10
         )
     except Exception as e:
-        print(f'❌ Ошибка подключения к MySQL: {e}')
+        logger.error(f'❌ Ошибка подключения к MySQL: {e}')
         update_sync_status("Hexing KUK", "error", error=str(e))
         return
 
     cursor = conn.cursor()
 
-    # Определяем время последней синхронизации
     last_reading = readings_col.find_one({'notes': 'Hexing KUK'}, sort=[('timestamp', -1)])
     if last_reading:
         last_time = last_reading['timestamp'] - timedelta(hours=1)
@@ -65,7 +63,7 @@ def run_sync():
         """
         cursor.execute(query, (last_time,))
     else:
-        print('📦 Первый запуск Hexing: импорт всей истории комбинированной энергии...')
+        logger.info('📦 Первый запуск Hexing: импорт всей истории комбинированной энергии...')
         query = """
             SELECT 
                 m.METER_NO AS serial_number,
@@ -98,7 +96,7 @@ def run_sync():
                 'serial_number': sn,
                 'timestamp': timestamp,
                 'reading_value': float(reading_value),
-                'notes': 'Авто-сбор: База Hexing KUK'
+                'notes': 'Авто-сбор: база Hexing KUK'
             }},
             upsert=True
         ))
@@ -106,21 +104,22 @@ def run_sync():
         if len(updates) >= 1000:
             readings_col.bulk_write(updates, ordered=False)
             updates = []
-            print(f'   Записано {total} показаний...')
+            logger.info(f'   Записано {total} показаний...')
 
     if updates:
         readings_col.bulk_write(updates, ordered=False)
 
     cursor.close()
     conn.close()
-    print(f'✅ Синхронизация Hexing KUK завершена. Обработано показаний: {total}')
+    logger.info(f'✅ Синхронизация Hexing KUK завершена. Обработано показаний: {total}')
     update_sync_status("Hexing KUK", "success", records_processed=total)
 
 if __name__ == '__main__':
-    print('🤖 Робот синхронизации Hexing KUK запущен. Интервал 10 минут.')
+    logger.info('🤖 Робот синхронизации Hexing KUK (комбинированная энергия CA) запущен. Интервал 10 минут.')
     while True:
         try:
             run_sync()
         except Exception as e:
-            print(f'❌ Необработанная ошибка: {e}')
+            logger.error(f'❌ Необработанная ошибка: {e}')
+            update_sync_status("Hexing KUK", "error", error=str(e))
         time.sleep(600)

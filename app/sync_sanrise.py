@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
 from sync_common import update_sync_status
+from logger_config import logger
 
-# Загружаем настройки из cEnergo.env
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else '.'
 ENV_PATH = os.path.join(CURRENT_DIR, "cEnergo.env")
 load_dotenv(dotenv_path=ENV_PATH)
@@ -22,15 +22,14 @@ devices_col = mongo_db["devices"]
 readings_col = mongo_db["readings"]
 
 def run_sanrise_synchronization():
-    print(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Запуск умной синхронизации SunRise (Абсолютные кВт*ч)...")
+    logger.info(f"🔄 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Запуск умной синхронизации SunRise (Абсолютные кВт*ч)...")
     update_sync_status("Sanrise", "running")
 
-    # Берём список всех серийников, зарегистрированных в нашей веб-панели ИнфоЭнерго
     devices_cursor = devices_col.find({}, {"_id": 0, "serial_number": 1})
     registered_sns_set = {str(d["serial_number"]).strip() for d in devices_cursor}
 
     if not registered_sns_set:
-        print("⚠️ Синхронизация отменена: Реестр устройств (Devices) в MongoDB пуст!")
+        logger.warning("⚠️ Синхронизация отменена: Реестр устройств (Devices) в MongoDB пуст!")
         update_sync_status("Sanrise", "idle", records_processed=0)
         return
 
@@ -43,13 +42,11 @@ def run_sanrise_synchronization():
         with pyodbc.connect(conn_str) as mssql_conn:
             cursor = mssql_conn.cursor()
 
-            # Ищем последнюю запись от этого робота
             last_reading = readings_col.find_one(
                 {"notes": "Авто-сбор: SunRise"},
                 sort=[("timestamp", -1)],
             )
 
-            # Переключаемся на сбор колонки KWH_IMPORT_ABS
             if last_reading:
                 last_sync_time = last_reading["timestamp"] - timedelta(hours=2)
                 query = """
@@ -62,7 +59,7 @@ def run_sanrise_synchronization():
                 """
                 cursor.execute(query, (last_sync_time,))
             else:
-                print("📦 Первый запуск SunRise: импорт истории абсолютного потребления энергии (KWH_IMPORT_ABS)...")
+                logger.info("📦 Первый запуск SunRise: импорт истории абсолютного потребления энергии (KWH_IMPORT_ABS)...")
                 query = """
                     SET NOCOUNT ON;
                     SELECT RTRIM(LTRIM(M.MSNO)) as SerialNumber, D.DATA_TIME, D.KWH_IMPORT_ABS
@@ -83,16 +80,13 @@ def run_sanrise_synchronization():
                 mongo_ops = []
                 for row in rows:
                     db_sn = str(row.SerialNumber).strip()
-
                     if db_sn in registered_sns_set:
                         dt_object = row.DATA_TIME
-
                         if isinstance(dt_object, str):
                             try:
                                 dt_object = datetime.strptime(dt_object.split(".")[0], "%Y-%m-%d %H:%M:%S")
                             except Exception:
                                 dt_object = datetime.now()
-
                         final_value = float(row.KWH_IMPORT_ABS)
 
                         mongo_ops.append(
@@ -114,20 +108,20 @@ def run_sanrise_synchronization():
                     result = readings_col.bulk_write(mongo_ops, ordered=False)
                     success_count += result.upserted_count + result.modified_count
 
-            print(f"✅ Синхронизация завершена. Собрано показаний SunRise: {success_count} шт.")
+            logger.info(f"✅ Синхронизация завершена. Собрано абсолютных показаний SunRise: {success_count} шт.")
             update_sync_status("Sanrise", "success", records_processed=success_count)
 
     except Exception as e:
-        print(f"❌ Ошибка во время синхронизации SunRise: {e}")
+        logger.error(f"❌ Ошибка во время синхронизации SunRise: {e}")
         update_sync_status("Sanrise", "error", error=str(e))
 
 if __name__ == "__main__":
-    print("🤖 Робот автоматического сбора SunRise (KWH_IMPORT_ABS) запущен.")
-    print("-" * 75)
+    logger.info("🤖 Робот автоматического сбора SunRise (KWH_IMPORT_ABS) запущен.")
+    logger.info("-" * 75)
 
     while True:
         try:
             run_sanrise_synchronization()
         except Exception as e:
-            print(f"❌ Необработанная ошибка: {e}. Перезапуск через 10 минут...")
+            logger.error(f"❌ Необработанная ошибка: {e}. Перезапуск через 10 минут...")
         time.sleep(600)
