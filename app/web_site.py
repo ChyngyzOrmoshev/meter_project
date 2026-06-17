@@ -3,6 +3,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from db_client import sync_status_col
 from logger_config import logger
+from zoneinfo import ZoneInfo
 
 st.set_page_config(page_title="ИнфоЭнерго", page_icon="⚡", layout="wide")
 
@@ -79,7 +80,8 @@ with col1:
     if statuses:
         import pandas as pd
         df_status = pd.DataFrame(statuses)
-        df_status["last_update"] = pd.to_datetime(df_status["last_update"]).dt.strftime("%Y-%m-%d %H:%M:%S")
+        local_tz = ZoneInfo('Asia/Bishkek')
+        df_status["last_update"] = pd.to_datetime(df_status["last_update"]).dt.tz_localize('UTC').dt.tz_convert(local_tz).dt.strftime("%Y-%m-%d %H:%M:%S")
         df_status = df_status.rename(columns={
             "robot_name": "Робот",
             "status": "Статус",

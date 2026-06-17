@@ -28,3 +28,9 @@ env/
 .vscode/
 .idea/
 .DS_Store
+
+# Папки с данными, которые монтируются и не должны версионироваться
+/logs/
+/app/logs/
+/backups/
+/app/backup/

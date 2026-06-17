@@ -1,15 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from db_client import sync_status_col
 from logger_config import logger
 
 def update_sync_status(robot_name: str, status: str, records_processed: int = 0, error: str = None):
     """
     Обновляет статус синхронизатора в MongoDB и логирует действие.
+    Сохраняем время в UTC.
     """
     doc = {
         "robot_name": robot_name,
         "status": status,
-        "last_update": datetime.now(),
+        "last_update": datetime.now(timezone.utc),  # <-- UTC
         "records_processed": records_processed,
     }
     if error:

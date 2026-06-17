@@ -1,9 +1,7 @@
 FROM python:3.11-slim
 
-WORKDIR /app
-
-# Добавляем инструменты для сборки pyodbc и pymssql под Linux
-# Добавляем инструменты для сборки и сам драйвер FreeTDS с менеджером unixodbc
+# Устанавливаем часовой пояс (Бишкек, UTC+6)
+ENV TZ=Asia/Bishkek
 RUN apt-get update && apt-get install -y \
     build-essential \
     g++ \
@@ -12,18 +10,18 @@ RUN apt-get update && apt-get install -y \
     freetds-bin \
     freetds-dev \
     tdsodbc \
+    curl \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем зависимости Python
+WORKDIR /app
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код проекта
 COPY . .
 
-# Открываем порт для Streamlit
 EXPOSE 8501
 
-# Указываем команду для старта сайта
 CMD ["streamlit", "run", "web_site.py", "--server.port=8501", "--server.address=0.0.0.0"]
-
