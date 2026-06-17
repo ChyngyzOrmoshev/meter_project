@@ -138,6 +138,7 @@ if user_role in ["admin", "operator"]:
                     st.rerun()
 
 # ====== ИНТЕРФЕЙС ФИЛЬТРАЦИИ ======
+# Строка 1: поиск, статус, модель
 f1, f2, f3 = st.columns(3)
 with f1:
     s_search = st.text_input("🔍 Поиск по заводскому номеру:").strip()
@@ -147,7 +148,14 @@ with f3:
     pure_models = sorted(list(models_col.distinct("model_name")))
     m_filter = st.selectbox("Фильтр по модели:", ["Все"] + pure_models)
 
-# Формируем фильтр
+# Строка 2: дата добавления (от и до)
+col_date1, col_date2 = st.columns(2)
+with col_date1:
+    start_date = st.date_input("📅 Дата добавления (от):", value=None, key="filter_start_date")
+with col_date2:
+    end_date = st.date_input("📅 Дата добавления (до):", value=None, key="filter_end_date")
+
+# ====== ФОРМИРУЕМ ФИЛЬТР ======
 query = {}
 if s_search:
     query["serial_number"] = {"$regex": s_search, "$options": "i"}
@@ -156,26 +164,40 @@ if s_filter != "Все":
 if m_filter != "Все":
     query["model_name"] = m_filter
 
+# Добавляем условия по дате
+if start_date:
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    if "created_at" not in query:
+        query["created_at"] = {}
+    query["created_at"]["$gte"] = start_dt
+if end_date:
+    end_dt = datetime.combine(end_date, datetime.max.time())
+    if "created_at" not in query:
+        query["created_at"] = {}
+    query["created_at"]["$lte"] = end_dt
+
+# ====== СБРОС СТРАНИЦЫ ПРИ ИЗМЕНЕНИИ ФИЛЬТРОВ ======
+# Хеш текущих фильтров
+filter_hash = f"{s_search}|{s_filter}|{m_filter}|{start_date}|{end_date}"
+if "prev_filter_hash" not in st.session_state:
+    st.session_state.prev_filter_hash = filter_hash
+if st.session_state.prev_filter_hash != filter_hash:
+    st.session_state.devices_page = 1
+    st.session_state.prev_filter_hash = filter_hash
+
 # ====== ПАГИНАЦИЯ ======
-# Параметры пагинации
-PAGE_SIZE = 20  # Количество записей на странице
+PAGE_SIZE = 20
 if "devices_page" not in st.session_state:
     st.session_state.devices_page = 1
 
-# Получаем общее количество записей по фильтру
 total_count = devices_col.count_documents(query)
 total_pages = max(1, (total_count + PAGE_SIZE - 1) // PAGE_SIZE)
-
-# Корректируем текущую страницу, если она выходит за границы
 if st.session_state.devices_page > total_pages:
     st.session_state.devices_page = total_pages
 if st.session_state.devices_page < 1:
     st.session_state.devices_page = 1
 
-# Вычисляем смещение для пропуска
 skip = (st.session_state.devices_page - 1) * PAGE_SIZE
-
-# Получаем записи для текущей страницы (сортировка по серийному номеру)
 devices_cursor = devices_col.find(query, {"_id": 0}).sort("serial_number", 1).skip(skip).limit(PAGE_SIZE)
 devices = list(devices_cursor)
 
@@ -186,7 +208,6 @@ if devices:
         df_devices["nominal_current"] = ""
     df_devices["nominal_current"] = df_devices["nominal_current"].fillna("")
 
-    # Подгружаем метаданные моделей
     df_m_meta = pd.DataFrame(list(
         models_col.find(
             {},
@@ -214,6 +235,7 @@ if devices:
         "device_type_id": "Код АСКУЭ (ID)",
         "device_type_str": "Идентификатор API",
         "phases": "Фазность",
+        "created_at": "Дата добавления",
     })
 
     display_cols = [
@@ -224,8 +246,13 @@ if devices:
         "Фазность",
         "Код АСКУЭ (ID)",
         "Идентификатор API",
+        "Дата добавления",
     ]
     final_df = final_df[[c for c in display_cols if c in final_df.columns]]
+
+    # Форматируем дату добавления для красивого отображения
+    if "Дата добавления" in final_df.columns:
+        final_df["Дата добавления"] = pd.to_datetime(final_df["Дата добавления"]).dt.strftime("%Y-%m-%d %H:%M:%S")
 
     st.dataframe(final_df, use_container_width=True, hide_index=True)
 
@@ -233,7 +260,6 @@ if devices:
     st.markdown("---")
     col_nav1, col_nav2, col_nav3 = st.columns([1, 3, 1])
     with col_nav2:
-        # Номера страниц с кнопками
         col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)
         with col_btn1:
             if st.button("⏮️ Первая", use_container_width=True):
@@ -253,8 +279,6 @@ if devices:
             if st.button("Последняя ⏭️", use_container_width=True):
                 st.session_state.devices_page = total_pages
                 st.rerun()
-
-        # Индикатор текущей страницы
         st.markdown(
             f"<p style='text-align: center; margin-top: 0.5rem;'>Страница <b>{st.session_state.devices_page}</b> из <b>{total_pages}</b> (всего записей: {total_count})</p>",
             unsafe_allow_html=True
