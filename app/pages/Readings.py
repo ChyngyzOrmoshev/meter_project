@@ -293,6 +293,14 @@ with col_clear:
         on_click=clear_search_callback,  # Используем callback для безопасной очистки состояния
     )
 
+# === ЗАЩИТА ОТ НЕОПРЕДЕЛЁННЫХ ДАТ ===
+if start_date is None:
+    start_date = today_date
+    st.session_state.filter_start_date = today_date
+if end_date is None:
+    end_date = today_date
+    st.session_state.filter_end_date = today_date
+
 # Валидация ограничения периода (максимум 7 дней)
 delta_days = (end_date - start_date).days
 
@@ -353,38 +361,34 @@ else:
         st.session_state.readings_page = total_pages
 
     if total_rows > 0:
-        start_idx = (st.session_state.readings_page - 1) * rows_per_page
+        with st.spinner("⏳ Загрузка журнала показаний..."):
+            start_idx = (st.session_state.readings_page - 1) * rows_per_page
 
-        # ИСПРАВЛЕННАЯ АГРЕГАЦИЯ 2: Посуточный конвейер (Часы схлопываем внутри дня, но дни разделяем)
-        readings_pipeline = [
-            {"$match": match_stage},
-            {"$sort": {"timestamp": -1}},  # Свежие часы всегда первыми
-            {
-                "$group": {
-                    # Группируем одновременно по номеру счетчика и по календарному дню
-                    "_id": {
-                        "serial_number": "$serial_number",
-                        "day": {
-                            "$dateToString": {
-                                "format": "%Y-%m-%d",
-                                "date": "$timestamp",
-                            }
+            readings_pipeline = [
+                {"$match": match_stage},
+                {"$sort": {"timestamp": -1}},
+                {
+                    "$group": {
+                        "_id": {
+                            "serial_number": "$serial_number",
+                            "day": {
+                                "$dateToString": {
+                                    "format": "%Y-%m-%d",
+                                    "date": "$timestamp",
+                                }
+                            },
                         },
-                    },
-                    "latest_hour_doc": {
-                        "$first": "$$ROOT"
-                    },  # Берем самый свежий час внутри ЭТОГО конкретного дня
-                }
-            },
-            {"$replaceRoot": {"newRoot": "$latest_hour_doc"}},
-            # Сортируем ведомость: сначала по убыванию даты (свежие дни сверху), а внутри дня — по номеру счетчика
-            {"$sort": {"timestamp": -1, "serial_number": 1}},
-            {"$skip": start_idx},
-            {"$limit": rows_per_page},
-        ]
+                        "latest_hour_doc": {"$first": "$$ROOT"},
+                    }
+                },
+                {"$replaceRoot": {"newRoot": "$latest_hour_doc"}},
+                {"$sort": {"timestamp": -1, "serial_number": 1}},
+                {"$skip": start_idx},
+                {"$limit": rows_per_page},
+            ]
 
-        readings = list(readings_col.aggregate(readings_pipeline))
-        df_readings = pd.DataFrame(readings)
+            readings = list(readings_col.aggregate(readings_pipeline))
+            df_readings = pd.DataFrame(readings)
 
         # Точечная подгрузка моделей только для выводимых 10 строк
         unique_sns_on_page = df_readings["serial_number"].unique().tolist()
