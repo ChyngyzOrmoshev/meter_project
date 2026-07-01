@@ -1,0 +1,40 @@
+<div class="mb-3">
+    <label>Код</label>
+    <input type="text" name="catalog_code" class="form-control" value="{{ model.catalog_code|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Наименование</label>
+    <input type="text" name="model_name" class="form-control" value="{{ model.model_name|default:'' }}" required>
+</div>
+<div class="mb-3">
+    <label>Значность</label>
+    <input type="text" name="digit_capacity" class="form-control" value="{{ model.digit_capacity|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Фазность</label>
+    <input type="number" name="phases" class="form-control" value="{{ model.phases|default:1 }}">
+</div>
+<div class="mb-3">
+    <label>Номинальный ток</label>
+    <input type="text" name="nominal_current" class="form-control" value="{{ model.nominal_current|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Номинальное напряжение</label>
+    <input type="text" name="nominal_voltage" class="form-control" value="{{ model.nominal_voltage|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Тип прибора</label>
+    <input type="text" name="system_type" class="form-control" value="{{ model.system_type|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Период</label>
+    <input type="text" name="period" class="form-control" value="{{ model.period|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Тип АСКУЭ</label>
+    <input type="text" name="device_type_id" class="form-control" value="{{ model.device_type_id|default:'' }}">
+</div>
+<div class="mb-3">
+    <label>Идентификатор API</label>
+    <input type="text" name="device_type_str" class="form-control" value="{{ model.device_type_str|default:'' }}">
+</div>

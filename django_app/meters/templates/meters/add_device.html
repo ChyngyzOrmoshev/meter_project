@@ -1,0 +1,115 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-plus-circle"></i>Добавление приборов</h1>
+
+<div class="row g-4">
+    <!-- Одиночное добавление -->
+    <div class="col-md-6">
+        <div class="card-pastel h-100">
+            <div class="card-header"><i class="fas fa-single"></i> По одному</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="single_submit" value="1">
+                    <div class="mb-3">
+                        <label class="form-label">Заводской номер *</label>
+                        <input type="text" name="serial_number" class="form-control form-control-pastel"
+                            placeholder="Например, 084600001431" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Модель *</label>
+                        <select name="model" class="form-select form-control-pastel" required>
+                            <option value="">— Выберите модель —</option>
+                            {% for m in models %}
+                            <option value="{{ m.id }}">{{ m.model_name }} ({{ m.nominal_current|default:"—" }}, {{
+                                m.phases }}ф)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Статус</label>
+                        <select name="status" class="form-select form-control-pastel">
+                            <option value="active">active</option>
+                            <option value="repair">repair</option>
+                            <option value="inactive">inactive</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Добавить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Групповое добавление -->
+    <div class="col-md-6">
+        <div class="card-pastel h-100">
+            <div class="card-header"><i class="fas fa-layer-group"></i> Группой (построчно)</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="bulk_submit" value="1">
+                    <div class="mb-3">
+                        <label class="form-label">Список номеров (каждый с новой строки) *</label>
+                        <textarea name="bulk_serials" class="form-control form-control-pastel" rows="5"
+                            placeholder="084600001431&#10;084600001432" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Модель (общая) *</label>
+                        <select name="bulk_model" class="form-select form-control-pastel" required>
+                            <option value="">— Выберите модель —</option>
+                            {% for m in models %}
+                            <option value="{{ m.id }}">{{ m.model_name }} ({{ m.nominal_current|default:"—" }}, {{
+                                m.phases }}ф)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Статус (общий)</label>
+                        <select name="bulk_status" class="form-select form-control-pastel">
+                            <option value="active">active</option>
+                            <option value="repair">repair</option>
+                            <option value="inactive">inactive</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Добавить
+                        группу</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Импорт из Excel -->
+<div class="card-pastel mt-4">
+    <div class="card-header"><i class="fas fa-file-excel"></i> Импорт из Excel</div>
+    <div class="card-body">
+        <p><a href="{% url 'download_template' %}" class="btn btn-pastel-outline btn-sm"><i class="fas fa-download"></i>
+                Скачать шаблон</a></p>
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_devices' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="file" name="excel_file" class="form-control form-control-pastel" accept=".xlsx,.xls"
+                    required>
+            </div>
+            <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-upload"></i> Загрузить и
+                импортировать</button>
+        </form>
+    </div>
+</div>
+<!-- Оверлей загрузки -->
+<div id="loading-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;">
+        <span class="visually-hidden">Загрузка...</span>
+    </div>
+</div>
+
+<script>
+    // Показываем оверлей при отправке любой формы на странице
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        });
+    });
+</script>
+{% endblock %}

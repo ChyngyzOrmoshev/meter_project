@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИнфоЭнерго</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* === ГЛОБАЛЬНЫЕ СТИЛИ === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            color: #2d3e50;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+            /* растягивается на всю доступную высоту */
+        }
+
+        .container-1190 {
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        /* === НАВИГАЦИЯ === */
+        .navbar-custom {
+            background: #ffffff;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .navbar-custom .navbar-brand {
+            flex: 0 0 200px;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: #3a5b6e;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-custom .navbar-brand span {
+            color: #7fa3b8;
+        }
+
+        .navbar-custom .nav-link {
+            color: #4a6278;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s;
+            padding: 0.6rem 1.2rem;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #3a5b6e;
+            background: rgba(122, 169, 194, 0.08);
+        }
+
+        .navbar-custom .nav-link.active {
+            color: #3a5b6e;
+            background: rgba(122, 169, 194, 0.12);
+        }
+
+        .navbar-custom .nav-link i {
+            margin-right: 0.4rem;
+        }
+
+        .navbar-custom .user-info {
+            color: #4a6278;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .navbar-custom .btn-outline-light {
+            padding: 0.3rem 0.9rem;
+            font-size: 0.9rem;
+            color: #4a6278;
+            border-color: #cbd5e0;
+        }
+
+        .navbar-custom .btn-outline-light:hover {
+            background: #7fa3b8;
+            border-color: #7fa3b8;
+            color: #fff;
+        }
+
+        /* === КАРТОЧКИ === */
+        .card-pastel {
+            background: #ffffff;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), 0 1px 4px rgba(0, 0, 0, 0.02);
+            transition: box-shadow 0.25s ease;
+        }
+
+        .card-pastel .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            padding: 1.2rem 1.5rem;
+            font-weight: 600;
+            color: #2d3e50;
+            font-size: 1.1rem;
+        }
+
+        .card-pastel .card-body {
+            padding: 1.5rem;
+        }
+
+        /* === МЕТРИКИ === */
+        .metric-pastel {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            transition: box-shadow 0.2s;
+        }
+
+        .metric-pastel:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+        }
+
+        .metric-pastel .metric-icon {
+            font-size: 2.2rem;
+            color: #7fa3b8;
+            margin-bottom: 0.3rem;
+        }
+
+        .metric-pastel h5 {
+            font-weight: 400;
+            color: #6f8a9e;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+
+        .metric-pastel h2 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            color: #2d3e50;
+            margin: 0;
+        }
+
+        /* === ТАБЛИЦЫ === */
+        .table-pastel {
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .table-pastel thead th {
+            background: #f8fafc;
+            color: #4a6278;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 1px solid #eef2f6;
+            padding: 0.8rem 1rem;
+        }
+
+        .table-pastel tbody td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #f0f3f7;
+            color: #2d3e50;
+        }
+
+        .table-pastel tbody tr:hover {
+            background: #fafcfe;
+        }
+
+        /* === БЭЙДЖИ === */
+        .badge-pastel {
+            font-weight: 500;
+            padding: 0.35rem 0.9rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+
+        .badge-pastel.success {
+            background: #e3f5ec;
+            color: #1e7b4c;
+        }
+
+        .badge-pastel.error {
+            background: #fde8e8;
+            color: #b33636;
+        }
+
+        .badge-pastel.warning {
+            background: #fff3d6;
+            color: #a67c1e;
+        }
+
+        .badge-pastel.idle {
+            background: #eef2f6;
+            color: #5a6b7c;
+        }
+
+        /* === КНОПКИ === */
+        .btn-pastel-primary {
+            background: #e6f0f7;
+            border: none;
+            color: #3a5b6e;
+            border-radius: 30px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-pastel-primary:hover {
+            background: #cde0ed;
+            color: #2d3e50;
+            transform: translateY(-1px);
+        }
+
+        /* === ПРОГРЕСС-БАР === */
+        /* ===== ПРОГРЕСС-БАРЫ ===== */
+        .progress-pastel {
+            height: 10px;
+            background: #eef2f6;
+            border-radius: 30px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-pastel .progress-bar {
+            height: 100%;
+            border-radius: 30px;
+            transition: width 0.4s ease;
+        }
+
+        .bg-success-pastel {
+            background: linear-gradient(90deg, #a8d5ba, #7fc9a8) !important;
+        }
+
+        .bg-warning-pastel {
+            background: linear-gradient(90deg, #f7d98c, #f5c86a) !important;
+        }
+
+        .bg-danger-pastel {
+            background: linear-gradient(90deg, #f5a3a3, #ef8a8a) !important;
+        }
+
+        /* === ФУТЕР === */
+        /* === STICKY FOOTER === */
+
+
+        .footer-pastel {
+            flex-shrink: 0;
+            /* не сжимается */
+            margin-top: 1.5rem;
+            padding: 0.5rem 0;
+            border-top: 1px solid #eef2f6;
+            color: #8aa0b2;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* .footer-pastel {
+            margin-top: 1.5rem;
+            padding: 0.5rem 0;
+            border-top: 1px solid #eef2f6;
+            color: #8aa0b2;
+            font-size: 1rem;
+            text-align: center;
+        } */
+
+        /* === ЗАГОЛОВКИ === */
+        .page-title {
+            font-weight: 300;
+            font-size: 2rem;
+            color: #2d3e50;
+            margin-bottom: 1.8rem;
+        }
+
+        .page-title i {
+            color: #7fa3b8;
+            margin-right: 0.5rem;
+        }
+
+        /* === АДАПТИВНОСТЬ === */
+        @media (max-width: 1280px) {
+            .container-1190 {
+                max-width: 100%;
+                padding: 0 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metric-pastel h2 {
+                font-size: 1.8rem;
+            }
+
+            .page-title {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- НАВИГАЦИЯ -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container-1190">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-bolt" style="color: #7fa3b8;"></i> Инфо<span style="color: #7fa3b8;">Энерго</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto gap-3"> <!-- gap-3 для отступов между пунктами -->
+                    <li class="nav-item"><a
+                            class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                            href="{% url 'dashboard' %}"><i class="fas fa-chart-pie"></i> Дашборд</a></li>
+                    <li class="nav-item"><a
+                            class="nav-link {% if request.resolver_match.url_name == 'readings' %}active{% endif %}"
+                            href="{% url 'readings' %}"><i class="fas fa-history"></i> Показания</a></li>
+                    {% if user.is_authenticated and user.is_staff or user.groups.all.0.name == 'operator' %}
+                    <li class="nav-item"><a
+                            class="nav-link {% if request.resolver_match.url_name == 'devices' %}active{% endif %}"
+                            href="{% url 'devices' %}"><i class="fas fa-server"></i> Реестр</a></li>
+                    <li class="nav-item"><a
+                            class="nav-link {% if request.resolver_match.url_name == 'models' %}active{% endif %}"
+                            href="{% url 'models' %}"><i class="fas fa-cubes"></i> Модели</a></li>
+                    <li class="nav-item"><a
+                            class="nav-link {% if request.resolver_match.url_name == 'bulk_readings' %}active{% endif %}"
+                            href="{% url 'bulk_readings' %}"><i class="fas fa-upload"></i> Импорт показаний </a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'missing_readings' %}"><i
+                                class="fas fa-file-alt"></i> Отчеты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/"><i class="fas fa-user-cog"></i> Админка</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center ms-4"> <!-- ms-4 для отступа от меню -->
+                    <span class="user-info me-3">
+                        <i class="fas fa-user-circle"></i>
+                        {% if user.is_authenticated %}{{ user.username }}{% else %}Гость{% endif %}
+                    </span>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm"><i
+                            class="fas fa-sign-out-alt"></i></a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm"><i
+                            class="fas fa-sign-in-alt"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="container-1190 py-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ФУТЕР -->
+    <footer class="footer-pastel container-1190">
+        <p>&copy; 2026 ИнфоЭнерго — Автоматизированная система коммерческого учета электроэнергии</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

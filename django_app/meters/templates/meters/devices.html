@@ -1,0 +1,134 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="page-title mb-0"><i class="fas fa-server"></i>Реестр приборов</h1>
+    <div>
+        <a href="{% url 'bulk_update_status_page' %}" class="btn btn-pastel-outline btn-sm me-2">
+            <i class="fas fa-edit"></i> Групповое изменение статуса
+        </a>
+        <a href="{% url 'add_device' %}" class="btn btn-pastel-primary btn-sm">
+            <i class="fas fa-plus"></i> Добавить приборы
+        </a>
+    </div>
+</div>
+
+<!-- Поиск и фильтры -->
+<div class="card-pastel mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <input type="text" name="search" class="form-control form-control-pastel" placeholder="Поиск по номеру" value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="producer" class="form-select form-control-pastel">
+                    <option value="">Все производители</option>
+                    {% for display, code, selected in producers_with_selected %}
+                        <option value="{{ code }}" {% if selected %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="model" class="form-select form-control-pastel">
+                    <option value="">Все модели</option>
+                    {% for m, selected in models_with_selected %}
+                        <option value="{{ m.id }}" {% if selected %}selected{% endif %}>{{ m.model_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-control-pastel">
+                    <option value="">Все статусы</option>
+                    {% for s, selected in statuses_with_selected %}
+                        <option value="{{ s }}" {% if selected %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-primary w-100"><i class="fas fa-filter"></i> Применить</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица -->
+<div class="card-pastel">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>Заводской номер</th>
+                        <th>Модель</th>
+                        <th>Статус</th>
+                        <th>Ток</th>
+                        <th>Фазность</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for device in devices %}
+                    <tr>
+                        <td><strong>{{ device.serial_number }}</strong></td>
+                        <td>{{ device.model.model_name|default:"—" }}</td>
+                        <td>
+                            <span class="badge-pastel 
+                                {% if device.status == 'active' %}success
+                                {% elif device.status == 'repair' %}warning
+                                {% else %}idle{% endif %}">
+                                {{ device.status }}
+                            </span>
+                        </td>
+                        <td>{{ device.nominal_current }}</td>
+                        <td>{{ device.model.phases|default:"—" }}</td>
+                        <td>
+                            <a href="{% url 'edit_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'delete_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm text-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted">Нет устройств</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if total_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page=1">⏮</a>
+        </li>
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ page|add:"-1" }}">◀</a>
+        </li>
+        {% for p in page_range %}
+            {% if p == page %}
+                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+            {% elif p == 1 or p == total_pages or p >= page|add:"-2" and p <= page|add:"2" %}
+                <li class="page-item"><a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ p }}">{{ p }}</a></li>
+            {% elif p == page|add:"-3" or p == page|add:"3" %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ page|add:"1" }}">▶</a>
+        </li>
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ total_pages }}">⏭</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<p class="text-muted small mt-3">Всего записей: {{ total }}</p>
+{% endblock %}

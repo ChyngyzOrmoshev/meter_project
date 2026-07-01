@@ -24,12 +24,18 @@ def run_sync():
     logger.info(f'🔄 [{datetime.now()}] Запуск синхронизации Hexing KUK (комбинированная энергия CA)...')
     update_sync_status("Hexing KUK", "running")
 
+    # Получаем устройства из реестра
     devices_set = set(str(d['serial_number']).strip() for d in devices_col.find({}, {'serial_number': 1}))
     if not devices_set:
         logger.warning('⚠️ Реестр устройств пуст, синхронизация отменена.')
         update_sync_status("Hexing KUK", "idle", records_processed=0)
         return
 
+    # Проверяем, сколько записей уже есть
+    existing_count = readings_col.count_documents({'notes': 'Hexing KUK'})
+    logger.info(f"📊 Существующих записей Hexing KUK: {existing_count}")
+
+    # Подключаемся к MySQL
     try:
         conn = mysql.connector.connect(
             host=HEXING_HOST,
@@ -46,9 +52,12 @@ def run_sync():
 
     cursor = conn.cursor()
 
+    # Ищем последнюю запись
     last_reading = readings_col.find_one({'notes': 'Hexing KUK'}, sort=[('timestamp', -1)])
     if last_reading:
         last_time = last_reading['timestamp'] - timedelta(hours=1)
+        last_time_str = last_time.strftime("%Y-%m-%d %H:%M:%S")
+        logger.info(f"🕒 Последняя синхронизация: {last_time_str}")
         query = """
             SELECT 
                 m.METER_NO AS serial_number,
@@ -96,22 +105,32 @@ def run_sync():
                 'serial_number': sn,
                 'timestamp': timestamp,
                 'reading_value': float(reading_value),
-                'notes': 'Авто-сбор: база Hexing KUK'
+                'notes': 'Hexing KUK'
             }},
             upsert=True
         ))
         total += 1
         if len(updates) >= 1000:
-            readings_col.bulk_write(updates, ordered=False)
+            try:
+                result = readings_col.bulk_write(updates, ordered=False)
+                logger.info(f"   💾 Сохранено пакет: upserted={result.upserted_count}, modified={result.modified_count}")
+            except Exception as e:
+                logger.error(f"   ❌ Ошибка bulk_write: {e}")
             updates = []
-            logger.info(f'   Записано {total} показаний...')
 
     if updates:
-        readings_col.bulk_write(updates, ordered=False)
+        try:
+            result = readings_col.bulk_write(updates, ordered=False)
+            logger.info(f"   💾 Сохранено пакет: upserted={result.upserted_count}, modified={result.modified_count}")
+        except Exception as e:
+            logger.error(f"   ❌ Ошибка bulk_write: {e}")
 
     cursor.close()
     conn.close()
     logger.info(f'✅ Синхронизация Hexing KUK завершена. Обработано показаний: {total}')
+    # Проверяем итоговое количество
+    final_count = readings_col.count_documents({'notes': 'Hexing KUK'})
+    logger.info(f"📊 Итоговое количество записей Hexing KUK: {final_count}")
     update_sync_status("Hexing KUK", "success", records_processed=total)
 
 if __name__ == '__main__':

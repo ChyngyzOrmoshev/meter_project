@@ -1,0 +1,115 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-history"></i>Показания</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card-pastel mb-4">
+            <div class="card-header"><i class="fas fa-search"></i> Поиск прибора</div>
+            <div class="card-body">
+                <form method="get" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" name="serial" class="form-control form-control-pastel"
+                            placeholder="Введите номер" value="{{ serial }}">
+                        <button class="btn btn-pastel-primary" type="submit">Найти</button>
+                    </div>
+                </form>
+
+                {% if device %}
+                <div class="mt-3">
+                    <p><strong>Заводской номер:</strong> {{ device.serial_number }}</p>
+                    <p><strong>Модель:</strong> {{ device.model.model_name|default:"—" }}</p>
+                    <p><strong>Статус реестра:</strong>
+                        <span class="badge-pastel 
+                            {% if device.status == 'active' %}success
+                            {% elif device.status == 'repair' %}warning
+                            {% else %}idle{% endif %}">
+                            {{ device.status }}
+                        </span>
+                    </p>
+                    <p><strong>Статус связи:</strong>
+                        {% if is_online %}
+                        <span class="badge-pastel success">🟢 Онлайн</span>
+                        {% else %}
+                        <span class="badge-pastel error">🔴 Оффлайн</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Ток:</strong> {{ device.nominal_current|default:"—" }}</p>
+                    <p><strong>Фазность:</strong> {{ device.model.phases|default:"—" }}</p>
+                    {% if device.created_at %}
+                    <p><strong>Добавлен:</strong> {{ device.created_at|date:"Y-m-d H:i:s" }}</p>
+                    {% endif %}
+                </div>
+                {% elif serial %}
+                <div class="alert alert-warning">Прибор не найден</div>
+                {% else %}
+                <p class="text-muted">Введите номер для поиска</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card-pastel">
+            <div class="card-header"><i class="fas fa-table"></i> История показаний</div>
+            <div class="card-body">
+                {% if device %}
+                <form method="get" class="row g-2 mb-3">
+                    <input type="hidden" name="serial" value="{{ serial }}">
+                    <div class="col-md-3">
+                        <input type="date" name="start_date" class="form-control form-control-pastel"
+                            value="{{ start_date|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="end_date" class="form-control form-control-pastel"
+                            value="{{ end_date|default:'' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-pastel-primary w-100">Применить</button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="?serial={{ serial }}" class="btn btn-pastel-outline w-100">Сброс</a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="?serial={{ serial }}&start_date={{ start_3d }}&end_date={{ end_today }}"
+                            class="btn btn-pastel-outline btn-sm">3д</a>
+                        <a href="?serial={{ serial }}&start_date={{ start_7d }}&end_date={{ end_today }}"
+                            class="btn btn-pastel-outline btn-sm">7д</a>
+                        <a href="?serial={{ serial }}&start_date={{ start_30d }}&end_date={{ end_today }}"
+                            class="btn btn-pastel-outline btn-sm">30д</a>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-pastel">
+                        <thead>
+                            <tr>
+                                <th>Дата и время</th>
+                                <th>Значение</th>
+                                <th>Примечание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in readings %}
+                            <tr>
+                                <td>{{ r.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ r.reading_value|floatformat:3 }}</td>
+                                <td>{{ r.notes|default:"" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Нет показаний</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted small">Показано {{ readings|length }} записей</p>
+                {% else %}
+                <p class="text-muted">Показания появятся после поиска прибора.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

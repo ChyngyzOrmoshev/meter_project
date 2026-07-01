@@ -1,137 +1,180 @@
 services:
-  mongodb:
-    image: mongo:7.0
-    container_name: meters_db
+  mysql:
+    image: mysql:8.0
+    container_name: meters_mysql
     restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-      - ./backups:/backups
-
-  app:
-    build: ./app
-    container_name: meters_app
-    restart: always
-    depends_on:
-      - mongodb
-    ports:
-      - "8501:8501" # <-- Открываем порт для сайта в браузере
-    env_file:
-      - ./app/cEnergo.env # <-- ДОБАВЛЯЕМ ЭТУ СТРОКУ, чтобы контейнер подхватил пароли и настройки MSSQL
     environment:
-      - TZ=Asia/Bishkek
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: infoenergo
+      MYSQL_USER: infoenergo
+      MYSQL_PASSWORD: infopass
+    ports:
+      - "3306:3306"
     volumes:
-      - ./Catalog.xlsx:/app/catalog.xlsx
-      - ./app:/app # <-- связывает папку app на сервере с папкой /app в контейнере
-      - ./app/odbcinst.ini:/etc/odbcinst.ini
-      - ./logs:/app/logs
-    command: streamlit run web_site.py --server.port=8501 --server.address=0.0.0.0 # <-- Запускаем сайт при старте
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8501/_stcore/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ ИЗ MS SQL
-  sync-mssql:
-    build: ./app
-    container_name: meters_sync_mssql
-    restart: always # <-- Если сервер упадет или перезагрузится, робот включится сам
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_django
+    restart: always
     depends_on:
-      - mongodb
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
     env_file:
       - ./app/cEnergo.env
-    environment:
-      - TZ=Asia/Bishkek
     volumes:
-      - ./app:/app
-      - ./app/odbcinst.ini:/etc/odbcinst.ini
+      - ./django_app:/app
       - ./logs:/app/logs
-    command: python sync_mssql.py # <-- Запускаем именно робота, а не сайт
+      - ./Catalog.xlsx:/app/Catalog.xlsx
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py runserver 0.0.0.0:8000
 
-  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ С СЕРВЕРА SANXING
+  # Службы синхронизации
+  sync-mssql:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_sync_mssql
+    restart: always
+    depends_on:
+      - mysql
+      - django
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./django_app:/app
+      - ./logs:/app/logs
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_mssql
+
   sync-sanxing:
-    build: ./app
+    build:
+      context: .
+      dockerfile: Dockerfile.django
     container_name: meters_sync_sanxing
     restart: always
     depends_on:
-      - mongodb
+      - mysql
+      - django
     env_file:
       - ./app/cEnergo.env
-    environment:
-      - TZ=Asia/Bishkek
     volumes:
-      - ./app:/app
-      - ./app/odbcinst.ini:/etc/odbcinst.ini
+      - ./django_app:/app
       - ./logs:/app/logs
-    command: python sync_sanxing.py
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_sanxing
 
-  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ С СЕРВЕРА SANRISE
   sync-sanrise:
-    build: ./app
+    build:
+      context: .
+      dockerfile: Dockerfile.django
     container_name: meters_sync_sanrise
     restart: always
     depends_on:
-      - mongodb
+      - mysql
+      - django
     env_file:
       - ./app/cEnergo.env
-    environment:
-      - TZ=Asia/Bishkek
     volumes:
-      - ./app:/app
-      - ./app/odbcinst.ini:/etc/odbcinst.ini
+      - ./django_app:/app
       - ./logs:/app/logs
-    command: python sync_sanrise.py
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_sanrise
 
-  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ С СЕРВЕРА HEXING KUK
-  sync-hexing-kuk:
-    build: ./app
-    container_name: meters_sync_hexing_kuk
+  sync-hexing:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_sync_hexing
     restart: always
     depends_on:
-      - mongodb
+      - mysql
+      - django
     env_file:
       - ./app/cEnergo.env
-    environment:
-      - TZ=Asia/Bishkek
     volumes:
-      - ./app:/app
-      - ./app/odbcinst.ini:/etc/odbcinst.ini
+      - ./django_app:/app
       - ./logs:/app/logs
-    command: python sync_hexing_kuk.py
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_hexing
 
-  # РОБОТ АВТОМАТИЧЕСКОГО СБОРА ДАННЫХ С СЕРВЕРА RiseSun
   sync-risesun:
-    build: ./app
+    build:
+      context: .
+      dockerfile: Dockerfile.django
     container_name: meters_sync_risesun
     restart: always
     depends_on:
-      - mongodb
+      - mysql
+      - django
     env_file:
       - ./app/cEnergo.env
-    environment:
-      - TZ=Asia/Bishkek
     volumes:
-      - ./app:/app
-      - ./app/odbcinst.ini:/etc/odbcinst.ini
+      - ./django_app:/app
       - ./logs:/app/logs
-    command: python sync_risesun.py
-
-  # ВЕБ-ИНТЕРФЕЙС ДЛЯ БРАУЗЕРА
-  mongo-express:
-    image: mongo-express:latest
-    container_name: meters_web_admin
-    restart: always
-    ports:
-      - "8081:8081"
+      - ./app/cEnergo.env:/app/cEnergo.env
     environment:
-      - ME_CONFIG_MONGODB_SERVER=mongodb # Подключаемся к нашему контейнеру базы
-      - ME_CONFIG_BASICAUTH_USERNAME=admin # Логин для входа в веб-панель
-      - ME_CONFIG_BASICAUTH_PASSWORD=pass # Пароль для входа в веб-панель
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_risesun
+
+  sync-website:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_sync_website
+    restart: always
     depends_on:
-      - mongodb
+      - mysql
+      - django
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./django_app:/app
+      - ./downloads:/app/downloads
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_website
 
 volumes:
-  mongo_data:
+  mysql_data:

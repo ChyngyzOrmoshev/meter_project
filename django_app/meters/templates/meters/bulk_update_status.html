@@ -1,0 +1,29 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-edit"></i> Групповое изменение статуса</h1>
+
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-list"></i> Обновить статус для нескольких приборов</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Введите серийные номера (каждый с новой строки)</label>
+                <textarea name="serials" class="form-control form-control-pastel" rows="10"
+                    placeholder="084600001431&#10;084600001432"></textarea>
+                <div class="form-text">Минимум 1 номер.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Новый статус</label>
+                <select name="status" class="form-select form-control-pastel">
+                    <option value="active">active</option>
+                    <option value="repair">repair</option>
+                    <option value="inactive">inactive</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Обновить статус</button>
+            <a href="{% url 'devices' %}" class="btn btn-pastel-outline"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

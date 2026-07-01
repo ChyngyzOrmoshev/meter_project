@@ -1,0 +1,39 @@
+<table class="table table-pastel mb-0">
+    <thead>
+        <tr>
+            <th>Производитель</th>
+            <th>Всего приборов</th>
+            <th>Активных</th>
+            <th>% чтения</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stat in producer_stats %}
+        <tr>
+            <td><strong>{{ stat.producer }}</strong></td>
+            <td>{{ stat.total }}</td>
+            <td>{{ stat.active }}</td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="progress-pastel flex-grow-1 me-2">
+                        <div class="progress-bar 
+                            {% if stat.percent >= 80 %}bg-success-pastel
+                            {% elif stat.percent >= 50 %}bg-warning-pastel
+                            {% else %}bg-danger-pastel{% endif %}" role="progressbar"
+                            style="width: {{ stat.percent|floatformat:0 }}%;"
+                            aria-valuenow="{{ stat.percent|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <span style="font-size: 0.9rem; min-width: 3.5rem; text-align: right;">
+                        {{ stat.percent|floatformat:1 }}%
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center text-muted">Нет данных</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

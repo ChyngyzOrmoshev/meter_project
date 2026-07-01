@@ -1,0 +1,129 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-chart-pie"></i>Аналитика по приборам учета</h1>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="metric-pastel">
+            <div class="metric-icon"><i class="fas fa-cubes"></i></div>
+            <h5>Всего приборов</h5>
+            <h2>{{ total_devices }}</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-pastel">
+            <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
+            <h5>Активных на текущий день</h5>
+            <h2>{{ active_today }}</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-pastel">
+            <div class="metric-icon"><i class="fas fa-percent"></i></div>
+            <h5>% чтения</h5>
+            <h2>{{ active_percent }}%</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-pastel">
+            <div class="metric-icon"><i class="fas fa-edit"></i></div>
+            <h5>Ручных показаний</h5>
+            <h2>{{ manual_today }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="card-pastel mb-5">
+    <div class="card-header">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span><i class="fas fa-industry me-2"></i>Активность по производителям</span>
+            <div class="btn-group btn-group-sm" role="group">
+                <a href="?period=today"
+                    class="btn {% if period == 'today' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
+                    <i class="fas fa-calendar-day me-1"></i>Сегодня
+                </a>
+                <a href="?period=3d"
+                    class="btn {% if period == '3d' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
+                    <i class="fas fa-calendar-alt me-1"></i>3 дня
+                </a>
+                <a href="?period=7d"
+                    class="btn {% if period == '7d' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
+                    <i class="fas fa-calendar-alt me-1"></i>7 дней
+                </a>
+                <a href="?period=30d"
+                    class="btn {% if period == '30d' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
+                    <i class="fas fa-calendar-alt me-1"></i>30 дней
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body" id="producer-stats-container">
+        <div class="text-center py-4">
+            <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted" style="font-size: 0.9rem;">Загрузка данных...</p>
+        </div>
+    </div>
+</div>
+
+<div class="card-pastel">
+    <div class="card-header">
+        <i class="fas fa-robot me-2"></i>Статус синхронизаторов
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>Служба</th>
+                        <th>Статус</th>
+                        <th>Последнее обновление</th>
+                        <th>Записей</th>
+                        <th>Ошибка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sync_statuses %}
+                    <tr>
+                        <td><strong>{{ s.robot_name }}</strong></td>
+                        <td>
+                            <span class="badge-pastel 
+                                {% if s.status == 'success' %}success
+                                {% elif s.status == 'error' %}error
+                                {% elif s.status == 'running' %}warning
+                                {% else %}idle{% endif %}">
+                                {{ s.status }}
+                            </span>
+                        </td>
+                        <td>{{ s.last_update|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ s.records_processed }}</td>
+                        <td>{{ s.error|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const period = new URLSearchParams(window.location.search).get('period') || 'today';
+        fetch('{% url "producer_stats_table" %}?period=' + period)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('producer-stats-container').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('producer-stats-container').innerHTML =
+                    '<div class="alert alert-warning">Ошибка загрузки данных</div>';
+                console.error('Error loading producer stats:', error);
+            });
+    });
+</script>
+{% endblock %}

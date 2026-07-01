@@ -1,0 +1,27 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-trash-alt text-danger"></i>Подтверждение удаления</h1>
+
+<div class="card-pastel border-danger">
+    <div class="card-header bg-danger bg-opacity-10 text-danger">
+        <i class="fas fa-exclamation-triangle"></i> Вы уверены?
+    </div>
+    <div class="card-body">
+        <p>Вы собираетесь удалить <strong>{{ type }}</strong>:</p>
+        <blockquote class="blockquote p-3 bg-light rounded">
+            {% if object.serial_number %}
+            <strong>Заводской номер:</strong> {{ object.serial_number }}
+            {% else %}
+            <strong>{{ object.model_name }}</strong> ({{ object.catalog_code }})
+            {% endif %}
+        </blockquote>
+        <p class="text-danger">Это действие необратимо!</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Удалить</button>
+            <a href="{% if type == 'устройство' %}{% url 'devices' %}{% else %}{% url 'models' %}{% endif %}"
+                class="btn btn-pastel-outline"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

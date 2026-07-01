@@ -7,16 +7,27 @@ models_col = db["meter_models"]
 devices_col = db["devices"]
 readings_col = db["readings"]
 
-# Уникальный индекс на серийный номер (устройства)
+# Индексы для устройств
 devices_col.create_index([("serial_number", ASCENDING)], unique=True)
 
-# Уникальный составной индекс (серийник + временная метка) – гарантирует отсутствие дубликатов показаний
+# Индексы для показаний
+# Основной уникальный индекс (серийный номер + время) для предотвращения дублей
 readings_col.create_index(
-    [("serial_number", ASCENDING), ("timestamp", ASCENDING)], unique=True
+    [("serial_number", ASCENDING), ("timestamp", ASCENDING)],
+    unique=True
 )
 
-# Дополнительный индекс для быстрой сортировки по времени (используется в агрегациях)
+# Индекс для быстрой сортировки и фильтрации по времени
 readings_col.create_index([("timestamp", DESCENDING)])
+
+# Индекс для фильтрации по notes и времени (для дашборда и аналитики)
+readings_col.create_index([("notes", ASCENDING), ("timestamp", DESCENDING)])
+
+# Индекс для поиска по серийному номеру (если ищем конкретный)
+readings_col.create_index([("serial_number", ASCENDING)])
+
+# Индекс для агрегаций по дате (если часто группируем по дням)
+# Можно добавить частичный индекс, но пока оставим полноценный
 
 # Коллекция статусов синхронизаторов
 sync_status_col = db["sync_status"]

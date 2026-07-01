@@ -1,0 +1,86 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-upload"></i> Импорт показаний</h1>
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% if request.session.import_result %}
+<div class="alert alert-success">
+    <strong>Результат импорта:</strong><br>
+    Добавлено: {{ request.session.import_result.success }}<br>
+    Обновлено: {{ request.session.import_result.updated }}<br>
+    Ошибок: {{ request.session.import_result.error_count }} (первые 5: {{ request.session.import_result.errors|join:", "
+    }})<br>
+    Пропущено (устройство не найдено): {{ request.session.import_result.skipped_count }} (первые 5: {{
+    request.session.import_result.skipped|join:", " }})<br>
+    Пропущено (пустое значение): {{ request.session.import_result.empty_count }} (первые 5: {{
+    request.session.import_result.skipped_empty|join:", " }})<br>
+    <a href="?clear_result=1" class="btn btn-sm btn-pastel-outline">Очистить результат</a>
+</div>
+{% endif %}
+<!-- Ручной групповой ввод -->
+<div class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-edit"></i> Групповой ввод (построчно)</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="manual_submit" value="1">
+            <div class="mb-3">
+                <label class="form-label">Дата снятия</label>
+                <input type="date" name="date" class="form-control form-control-pastel" value="{% now 'Y-m-d' %}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Данные (каждая строка: номер пробел значение)</label>
+                <textarea name="readings_text" class="form-control form-control-pastel" rows="8"
+                    placeholder="084600001431 123.45"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Примечание (общее)</label>
+                <input type="text" name="notes" class="form-control form-control-pastel">
+            </div>
+            <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Добавить группу</button>
+        </form>
+    </div>
+</div>
+
+<!-- Импорт из Excel -->
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-file-excel"></i> Импорт из Excel</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="excel_submit" value="1">
+            <div class="mb-3">
+                <label class="form-label">Excel-файл (.xlsx, .xls)</label>
+                <input type="file" name="excel_file" class="form-control form-control-pastel" accept=".xlsx,.xls"
+                    required>
+            </div>
+            <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-upload"></i> Загрузить и
+                проанализировать</button>
+        </form>
+    </div>
+</div>
+<!-- Оверлей загрузки -->
+<div id="loading-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;">
+        <span class="visually-hidden">Загрузка...</span>
+    </div>
+</div>
+
+<script>
+    // Показываем оверлей при отправке любой формы на странице
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        });
+    });
+</script>
+{% endblock %}

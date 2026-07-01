@@ -5,19 +5,22 @@ from logger_config import logger
 def update_sync_status(robot_name: str, status: str, records_processed: int = 0, error: str = None):
     """
     Обновляет статус синхронизатора в MongoDB и логирует действие.
-    Сохраняем время в UTC.
+    При успешном статусе поле error удаляется из документа.
     """
     doc = {
         "robot_name": robot_name,
         "status": status,
-        "last_update": datetime.now(timezone.utc),  # <-- UTC
+        "last_update": datetime.now(timezone.utc),
         "records_processed": records_processed,
     }
+    update_operation = {"$set": doc}
     if error:
         doc["error"] = error
+        update_operation["$set"] = doc
         logger.error(f"{robot_name}: {status} - {error}")
     else:
-        doc.pop("error", None)
+        # Удаляем поле error, если оно было
+        update_operation["$unset"] = {"error": ""}
         if status == "success":
             logger.info(f"{robot_name}: успешно, обработано {records_processed} записей")
         elif status == "running":
@@ -28,7 +31,7 @@ def update_sync_status(robot_name: str, status: str, records_processed: int = 0,
     try:
         sync_status_col.update_one(
             {"robot_name": robot_name},
-            {"$set": doc},
+            update_operation,
             upsert=True
         )
     except Exception as e:
