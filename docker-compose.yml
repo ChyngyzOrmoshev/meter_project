@@ -174,7 +174,7 @@ services:
       - MYSQL_DATABASE=infoenergo
       - MYSQL_USER=infoenergo
       - MYSQL_PASSWORD=infopass
-    command: python manage.py sync_website
+    command: python manage.py sync_website --daemon --verbose
 
 volumes:
   mysql_data:
