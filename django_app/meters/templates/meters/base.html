@@ -33,7 +33,6 @@
 
         main {
             flex: 1 0 auto;
-            /* растягивается на всю доступную высоту */
         }
 
         .container-1190 {
@@ -239,8 +238,37 @@
             transform: translateY(-1px);
         }
 
+        .btn-pastel-success {
+            background: #d4edda;
+            border: none;
+            color: #155724;
+            border-radius: 30px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-pastel-success:hover {
+            background: #b8e0c8;
+            transform: translateY(-1px);
+        }
+
+        .btn-pastel-outline {
+            background: transparent;
+            border: 1px solid #d0d9e4;
+            color: #4a6278;
+            border-radius: 30px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-pastel-outline:hover {
+            background: #f0f4f9;
+            border-color: #b0c0d0;
+        }
+
         /* === ПРОГРЕСС-БАР === */
-        /* ===== ПРОГРЕСС-БАРЫ ===== */
         .progress-pastel {
             height: 10px;
             background: #eef2f6;
@@ -268,12 +296,8 @@
         }
 
         /* === ФУТЕР === */
-        /* === STICKY FOOTER === */
-
-
         .footer-pastel {
             flex-shrink: 0;
-            /* не сжимается */
             margin-top: 1.5rem;
             padding: 0.5rem 0;
             border-top: 1px solid #eef2f6;
@@ -281,15 +305,6 @@
             font-size: 1rem;
             text-align: center;
         }
-
-        /* .footer-pastel {
-            margin-top: 1.5rem;
-            padding: 0.5rem 0;
-            border-top: 1px solid #eef2f6;
-            color: #8aa0b2;
-            font-size: 1rem;
-            text-align: center;
-        } */
 
         /* === ЗАГОЛОВКИ === */
         .page-title {
@@ -336,30 +351,40 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto gap-3"> <!-- gap-3 для отступов между пунктами -->
-                    <li class="nav-item"><a
-                            class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-                            href="{% url 'dashboard' %}"><i class="fas fa-chart-pie"></i> Дашборд</a></li>
-                    <li class="nav-item"><a
-                            class="nav-link {% if request.resolver_match.url_name == 'readings' %}active{% endif %}"
-                            href="{% url 'readings' %}"><i class="fas fa-history"></i> Показания</a></li>
-                    {% if user.is_authenticated and user.is_staff or user.groups.all.0.name == 'operator' %}
-                    <li class="nav-item"><a
-                            class="nav-link {% if request.resolver_match.url_name == 'devices' %}active{% endif %}"
-                            href="{% url 'devices' %}"><i class="fas fa-server"></i> Реестр</a></li>
-                    <li class="nav-item"><a
-                            class="nav-link {% if request.resolver_match.url_name == 'models' %}active{% endif %}"
-                            href="{% url 'models' %}"><i class="fas fa-cubes"></i> Модели</a></li>
-                    <li class="nav-item"><a
-                            class="nav-link {% if request.resolver_match.url_name == 'bulk_readings' %}active{% endif %}"
-                            href="{% url 'bulk_readings' %}"><i class="fas fa-upload"></i> Импорт показаний </a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'missing_readings' %}"><i
-                                class="fas fa-file-alt"></i> Отчеты</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/"><i class="fas fa-user-cog"></i> Админка</a>
+                <ul class="navbar-nav mx-auto gap-3">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                            href="{% url 'dashboard' %}"><i class="fas fa-chart-pie"></i> Дашборд</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'readings' %}active{% endif %}"
+                            href="{% url 'readings' %}"><i class="fas fa-history"></i> Показания</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'missing_readings' %}"><i class="fas fa-file-alt"></i>
+                            Отчеты</a>
+                    </li>
+                    {% if user.is_authenticated and user.is_staff or user.groups.all.0.name == 'operator' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'devices' %}active{% endif %}"
+                            href="{% url 'devices' %}"><i class="fas fa-server"></i> Реестр</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'models' %}active{% endif %}"
+                            href="{% url 'models' %}"><i class="fas fa-cubes"></i> Модели</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'bulk_readings' %}active{% endif %}"
+                            href="{% url 'bulk_readings' %}"><i class="fas fa-upload"></i> Импорт показаний</a>
+                    </li>
+
+
+                    <!-- <li class="nav-item">
+                        <a class="nav-link" href="/admin/"><i class="fas fa-user-cog"></i> Админка</a>
+                    </li> -->
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center ms-4"> <!-- ms-4 для отступа от меню -->
+                <div class="d-flex align-items-center ms-4">
                     <span class="user-info me-3">
                         <i class="fas fa-user-circle"></i>
                         {% if user.is_authenticated %}{{ user.username }}{% else %}Гость{% endif %}

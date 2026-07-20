@@ -50,85 +50,194 @@
                 <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс</a>
             </div>
         </form>
+        <!-- Фильтры по иерархии (вторая строка) -->
+        <form method="get" class="row g-3 mt-3">
+            <div class="col-md-2">
+                <select name="region" class="form-select form-control-pastel">
+                    <option value="">Все районы</option>
+                    {% for r in regions %}
+                        <option value="{{ r.id }}" {% if r.id == selected_region|add:0 %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="substation" class="form-select form-control-pastel">
+                    <option value="">Все подстанции</option>
+                    {% for s in substations %}
+                        <option value="{{ s.id }}" {% if s.id == selected_substation|add:0 %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="feeder" class="form-select form-control-pastel">
+                    <option value="">Все фидеры</option>
+                    {% for f in feeders %}
+                        <option value="{{ f.id }}" {% if f.id == selected_feeder|add:0 %}selected{% endif %}>{{ f.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="tp" class="form-select form-control-pastel">
+                    <option value="">Все ТП</option>
+                    {% for t in tps %}
+                        <option value="{{ t.id }}" {% if t.id == selected_tp|add:0 %}selected{% endif %}>{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-secondary w-100"><i class="fas fa-sitemap"></i> Фильтр по иерархии</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс иерархии</a>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- Таблица -->
-<div class="card-pastel">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-pastel mb-0">
-                <thead>
-                    <tr>
-                        <th>Заводской номер</th>
-                        <th>Модель</th>
-                        <th>Статус</th>
-                        <th>Ток</th>
-                        <th>Фазность</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for device in devices %}
-                    <tr>
-                        <td><strong>{{ device.serial_number }}</strong></td>
-                        <td>{{ device.model.model_name|default:"—" }}</td>
-                        <td>
-                            <span class="badge-pastel 
-                                {% if device.status == 'active' %}success
-                                {% elif device.status == 'repair' %}warning
-                                {% else %}idle{% endif %}">
-                                {{ device.status }}
-                            </span>
-                        </td>
-                        <td>{{ device.nominal_current }}</td>
-                        <td>{{ device.model.phases|default:"—" }}</td>
-                        <td>
-                            <a href="{% url 'edit_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'delete_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm text-danger">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted">Нет устройств</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
+<!-- Форма массового обновления -->
+<form method="post" id="mass-update-form">
+    {% csrf_token %}
+    <div class="card-pastel mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label for="target_region" class="form-label small">Район</label>
+                    <select name="target_region" id="target_region" class="form-select form-select-sm form-control-pastel">
+                        <option value="">—</option>
+                        {% for r in regions %}
+                            <option value="{{ r.id }}">{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="target_substation" class="form-label small">Подстанция</label>
+                    <select name="target_substation" id="target_substation" class="form-select form-select-sm form-control-pastel">
+                        <option value="">—</option>
+                        {% for s in substations %}
+                            <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="target_feeder" class="form-label small">Фидер</label>
+                    <select name="target_feeder" id="target_feeder" class="form-select form-select-sm form-control-pastel">
+                        <option value="">—</option>
+                        {% for f in feeders %}
+                            <option value="{{ f.id }}">{{ f.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="target_tp" class="form-label small">ТП</label>
+                    <select name="target_tp" id="target_tp" class="form-select form-select-sm form-control-pastel">
+                        <option value="">—</option>
+                        {% for t in tps %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-pastel-success btn-sm" onclick="return confirm('Применить изменения к выбранным устройствам?')">
+                        <i class="fas fa-save"></i> Применить к выбранным
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <span class="text-muted small">(оставьте поле пустым, чтобы не менять)</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Таблица -->
+    <div class="card-pastel">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-pastel mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:30px"><input type="checkbox" id="select-all" class="form-check-input"></th>
+                            <th>Заводской номер</th>
+                            <th>Модель</th>
+                            <th>Статус</th>
+                            <th>Район</th>
+                            <th>Подстанция</th>
+                            <th>Фидер</th>
+                            <th>ТП</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for device in devices %}
+                        <tr>
+                            <td><input type="checkbox" name="selected_devices" value="{{ device.id }}" class="form-check-input device-checkbox"></td>
+                            <td><strong>{{ device.serial_number }}</strong></td>
+                            <td>{{ device.model.model_name|default:"—" }}</td>
+                            <td>
+                                <span class="badge-pastel 
+                                    {% if device.status == 'active' %}success
+                                    {% elif device.status == 'repair' %}warning
+                                    {% else %}idle{% endif %}">
+                                    {{ device.status }}
+                                </span>
+                            </td>
+                            <td>{{ device.region.name|default:"—" }}</td>
+                            <td>{{ device.substation.name|default:"—" }}</td>
+                            <td>{{ device.feeder.name|default:"—" }}</td>
+                            <td>{{ device.tp.name|default:"—" }}</td>
+                            <td>
+                                <a href="{% url 'edit_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'delete_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm text-danger">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center text-muted">Нет устройств</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
 
 <!-- Пагинация -->
 {% if total_pages > 1 %}
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
         <li class="page-item {% if page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page=1">⏮</a>
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page=1">⏮</a>
         </li>
         <li class="page-item {% if page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ page|add:"-1" }}">◀</a>
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ page|add:"-1" }}">◀</a>
         </li>
         {% for p in page_range %}
             {% if p == page %}
                 <li class="page-item active"><span class="page-link">{{ p }}</span></li>
             {% elif p == 1 or p == total_pages or p >= page|add:"-2" and p <= page|add:"2" %}
-                <li class="page-item"><a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ p }}">{{ p }}</a></li>
+                <li class="page-item"><a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ p }}">{{ p }}</a></li>
             {% elif p == page|add:"-3" or p == page|add:"3" %}
                 <li class="page-item disabled"><span class="page-link">…</span></li>
             {% endif %}
         {% endfor %}
         <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ page|add:"1" }}">▶</a>
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ page|add:"1" }}">▶</a>
         </li>
         <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&page={{ total_pages }}">⏭</a>
+            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ total_pages }}">⏭</a>
         </li>
     </ul>
 </nav>
 {% endif %}
 
 <p class="text-muted small mt-3">Всего записей: {{ total }}</p>
+
+<script>
+    // Выделить все чекбоксы
+    document.getElementById('select-all').addEventListener('change', function(e) {
+        document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = e.target.checked);
+    });
+</script>
 {% endblock %}

@@ -36,6 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libcairo2 \
     libasound2 \
+    curl\
+    gnupg\
+    docker.io\
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем и устанавливаем Python-зависимости

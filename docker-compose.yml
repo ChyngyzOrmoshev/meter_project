@@ -36,6 +36,7 @@ services:
       - ./logs:/app/logs
       - ./Catalog.xlsx:/app/Catalog.xlsx
       - ./app/cEnergo.env:/app/cEnergo.env
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - MYSQL_HOST=mysql
       - MYSQL_DATABASE=infoenergo
@@ -66,11 +67,11 @@ services:
       - MYSQL_PASSWORD=infopass
     command: python manage.py sync_mssql
 
-  sync-sanxing:
+  sync-sanxing-old:
     build:
       context: .
       dockerfile: Dockerfile.django
-    container_name: meters_sync_sanxing
+    container_name: meters_sync_sanxing_old
     restart: always
     depends_on:
       - mysql
@@ -110,11 +111,11 @@ services:
       - MYSQL_PASSWORD=infopass
     command: python manage.py sync_sanrise
 
-  sync-hexing:
+  sync-hexing-kuk:
     build:
       context: .
       dockerfile: Dockerfile.django
-    container_name: meters_sync_hexing
+    container_name: meters_sync_hexing_kuk
     restart: always
     depends_on:
       - mysql
@@ -154,11 +155,11 @@ services:
       - MYSQL_PASSWORD=infopass
     command: python manage.py sync_risesun
 
-  sync-website:
+  sync-sanxing-new-100a:
     build:
       context: .
       dockerfile: Dockerfile.django
-    container_name: meters_sync_website
+    container_name: meters_sync_sanxing_new_100a
     restart: always
     depends_on:
       - mysql
@@ -176,5 +177,70 @@ services:
       - MYSQL_PASSWORD=infopass
     command: python manage.py sync_website --daemon --verbose
 
+  sync-sanxing-new-5a:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_sync_sanxing_new_5a
+    restart: always
+    depends_on:
+      - mysql
+      - django
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./django_app:/app
+      - ./downloads:/app/downloads
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_website_period1 --daemon --verbose
+
+  sync-star:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_sync_star
+    restart: always
+    depends_on:
+      - mysql
+      - django
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./django_app:/app
+      - ./downloads:/app/downloads
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_star --daemon --verbose
+
+  sync-hxn-pop:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: meters_sync_hexing_pop
+    restart: always
+    depends_on:
+      - mysql
+      - django
+    env_file:
+      - ./app/cEnergo.env
+    volumes:
+      - ./django_app:/app
+      - ./downloads:/app/downloads
+      - ./app/cEnergo.env:/app/cEnergo.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=infoenergo
+      - MYSQL_USER=infoenergo
+      - MYSQL_PASSWORD=infopass
+    command: python manage.py sync_hxn --daemon --verbose
 volumes:
   mysql_data:

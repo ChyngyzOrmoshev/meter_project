@@ -66,7 +66,7 @@
         </div>
     </div>
 </div>
-
+{% if user.is_staff %}
 <div class="card-pastel">
     <div class="card-header">
         <i class="fas fa-robot me-2"></i>Статус синхронизаторов
@@ -81,6 +81,7 @@
                         <th>Последнее обновление</th>
                         <th>Записей</th>
                         <th>Ошибка</th>
+                        <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,8 +100,17 @@
                         <td>{{ s.last_update|date:"Y-m-d H:i:s" }}</td>
                         <td>{{ s.records_processed }}</td>
                         <td>{{ s.error|default:"—" }}</td>
+                        <td>
+                            {% if s.robot_name %}
+                            <button class="btn btn-pastel-outline btn-sm restart-btn" data-robot="{{ s.robot_name }}">
+                                <i class="fas fa-sync-alt"></i> Перезапустить
+                            </button>
+                            {% endif %}
+                            <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+                        </td>
                     </tr>
                     {% empty %}
+
                     <tr>
                         <td colspan="5" class="text-center text-muted">Нет данных</td>
                     </tr>
@@ -110,7 +120,7 @@
         </div>
     </div>
 </div>
-
+{% endif %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const period = new URLSearchParams(window.location.search).get('period') || 'today';
@@ -124,6 +134,53 @@
                     '<div class="alert alert-warning">Ошибка загрузки данных</div>';
                 console.error('Error loading producer stats:', error);
             });
+    });
+    // Получение CSRF-токена из cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    document.querySelectorAll('.restart-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const robot = this.dataset.robot;
+            if (!robot) {
+                alert('Ошибка: имя робота не указано');
+                return;
+            }
+            if (!confirm(`Перезапустить синхронизацию для ${robot}?`)) return;
+            fetch(`/restart-robot/${encodeURIComponent(robot)}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(data.message || data.error || 'Запрос выполнен');
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Ошибка: ' + err.message);
+                });
+        });
     });
 </script>
 {% endblock %}

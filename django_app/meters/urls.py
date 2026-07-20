@@ -21,4 +21,8 @@ urlpatterns = [
     path('missing-readings/', views.missing_readings_report, name='missing_readings'),
     path('devices/bulk-status/', views.bulk_update_status_page, name='bulk_update_status_page'),
     path('import-readings-excel/', views.import_readings_excel, name='import_readings_excel'),
+    path('restart-robot/<str:robot_name>/', views.restart_robot, name='restart_robot'),
+    # path('balance/', views.balance_report, name='balance_report'),
+    # path('directories/', views.directories, name='directories'),
+    # path('directories-table/', views.directories_table, name='directories_table'),
 ]

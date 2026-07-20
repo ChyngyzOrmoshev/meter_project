@@ -17,8 +17,11 @@ from io import BytesIO
 import pandas as pd
 import logging
 import threading
-
-from .models import Device, Reading, SyncStatus, MeterModel
+from decimal import Decimal
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import subprocess
+from .models import Device, Reading, SyncStatus, MeterModel, Region, Substation, Feeder, TransformerSubstation
 
 logger = logging.getLogger(__name__)
 
@@ -170,30 +173,44 @@ def dashboard(request):
         cache.set(cache_key, data, 600)
     return render(request, 'meters/dashboard.html', data)
 
-# ===== УСТРОЙСТВА (Реестр) =====
+# ===== УСТРОЙСТВА (Реестр) – ОБНОВЛЁННАЯ ВЕРСИЯ =====
 @login_required
 @user_passes_test(is_allowed_user)
 def devices(request):
+    # Получаем фильтры из GET
     search = request.GET.get('search', '')
     producer_filter = request.GET.get('producer', '')
     model_filter = request.GET.get('model', '')
     status_filter = request.GET.get('status', '')
+    region_filter = request.GET.get('region', '')
+    substation_filter = request.GET.get('substation', '')
+    feeder_filter = request.GET.get('feeder', '')
+    tp_filter = request.GET.get('tp', '')
+
+    # Пагинация
     page = int(request.GET.get('page', 1))
     per_page = 20
 
-    qs = Device.objects.select_related('model')
+    # Базовый запрос с предзагрузкой связей
+    qs = Device.objects.select_related('model', 'region', 'substation', 'feeder', 'tp')
 
+    # Применяем фильтры
     if search:
-        qs = qs.filter(serial_number__icontains=search)
-
+        qs = qs.filter(Q(serial_number__icontains=search) | Q(model__model_name__icontains=search))
     if producer_filter:
         qs = qs.filter(model__device_type_str=producer_filter)
-
     if model_filter:
         qs = qs.filter(model__id=model_filter)
-
     if status_filter:
         qs = qs.filter(status=status_filter)
+    if region_filter:
+        qs = qs.filter(region_id=region_filter)
+    if substation_filter:
+        qs = qs.filter(substation_id=substation_filter)
+    if feeder_filter:
+        qs = qs.filter(feeder_id=feeder_filter)
+    if tp_filter:
+        qs = qs.filter(tp_id=tp_filter)
 
     total = qs.count()
     total_pages = (total + per_page - 1) // per_page if total > 0 else 1
@@ -202,6 +219,7 @@ def devices(request):
     devices_list = qs.order_by('serial_number')[(page-1)*per_page:page*per_page]
     page_range = range(1, total_pages + 1)
 
+    # Получаем списки для выпадающих фильтров
     codes = MeterModel.objects.values_list('device_type_str', flat=True).distinct().order_by('device_type_str')
     producers_with_selected = []
     for code in codes:
@@ -217,6 +235,45 @@ def devices(request):
     statuses = ['active', 'repair', 'inactive']
     statuses_with_selected = [(s, s == status_filter) for s in statuses]
 
+    # Списки для иерархии (регионы, подстанции, фидеры, ТП)
+    regions = Region.objects.all().order_by('name')
+    substations = Substation.objects.all().order_by('name')
+    feeders = Feeder.objects.all().order_by('name')
+    tps = TransformerSubstation.objects.all().order_by('name')
+
+    # Обработка POST-запроса для массового обновления привязки
+    if request.method == 'POST':
+        selected_ids = request.POST.getlist('selected_devices')
+        if not selected_ids:
+            messages.warning(request, 'Выберите хотя бы одно устройство.')
+            return redirect(request.path)
+
+        target_region = request.POST.get('target_region')
+        target_substation = request.POST.get('target_substation')
+        target_feeder = request.POST.get('target_feeder')
+        target_tp = request.POST.get('target_tp')
+
+        update_fields = {}
+        if target_region and target_region != '':
+            update_fields['region_id'] = target_region
+        if target_substation and target_substation != '':
+            update_fields['substation_id'] = target_substation
+        if target_feeder and target_feeder != '':
+            update_fields['feeder_id'] = target_feeder
+        if target_tp and target_tp != '':
+            update_fields['tp_id'] = target_tp
+
+        if not update_fields:
+            messages.warning(request, 'Выберите хотя бы одно поле для обновления.')
+            return redirect(request.path)
+
+        # Применяем обновление
+        updated_count = Device.objects.filter(id__in=selected_ids).update(**update_fields)
+        messages.success(request, f'Обновлено {updated_count} устройств.')
+
+        # Перенаправляем, чтобы избежать повторной отправки формы
+        return redirect(request.path)
+
     context = {
         'devices': devices_list,
         'total': total,
@@ -231,6 +288,14 @@ def devices(request):
         'producer_filter': producer_filter,
         'model_filter': model_filter,
         'status_filter': status_filter,
+        'regions': regions,
+        'substations': substations,
+        'feeders': feeders,
+        'tps': tps,
+        'selected_region': region_filter,
+        'selected_substation': substation_filter,
+        'selected_feeder': feeder_filter,
+        'selected_tp': tp_filter,
     }
     return render(request, 'meters/devices.html', context)
 
@@ -948,7 +1013,7 @@ def missing_readings_report(request):
 
     # ===== ПАГИНАЦИЯ =====
     page = int(request.GET.get('page', 1))
-    per_page = 50
+    per_page = 10
     total = devices_qs.count()
     total_pages = (total + per_page - 1) // per_page if total > 0 else 1
     if page > total_pages:
@@ -1190,3 +1255,462 @@ def import_readings_excel(request):
         return redirect('bulk_readings')  # или 'devices', но лучше на страницу импорта
 
     return render(request, 'meters/import_readings_excel.html')
+
+# ===== ОТЧЁТ БАЛАНСА =====
+from decimal import Decimal
+
+@login_required
+@user_passes_test(is_allowed_user)
+def balance_report(request):
+    from django.db import connection
+    from datetime import datetime
+
+    date_str = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+    level = request.GET.get('level', 'tp')
+    export = request.GET.get('export', '')
+
+    try:
+        report_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        report_date = datetime.now().date()
+        date_str = report_date.strftime('%Y-%m-%d')
+
+    # Формируем запрос в зависимости от уровня
+    if level == 'tp':
+        query = """
+            SELECT
+                t.id AS object_id,
+                t.name AS object_name,
+                f.name AS parent_name,
+                r.name AS region_name,
+                hd.serial_number AS head_serial,
+                hr.reading_value AS head_reading,
+                COALESCE(SUM(cr.reading_value), 0) AS sum_children,
+                (COALESCE(hr.reading_value, 0) - COALESCE(SUM(cr.reading_value), 0)) AS balance
+            FROM transformer_substations t
+            JOIN feeders f ON f.id = t.feeder_id
+            JOIN substations s ON s.id = f.substation_id
+            JOIN regions r ON r.id = s.region_id
+            LEFT JOIN devices hd ON hd.id = t.head_meter_id
+            LEFT JOIN readings hr ON hr.device_id = hd.id AND DATE(hr.timestamp) = %s
+            LEFT JOIN devices cd ON cd.tp_id = t.id AND cd.id != t.head_meter_id
+            LEFT JOIN readings cr ON cr.device_id = cd.id AND DATE(cr.timestamp) = %s
+            GROUP BY t.id, t.name, f.name, r.name, hd.serial_number, hr.reading_value
+            ORDER BY t.name
+        """
+        params = [report_date, report_date]
+        columns = ['ТП', 'Фидер', 'Район', 'Головной счётчик', 'Показание', 'Сумма подчинённых', 'Баланс']
+        header = ['object_name', 'parent_name', 'region_name', 'head_serial', 'head_reading', 'sum_children', 'balance']
+    elif level == 'feeder':
+        query = """
+            SELECT
+                f.id AS object_id,
+                f.name AS object_name,
+                s.name AS parent_name,
+                r.name AS region_name,
+                hd.serial_number AS head_serial,
+                hr.reading_value AS head_reading,
+                COALESCE(SUM(cr.reading_value), 0) AS sum_children,
+                (COALESCE(hr.reading_value, 0) - COALESCE(SUM(cr.reading_value), 0)) AS balance
+            FROM feeders f
+            JOIN substations s ON s.id = f.substation_id
+            JOIN regions r ON r.id = s.region_id
+            LEFT JOIN devices hd ON hd.id = f.head_meter_id
+            LEFT JOIN readings hr ON hr.device_id = hd.id AND DATE(hr.timestamp) = %s
+            LEFT JOIN devices cd ON cd.feeder_id = f.id AND cd.id != f.head_meter_id
+            LEFT JOIN readings cr ON cr.device_id = cd.id AND DATE(cr.timestamp) = %s
+            GROUP BY f.id, f.name, s.name, r.name, hd.serial_number, hr.reading_value
+            ORDER BY f.name
+        """
+        params = [report_date, report_date]
+        columns = ['Фидер', 'Подстанция', 'Район', 'Головной счётчик', 'Показание', 'Сумма подчинённых', 'Баланс']
+        header = ['object_name', 'parent_name', 'region_name', 'head_serial', 'head_reading', 'sum_children', 'balance']
+    elif level == 'substation':
+        query = """
+            SELECT
+                s.id AS object_id,
+                s.name AS object_name,
+                r.name AS parent_name,
+                '' AS region_name,
+                hd.serial_number AS head_serial,
+                hr.reading_value AS head_reading,
+                COALESCE(SUM(cr.reading_value), 0) AS sum_children,
+                (COALESCE(hr.reading_value, 0) - COALESCE(SUM(cr.reading_value), 0)) AS balance
+            FROM substations s
+            JOIN regions r ON r.id = s.region_id
+            LEFT JOIN devices hd ON hd.id = s.head_meter_id
+            LEFT JOIN readings hr ON hr.device_id = hd.id AND DATE(hr.timestamp) = %s
+            LEFT JOIN devices cd ON cd.substation_id = s.id AND cd.id != s.head_meter_id
+            LEFT JOIN readings cr ON cr.device_id = cd.id AND DATE(cr.timestamp) = %s
+            GROUP BY s.id, s.name, r.name, hd.serial_number, hr.reading_value
+            ORDER BY s.name
+        """
+        params = [report_date, report_date]
+        columns = ['Подстанция', 'Район', 'Головной счётчик', 'Показание', 'Сумма подчинённых', 'Баланс']
+        header = ['object_name', 'parent_name', 'head_serial', 'head_reading', 'sum_children', 'balance']
+    else:  # region
+        query = """
+            SELECT
+                r.id AS object_id,
+                r.name AS object_name,
+                '' AS parent_name,
+                '' AS region_name,
+                hd.serial_number AS head_serial,
+                hr.reading_value AS head_reading,
+                COALESCE(SUM(cr.reading_value), 0) AS sum_children,
+                (COALESCE(hr.reading_value, 0) - COALESCE(SUM(cr.reading_value), 0)) AS balance
+            FROM regions r
+            LEFT JOIN devices hd ON hd.id = r.head_meter_id
+            LEFT JOIN readings hr ON hr.device_id = hd.id AND DATE(hr.timestamp) = %s
+            LEFT JOIN devices cd ON cd.region_id = r.id AND cd.id != r.head_meter_id
+            LEFT JOIN readings cr ON cr.device_id = cd.id AND DATE(cr.timestamp) = %s
+            GROUP BY r.id, r.name, hd.serial_number, hr.reading_value
+            ORDER BY r.name
+        """
+        params = [report_date, report_date]
+        columns = ['Район', 'Головной счётчик', 'Показание', 'Сумма подчинённых', 'Баланс']
+        header = ['object_name', 'head_serial', 'head_reading', 'sum_children', 'balance']
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+    data = []
+    for row in rows:
+        item = {}
+        for i, col in enumerate(header):
+            val = row[i]
+            if isinstance(val, Decimal):
+                val = float(val)
+            item[col] = val if val is not None else 0
+        data.append(item)
+
+    # Экспорт
+    if export == 'excel':
+        import openpyxl
+        from openpyxl.styles import Font, Alignment
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"Баланс {report_date}"
+        for col, title in enumerate(columns, 1):
+            cell = ws.cell(row=1, column=col, value=title)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center')
+        for row_idx, item in enumerate(data, 2):
+            for col_idx, key in enumerate(header, 1):
+                ws.cell(row=row_idx, column=col_idx, value=item.get(key, ''))
+        for col in ws.columns:
+            max_length = 0
+            col_letter = col[0].column_letter
+            for cell in col:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            ws.column_dimensions[col_letter].width = max_length + 2
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="balance_{report_date}_{level}.xlsx"'
+        wb.save(response)
+        return response
+
+    if export == 'csv':
+        import csv
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="balance_{report_date}_{level}.csv"'
+        writer = csv.writer(response)
+        writer.writerow(columns)
+        for item in data:
+            row = [item.get(key, '') for key in header]
+            writer.writerow(row)
+        return response
+
+    levels = [
+        ('tp', 'ТП', level == 'tp'),
+        ('feeder', 'Фидер', level == 'feeder'),
+        ('substation', 'Подстанция', level == 'substation'),
+        ('region', 'Район', level == 'region'),
+    ]
+
+    context = {
+        'data': data,
+        'columns': columns,
+        'header': header,
+        'date': date_str,
+        'level': level,
+        'levels': levels,
+        'report_date': report_date,
+    }
+    return render(request, 'meters/balance.html', context)
+
+import subprocess
+import threading
+import logging
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.csrf import csrf_exempt
+
+logger = logging.getLogger(__name__)
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@csrf_exempt
+def restart_robot(request, robot_name):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    # Маппинг: имя робота -> имя контейнера и команда
+    robot_config = {
+        'RiseSun': {'command': 'sync_risesun', 'container': 'meters_sync_risesun'},
+        'SunRise': {'command': 'sync_sunrise', 'container': 'meters_sync_sanrise'},
+        'cEnergo': {'command': 'sync_mssql', 'container': 'meters_sync_mssql'},
+        'Hexing_KUK': {'command': 'sync_hexing', 'container': 'meters_sync_hexing_kuk'},
+        'Hexing_POP': {'command': 'sync_hxn', 'container': 'meters_sync_hexing_pop'},
+        'Sanxing_old': {'command': 'sync_sanxing', 'container': 'meters_sync_sanxing_old'},
+        'Sanxing_new_100A': {'command': 'sync_website', 'container': 'meters_sync_sanxing_new_100a'},
+        'Sanxing_new_5A': {'command': 'sync_website_period1', 'container': 'meters_sync_sanxing_new_5a'},
+        'Star': {'command': 'sync_star', 'container': 'meters_sync_star'},
+    }
+
+    config = robot_config.get(robot_name)
+    if not config:
+        return JsonResponse({'error': f'Unknown robot: {robot_name}'}, status=400)
+
+    container = config['container']
+    command = config['command']
+
+    def run_command():
+        try:
+            # Проверяем, запущен ли контейнер
+            check = subprocess.run(
+                ['docker', 'inspect', '-f', '{{.State.Running}}', container],
+                capture_output=True, text=True
+            )
+            if check.returncode != 0 or check.stdout.strip() != 'true':
+                logger.error(f"Container {container} is not running")
+                return
+
+            # Запускаем команду внутри контейнера
+            subprocess.Popen(
+                ['docker', 'exec', container, 'python', 'manage.py', command, '--verbose'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            logger.info(f"Manual restart of {robot_name} initiated")
+        except Exception as e:
+            logger.error(f"Manual restart of {robot_name} failed: {e}")
+
+    thread = threading.Thread(target=run_command)
+    thread.daemon = True
+    thread.start()
+
+    return JsonResponse({'message': f'Robot {robot_name} restart initiated'})
+
+# # ===== СПРАВОЧНИКИ (единая страница) =====
+# @login_required
+# @user_passes_test(is_allowed_user)
+# def directories(request):
+#     from django.shortcuts import get_object_or_404
+
+#     # Определяем уровень из GET или POST
+#     level = request.GET.get('level', 'region')  # region, substation, feeder, tp
+
+#     # Списки для выпадающих полей
+#     regions = Region.objects.all().order_by('name')
+#     substations_all = Substation.objects.all().order_by('name')
+#     feeders_all = Feeder.objects.all().order_by('name')
+#     tps_all = TransformerSubstation.objects.all().order_by('name')
+#     devices = Device.objects.filter(status='active').order_by('serial_number')
+
+#     # Обработка POST (добавление/редактирование/удаление)
+#     if request.method == 'POST':
+#         action = request.POST.get('action')
+#         level = request.POST.get('level', 'region')
+
+#         if action == 'add' or action == 'edit':
+#             # Общие поля
+#             obj_id = request.POST.get('id')
+#             name = request.POST.get('name', '').strip()
+#             head_meter_id = request.POST.get('head_meter_id')
+
+#             if not name:
+#                 messages.error(request, 'Название обязательно.')
+#                 return redirect(f'{request.path}?level={level}')
+
+#             # В зависимости от уровня собираем родительский объект
+#             if level == 'region':
+#                 if obj_id:
+#                     obj = get_object_or_404(Region, id=obj_id)
+#                     obj.name = name
+#                     obj.head_meter_id = head_meter_id if head_meter_id else None
+#                     obj.save()
+#                     messages.success(request, f'Район "{obj.name}" обновлён.')
+#                 else:
+#                     obj = Region.objects.create(name=name, head_meter_id=head_meter_id or None)
+#                     messages.success(request, f'Район "{obj.name}" добавлен.')
+
+#             elif level == 'substation':
+#                 region_id = request.POST.get('region_id')
+#                 if not region_id:
+#                     messages.error(request, 'Выберите район.')
+#                     return redirect(f'{request.path}?level={level}')
+#                 if obj_id:
+#                     obj = get_object_or_404(Substation, id=obj_id)
+#                     obj.name = name
+#                     obj.region_id = region_id
+#                     obj.head_meter_id = head_meter_id or None
+#                     obj.save()
+#                     messages.success(request, f'Подстанция "{obj.name}" обновлена.')
+#                 else:
+#                     obj = Substation.objects.create(
+#                         name=name,
+#                         region_id=region_id,
+#                         head_meter_id=head_meter_id or None
+#                     )
+#                     messages.success(request, f'Подстанция "{obj.name}" добавлена.')
+
+#             elif level == 'feeder':
+#                 substation_id = request.POST.get('substation_id')
+#                 if not substation_id:
+#                     messages.error(request, 'Выберите подстанцию.')
+#                     return redirect(f'{request.path}?level={level}')
+#                 if obj_id:
+#                     obj = get_object_or_404(Feeder, id=obj_id)
+#                     obj.name = name
+#                     obj.substation_id = substation_id
+#                     obj.head_meter_id = head_meter_id or None
+#                     obj.save()
+#                     messages.success(request, f'Фидер "{obj.name}" обновлён.')
+#                 else:
+#                     obj = Feeder.objects.create(
+#                         name=name,
+#                         substation_id=substation_id,
+#                         head_meter_id=head_meter_id or None
+#                     )
+#                     messages.success(request, f'Фидер "{obj.name}" добавлен.')
+
+#             elif level == 'tp':
+#                 feeder_id = request.POST.get('feeder_id')
+#                 if not feeder_id:
+#                     messages.error(request, 'Выберите фидер.')
+#                     return redirect(f'{request.path}?level={level}')
+#                 if obj_id:
+#                     obj = get_object_or_404(TransformerSubstation, id=obj_id)
+#                     obj.name = name
+#                     obj.feeder_id = feeder_id
+#                     obj.head_meter_id = head_meter_id or None
+#                     obj.save()
+#                     messages.success(request, f'ТП "{obj.name}" обновлена.')
+#                 else:
+#                     obj = TransformerSubstation.objects.create(
+#                         name=name,
+#                         feeder_id=feeder_id,
+#                         head_meter_id=head_meter_id or None
+#                     )
+#                     messages.success(request, f'ТП "{obj.name}" добавлена.')
+
+#             return redirect(f'{request.path}?level={level}')
+
+#         elif action == 'delete':
+#             obj_id = request.POST.get('id')
+#             if level == 'region':
+#                 obj = get_object_or_404(Region, id=obj_id)
+#                 obj.delete()
+#                 messages.success(request, f'Район "{obj.name}" удалён.')
+#             elif level == 'substation':
+#                 obj = get_object_or_404(Substation, id=obj_id)
+#                 obj.delete()
+#                 messages.success(request, f'Подстанция "{obj.name}" удалена.')
+#             elif level == 'feeder':
+#                 obj = get_object_or_404(Feeder, id=obj_id)
+#                 obj.delete()
+#                 messages.success(request, f'Фидер "{obj.name}" удалён.')
+#             elif level == 'tp':
+#                 obj = get_object_or_404(TransformerSubstation, id=obj_id)
+#                 obj.delete()
+#                 messages.success(request, f'ТП "{obj.name}" удалена.')
+#             return redirect(f'{request.path}?level={level}')
+
+#     # GET – получаем списки объектов для текущего уровня
+#     if level == 'region':
+#         objects = Region.objects.all().order_by('name')
+#         parent_field = None
+#     elif level == 'substation':
+#         objects = Substation.objects.select_related('region').all().order_by('name')
+#         parent_field = 'region'
+#     elif level == 'feeder':
+#         objects = Feeder.objects.select_related('substation').all().order_by('name')
+#         parent_field = 'substation'
+#     elif level == 'tp':
+#         objects = TransformerSubstation.objects.select_related('feeder').all().order_by('name')
+#         parent_field = 'feeder'
+#     else:
+#         objects = []
+#         parent_field = None
+
+#     # Формируем заголовки для таблицы
+#     if level == 'region':
+#         columns = ['Название', 'Головной счётчик']
+#         fields = ['name', 'head_meter']
+#     elif level == 'substation':
+#         columns = ['Название', 'Район', 'Головной счётчик']
+#         fields = ['name', 'region', 'head_meter']
+#     elif level == 'feeder':
+#         columns = ['Название', 'Подстанция', 'Головной счётчик']
+#         fields = ['name', 'substation', 'head_meter']
+#     elif level == 'tp':
+#         columns = ['Название', 'Фидер', 'Головной счётчик']
+#         fields = ['name', 'feeder', 'head_meter']
+#     else:
+#         columns = []
+#         fields = []
+
+#     context = {
+#         'level': level,
+#         'objects': objects,
+#         'columns': columns,
+#         'fields': fields,
+#         'regions': regions,
+#         'substations_all': substations_all,
+#         'feeders_all': feeders_all,
+#         'tps_all': tps_all,
+#         'devices': devices,
+#     }
+#     return render(request, 'meters/directories.html', context)
+
+# @login_required
+# @user_passes_test(is_allowed_user)
+# def directories_table(request):
+#     """Возвращает только таблицу для указанного уровня (AJAX)."""
+#     level = request.GET.get('level', 'region')
+
+#     # Получаем списки объектов для текущего уровня (аналогично directories)
+#     if level == 'region':
+#         objects = Region.objects.all().order_by('name')
+#         columns = ['Название', 'Головной счётчик']
+#         fields = ['name', 'head_meter']
+#         parent_field = None
+#     elif level == 'substation':
+#         objects = Substation.objects.select_related('region').all().order_by('name')
+#         columns = ['Название', 'Район', 'Головной счётчик']
+#         fields = ['name', 'region', 'head_meter']
+#         parent_field = 'region'
+#     elif level == 'feeder':
+#         objects = Feeder.objects.select_related('substation').all().order_by('name')
+#         columns = ['Название', 'Подстанция', 'Головной счётчик']
+#         fields = ['name', 'substation', 'head_meter']
+#         parent_field = 'substation'
+#     elif level == 'tp':
+#         objects = TransformerSubstation.objects.select_related('feeder').all().order_by('name')
+#         columns = ['Название', 'Фидер', 'Головной счётчик']
+#         fields = ['name', 'feeder', 'head_meter']
+#         parent_field = 'feeder'
+#     else:
+#         objects = []
+#         columns = []
+#         fields = []
+
+#     context = {
+#         'level': level,
+#         'objects': objects,
+#         'columns': columns,
+#         'fields': fields,
+#     }
+#     return render(request, 'meters/_directories_table.html', context)

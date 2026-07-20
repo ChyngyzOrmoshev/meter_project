@@ -1,0 +1,644 @@
+<!DOCTYPE html><html class="  ext-strict x-viewport"><head>
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+
+
+
+
+<link rel="shortcut icon" href="/Mini-MDM/public/images/favicon.ico" type="image/x-icon"> 
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/css/reset.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/extjs/resources/css/ext-all-notheme.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/css/hexing.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/css/ext-theme.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/css/other.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/extjs/ExtPagingTree.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/css/easyui.css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/jquery-easyui-1.4.3/themes/icon.css">
+<!-- 满足不同的项目不同系统样式的需求，根据项目标识加载不同的样式文件  -->
+
+<script type="text/javascript" src="/Mini-MDM/public/extjs/ext-base.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/extjs/ext-all.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/jquery-easyui-1.4.3/jquery.min.js"></script>
+<script type="text/javascript" src="/Mini-MDM/public/jquery-easyui-1.4.3/jquery.easyui.min.js"></script>
+
+<script type="text/javascript" src="/Mini-MDM/public/jquery-easyui-1.4.3/locale/easyui-lang-en_US.js"></script>
+
+<script type="text/javascript" src="/Mini-MDM/public/jquery-easyui-1.4.3/datagrid-detailview.js"></script>
+<script type="text/javascript" src="/Mini-MDM/public/jquery-easyui-1.4.3/datagrid-groupview.js"></script>
+
+
+<!-- 加载公共的国际化内容 -->
+
+<script type="text/javascript">
+	Ext.BLANK_IMAGE_URL = '/Mini-MDM/public/extjs/resources/images/default/s.gif';
+	//当前tab的ID值
+	var pagesize=10;
+	var curTabId = '';
+	var ctx='/Mini-MDM';
+	
+	var cu = 'AZM';
+	var gridExportDoc = 'txt,excel';
+	var sysMode = '0';
+	var ctxLang = 'en_US';
+	var unitCode='105008002';
+	var unitName='ЖПЭС';
+	var unitLevel='03';
+	var unitDwCode='79';
+	var onlineMode = '0'; //默认为0-一直在线 
+	var waitWakeUpSmsResult = 50;
+	var onlineTimeRange = '00:00:00-02:00:00,23:00:00-23:59:59'; //默认在线时段为00:00-24:00
+	var onlineTimeRangeArray = onlineTimeRange.split(",");
+	var timeOut = '60';//点抄超时时间默认60
+	try{
+		//将在线时段转换为object模式
+		for(var i=0;i<onlineTimeRangeArray.length;i++){
+			var times = onlineTimeRangeArray[i].split("-");
+			var temp = {startTime:times[0],endTime:times[1]};
+			onlineTimeRangeArray[i] = temp;
+		}
+	}catch(e){}
+	//判断系统时间是否在在线时段内
+	window.console = window.console || (function(){  
+	    var c = {}; c.log = c.warn = c.debug = c.info = c.error = c.time = c.dir = c.profile  
+	    = c.clear = c.exception = c.trace = c.assert = function(){};  
+	    return c;  
+	})();
+	function isInOnlineTimeRange(time){
+		var strTime = P$dp.utils.formatDate(time , "HH:mm:ss");
+		for(var i=0;i<onlineTimeRangeArray.length;i++){
+			if(strTime>onlineTimeRangeArray[i].startTime && strTime<onlineTimeRangeArray[i].endTime){
+				return true;
+			}
+		}
+		return false;
+	}
+	//操作类别
+	var addOpt='01';
+	var updOpt='02';
+	var delOpt='03';
+	
+	//处理键盘事件 禁止后退键（Backspace）密码或单行、多行文本框除外   
+	function specialKeyValidae(e){     
+	    var ev = e || window.event;//获取event对象      
+	    var obj = ev.target || ev.srcElement;//获取事件源      
+	   	var keyCode = ev.keyCode;
+	    var t = obj.type || obj.getAttribute('type');//获取事件源类型     
+	    if(keyCode == 8){ //后退按键的判断
+		    //获取作为判断条件的事件类型   
+		    var vReadOnly = obj.getAttribute('readonly');  
+		    var vEnabled = obj.getAttribute('enabled');  
+		    //处理null值情况   
+		    vReadOnly = (vReadOnly == null) ? false : vReadOnly;  
+		    vEnabled = (vEnabled == null) ? true : vEnabled;  
+		      
+		    //当敲Backspace键时，事件源类型为密码或单行、多行文本的，   
+		    //并且readonly属性为true或enabled属性为false的，则退格键失效   
+		    var flag1=(ev.keyCode == 8 && (t=="password" || t=="text" || t=="textarea")   
+		                && (vReadOnly==true || vEnabled!=true))?true:false;  
+		     
+		    //当敲Backspace键时，事件源类型非密码或单行、多行文本的，则退格键失效   
+		    var flag2=(ev.keyCode == 8 && t != "password" && t != "text" && t != "textarea")  
+		                ?true:false;          
+		      
+		    //判断   
+		    if(flag2){  
+		        return false;  
+		    }  
+		    if(flag1){     
+		        return false;     
+		    }  
+		    return true;
+	    }else{ //输入框特殊字符校验
+    		//特殊字符列表：#$%\^*\'\"\+
+	 		return true;
+	    }
+	}
+	//禁止后退键 作用于Firefox、Opera   
+	document.onkeypress=specialKeyValidae;  
+	//禁止后退键  作用于IE、Chrome   
+	document.onkeydown=specialKeyValidae; 
+	//系统是否是伊朗日历类型
+	var isPersianCalender = "";
+	
+	
+	Ext.onReady(function() {
+		initTimeInputElForPage();//初始化处理页面上所有的日历输入框
+		jQuery.ajaxSetup({   
+		    contentType:"application/x-www-form-urlencoded;charset=utf-8",   
+		    complete:function(XMLHttpRequest,textStatus){   
+		            var sessionstatus=XMLHttpRequest.getResponseHeader("sessionstatus"); //通过XMLHttpRequest取得响应头，sessionstatus，  
+		            if(sessionstatus=="timeout"){   
+		                        //如果超时就处理 ，指定要跳转的页面  
+		                                window.location.replace(ctx+"/common/login/initNoSession");   
+		                        }   
+		             }   
+		    }); 
+	});
+	
+	function initTimeInputElForPage(){
+		if(Ext.query("*[class=Wdate]").length>0){
+			Ext.each(Ext.query("*[class=Wdate]"),function(item){
+				initTimeInputEl(item);
+			});
+		}
+	}
+	function initTimeInputEl(item){
+		var sd_separator = "-";
+		var gregorianEl = item;
+		/************************************
+		*	日历输入框特殊处理
+		*	为每个输入框增加Start、End隐藏域
+		*************************************/
+		var monthStartDayEl = document.getElementById(gregorianEl.id+"Start");
+		var monthEndDayEl = document.getElementById(gregorianEl.id+"End");
+		if((!monthStartDayEl || !monthEndDayEl)){ //如果是月份选择，则生成月份起始日期值（公历）的隐藏输入框
+			if(!monthStartDayEl){
+				monthStartDayEl = document.createElement('input');
+				monthStartDayEl.name = gregorianEl.name+"Start";
+				monthStartDayEl.id = gregorianEl.id+"Start";
+				monthStartDayEl.style.display = "none";
+				gregorianEl.parentNode.insertBefore(monthStartDayEl , gregorianEl );
+			}
+			if(!monthEndDayEl){
+				monthEndDayEl = document.createElement('input');
+				monthEndDayEl.name = gregorianEl.name+"End";
+				monthEndDayEl.id = gregorianEl.id+"End";
+				monthEndDayEl.style.display = "none";
+				gregorianEl.parentNode.insertBefore(monthEndDayEl , gregorianEl );
+			}
+		}
+		/***日历输入框特殊处理end**/
+		
+			/************************
+			 *  月份特殊处理
+			 ***********************/
+			try{
+				if(gregorianEl.value && gregorianEl.value.length==7){ //对月份输入框已有的值进行处理
+					var startDay = gregorianEl.value+sd_separator + "01";
+					var startDate = P$dp.utils.parseDate(startDay , "yyyy-MM-dd");
+					startDate.setMonth(startDate.getMonth()+1);
+					var endDay = P$dp.utils.formatDate(startDate , "yyyy-MM-dd");
+					monthStartDayEl.value = startDay;
+					monthEndDayEl.value = endDay;
+				}else if(gregorianEl.value && gregorianEl.value.length==4){ //对年份输入框已有的值进行处理
+					var startDay = gregorianEl.value+sd_separator + "01"+sd_separator + "01";
+					var endDay = (parseInt(gregorianEl.value,10)+1)+sd_separator + "01"+sd_separator + "01";
+					monthStartDayEl.value = startDay;
+					monthEndDayEl.value = endDay;
+				}
+			}catch (e) {}
+			/************************
+			 *  月份 end
+			 ***********************/
+		
+		
+	}
+
+	//导出图表到Excel公用处理方式
+	var exportCharts = {};//格式：{chartKey1:chartObject1 , chartKey2:chartObject2}
+	var exportFd, exportFormName , exportUrl , exportHiddenParams ;
+	var exportedSize = 0 ;
+	var exportingCharts = [] , exportedFileNames = [];
+	function exportExcelAndImage(charts , formName , url , hiddenParams , fileFormat){ //初始化导出，判断页面上可以导出的图表都上传到服务器端生成图片文件或者PDF文件
+		exportingSize=0; exportedSize = 0; exportingCharts = [] ; exportedFileNames = [];
+		exportFd = null;exportFormName = formName; exportUrl = url ; exportHiddenParams = hiddenParams;
+		if(charts.length>0){
+			for(var i=0; i<charts.length; i++){
+				try{
+					charts[i].exportChart({
+						exportAction : "Save"
+						, exportFormat : fileFormat
+						,exportHandler:ctx + "/FCExporter"
+					});
+					exportingCharts.push(charts[i]);
+				}catch(e){}
+			}
+			if(exportingCharts.length==0) doExport();
+		}else{
+			doExport();
+		}
+	};
+	function FC_Exported(objRtn){ //服务器端文件生成回调函数，每生成成功一个文件回调一次该函数
+		exportedSize ++;
+        if (objRtn.statusCode=="1"){
+            var fileUrl = objRtn.fileName;
+        	var tmp=fileUrl.split("/");//按照"/"分割 
+        	exportedFileNames.push(tmp[tmp.length-1]);
+        }
+        if(exportedSize>=exportingCharts.length){
+        	exportHiddenParams.push({tag:'input',name:"exportedChartFileNames",id:"exportedChartFileNames",value:exportedFileNames.join(","),type:'hidden'});
+        	doExport();
+        }
+    }
+	function doExport(){ //图片生成成功之后执行原有的导出Excel、PDF函数 （上传的参数增加了exportedChartFileNames） 
+		exportFd=Ext.DomHelper.append(Ext.getBody(),
+   				{tag:'form',method:'post',id:exportFormName,name:exportFormName,action:exportUrl, target:'_blank',cls:'x-hidden',cn:exportHiddenParams}
+   		,true);
+       	exportFd.dom.submit();
+	}
+</script>
+<script type="text/javascript" src="/Mini-MDM/js/locale/commonModule/commonRes_en_US.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/extjs/ExtTools.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/extjs/ExtWindow.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/charts/FusionCharts.js"> </script><style type="text/css" media="screen">object.FusionCharts:focus, embed.FusionCharts:focus {outline: none}</style>
+<!-- 屏蔽FusionChartsExportComponent.js，解决页面访问时提示错误信息：FusionChartsExport:object::FusionCharts was not found.Verify script inclusions. -->
+
+<script type="text/javascript" src="/Mini-MDM/public/js/DatePicker/WdatePicker.js"></script><link href="/Mini-MDM/public/js/DatePicker/skin/WdatePicker.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/js/DatePicker/plugin/skin/gray/PersianWdatePicker.css">
+<script type="text/javascript" src="/Mini-MDM/public/js/DatePicker/plugin/PersianWdatePicker.js"></script>
+<script type="text/javascript" src="/Mini-MDM/public/js/checkfunction.js"></script>
+<script type="text/javascript" src="/Mini-MDM/dwr/engine.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/dwr/util.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/dwr/interface/dwrAction.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/js/comm.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/js/i18n.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/extjs/LockingGridView.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/public/extjs/locale/ext-lang-en_US.js"> </script>
+<link rel="stylesheet" type="text/css" href="/Mini-MDM/public/extjs/LockingGridView.css">
+<script type="text/javascript" src="/Mini-MDM/public/js/check.js"> </script>
+<style type="text/css">
+    .x-grid3-row{
+        height:25px;
+    }
+    /* style rows on mouseover */
+    .x-grid3-row-over .x-grid3-cell-inner {
+        font-weight: bold;
+    }
+    .x-grid3-row-selected{
+		background:#DFE8F6!important;border:1px dotted #a3bae9;
+	} /*鼠标移动上面改变背景色*/  
+ 	.x-grid3-row-over { 
+		background-color:#EFEFEF;/*鼠标移上去改变行的底色 #C9D8FC*/ 
+	} 
+	.x-selectable, .x-selectable * {      
+        -moz-user-select: text! important ;      
+        -khtml-user-select: text! important ;    
+		-webkit-user-select: text!important; /*解决chrome无法复制grid内容的问题*/ 
+    }       
+</style>
+ 
+<script>
+//解决extgrid内容无法选择导致无法复制，chrome暂时无法兼容 edit by jun 20140930
+if  (!Ext.grid.GridView.prototype.templates) {    
+    Ext.grid.GridView.prototype.templates = {};      
+}      
+Ext.grid.GridView.prototype.templates.cell =  new  Ext.Template(      
+     '<td class="x-grid3-col x-grid3-cell x-grid3-td-{id} x-selectable {css}" style="{style}" tabIndex="0" {cellAttr}>' ,      
+     '<div class="x-grid3-cell-inner x-grid3-col-{id}" {attr}>{value}</div>' ,      
+     '</td>'      
+);
+</script>
+<script type="text/javascript">
+var mouseClientY;
+window.onmouseout = function(event) {//用于chrome和Firefox浏览器的数据移出窗口y坐标定位
+	mouseClientY=event.clientY;
+}
+
+window.onbeforeunload = function() {
+	var explore = window.navigator.userAgent;
+	if(explore.indexOf("MSIE") >= 0) {
+	    if(window.event.clientY < 0 || window.event.altKey)   
+	    {   
+	    	 dwr.engine.setAsync(false); //设置dwr调用方式为同步
+	    	 dwrAction.doAjax("loginController", "logOutByClose", {}, function(res) {
+	    		 dwr.engine.setAsync(true); //恢复dwr调用方式为异步
+	     	 }); 
+	    }
+	} else {
+		if(mouseClientY < 0) {
+			dwr.engine.setAsync(false); 
+			dwrAction.doAjax("loginController", "logOutByClose", {}, function(res) {
+	   		 	dwr.engine.setAsync(true); 
+	    	});
+		}
+	}
+	dwr.engine.setAsync(true); 
+};  
+</script>
+
+
+<title>
+	Mini-MDM System
+</title>
+<style type="text/css">
+.CONN:link {font-weight:bold;text-decoration: none;}/*超链接文字格式*/ 
+.CONN:visited {font-weight:bold;text-decoration: none; }/*浏览过的链接文字格式*/ 
+.CONN:active {font-weight:bold; text-decoration: none;}/*按下链接的格式*/ 
+.CONN:hover {font-weight:bold;text-decoration: none; }/*鼠标转到链接*/ 
+</style>
+<script type="text/javascript" src="/Mini-MDM/public/js/jquery.js"></script>
+<script type="text/javascript">
+$.noConflict();
+</script>
+<script type="text/javascript" src="/Mini-MDM/public/extjs/ExtMenu.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/js/view/view.js"> </script>
+<script type="text/javascript" src="/Mini-MDM/js/view/tabCloseMenu.js"> </script>
+<script language="javascript">
+var firstMenuId = "Meter-Reading";
+var syJson = Ext.util.JSON.decode('[{"ms":"","syid":"Mini_MDM_Homepage_comm","symc":"Homepage","url":"/miniMDM/basic/homepage/init"}]');
+var helpDocAreaId = "Kyrghyzstan";
+var cdIds = "Meter-Reading,Device-Configration,Data-Explorer,Asset-Manager,Administration,Data-Analysis";
+var licenseDays = "-1";
+var xtid = "Mini-MDM";
+</script></head>
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+<body class="   ext-webkit ext-safari ext-safari4 ext-linux x-border-layout-ct" id="ext-gen5"><div id="ext-comp-1001" class=" x-panel x-border-panel" style="left: 0px; top: 0px; width: 1280px;"><div class="x-panel-bwrap" id="ext-gen7"><div class="x-panel-body x-panel-body-noheader x-border-layout-ct" id="ext-gen8" style="width: 1280px; height: 720px;"><div id="top" class=" x-panel x-panel-noborder x-border-panel" style="left: 0px; top: 0px; width: 1280px;"><div class="x-panel-bwrap" id="ext-gen10"><div class="x-panel-body x-panel-body-noheader x-panel-body-noborder" id="ext-gen11" style="width: 1280px; height: 45px;"><div id="toptb">
+	<div class="site-header">
+		<div class="site-nav-container">
+			<div class="logo-area">
+ 		        
+                  
+                  <a href="###"><img src="/Mini-MDM/public/images/login/logo.png"></a>
+                
+			</div>
+
+			<div id="fullHead" class="nav-menu-area">
+				<ul class="ui-nav">
+				  <li class="ui-nav-divider"></li>				  
+                    
+                      <li class="ui-nav-item" id="Meter-Reading">
+                      	<a href="javascript:;"><i class="icon-home"></i>Meter Reading</a>
+                      </li>
+                      <li class="ui-nav-divider"></li>
+                    
+                      <li class="ui-nav-item" id="Device-Configration">
+                      	<a href="javascript:;"><i class="icon-repair"></i>Device Configuration</a>
+                      </li>
+                      <li class="ui-nav-divider"></li>
+                    
+                      <li class="ui-nav-item" id="Data-Explorer">
+                      	<a href="javascript:;"><i class="icon-graph"></i>Data Explorer</a>
+                      </li>
+                      <li class="ui-nav-divider"></li>
+                    
+                      <li class="ui-nav-item" id="Asset-Manager">
+                      	<a href="javascript:;"><i class="icon-book"></i>Archives Management</a>
+                      </li>
+                      <li class="ui-nav-divider"></li>
+                    
+                      <li class="ui-nav-item" id="Administration">
+                      	<a href="javascript:;"><i class="icon-administrator"></i>Administration</a>
+                      </li>
+                      <li class="ui-nav-divider"></li>
+                    
+                      <li class="ui-nav-item" id="Data-Analysis">
+                      	<a href="javascript:;"><i class="icon-graph"></i>Data-Analysis</a>
+                      </li>
+                      <li class="ui-nav-divider"></li>
+                    
+				</ul>
+			</div>
+			<div class="nav-respond-area"></div>
+			<div class="user-action-area">
+				<ul class="ui-nav">
+				  <li class="ui-nav-divider"></li>
+				  <li id="user-menu" class="ui-nav-item fn-relative">
+				    <a href="###">Alibaev</a>	
+				    <ul class="dropdown">
+				    	<li><a href="javascript:initPwd();"><i class="icon icon-account"></i>Profile</a></li>
+				    	<li class="dropdown-divider"></li>
+				    	
+                  					
+				    			<li><a href="javascript:initGis();"><i class="icon icon-gis"></i>GIS</a></li>
+				    		
+				    	
+				    	<li class="dropdown-divider"></li>
+				    	<li><a href="javascript:loginOut();"><i class="icon icon-logout"></i>Log Out</a></li>
+				    	<li class="dropdown-divider"></li>
+				    	<li><a href="javascript:abountMe();"><i class="icon icon-account"></i>About Me</a></li>
+				    </ul>
+				  </li>
+				  <li class="ui-nav-divider"></li>
+				  <li id="user-manual" class="ui-nav-item fn-relative" style="display:none">
+				     
+                        
+				        <a href="/AmiWeb/document/HexingPrepayUserManual_en_US.docx" id="help">Help</a>
+				     
+				  </li>
+				  <li class="ui-nav-divider"></li>
+				</ul>
+			</div>
+			
+			<!-- div id="alarmTip" style="position:absolute; top:2px; right:100px">
+				<div id="alermText"></div>
+			</div-->
+			<div id="licenseTip" style="position:absolute; top:2px; right:200px">
+				<div id="licenseText"></div>
+			</div>
+		</div>
+	</div>
+
+</div></div></div></div><div id="ws" class="x-panel x-border-panel" style="width: 320px; position: absolute; visibility: visible; left: 0px; top: 43px; z-index: auto;"><div class="x-panel-header x-unselectable" id="ext-gen13"><div class="x-tool x-tool-toggle x-tool-collapse-west" id="ext-gen16">&nbsp;</div><span class="x-panel-header-text"></span></div><div class="x-panel-bwrap" id="ext-gen14"><div class="x-panel-body" id="ext-gen15" style="overflow: auto; width: 320px; height: 677px;"><iframe src="/Mini-MDM/common/left/init" width="100%" height="100%" name="leftFrame" id="leftFrame" frameborder="no" scrolling="no"></iframe></div></div></div><div id="main" class=" x-panel x-border-panel" style="left: 320px; top: 43px; width: 959px;"><div class="x-panel-bwrap" id="ext-gen18"><div class="x-panel-body x-panel-body-noheader x-border-layout-ct" id="ext-gen19" style="width: 959px; height: 677px;"><div id="defaulttab0" class=" x-tab-panel x-border-panel" style="left: 0px; top: 0px; width: 959px;"><div class="x-tab-panel-header x-unselectable" id="ext-gen21" style="width: 959px;"><div class="x-tab-strip-wrap" id="ext-gen24" style="width: 959px;"><ul class="x-tab-strip x-tab-strip-top" id="ext-gen26"><li class="x-tab-with-icon" id="defaulttab0__home_Mini_MDM_Homepage_comm"><a class="x-tab-strip-close" id="ext-gen29"></a><a class="x-tab-right" href="#" id="ext-gen30"><em class="x-tab-left"><span class="x-tab-strip-inner"><span class="x-tab-strip-text tabs">Homepage</span></span></em></a></li><li class="x-tab-strip-closable x-tab-with-icon x-tab-strip-active" id="defaulttab0__AmiPS_RawDataReport_2"><a class="x-tab-strip-close" id="ext-gen43"></a><a class="x-tab-right" href="#" id="ext-gen44"><em class="x-tab-left"><span class="x-tab-strip-inner"><span class="x-tab-strip-text tabs">Raw Data Report</span></span></em></a></li><li class="x-tab-edge" id="ext-gen27"><span class="x-tab-strip-text">&nbsp;</span></li><div class="x-clear" id="ext-gen28"></div></ul></div><div class="x-tab-strip-spacer" id="ext-gen25"></div></div><div class="x-tab-panel-bwrap" id="ext-gen22"><div class="x-tab-panel-body x-tab-panel-body-top" id="ext-gen23" style="width: 959px; height: 645px;"><div id="home_Mini_MDM_Homepage_comm" class=" x-panel x-panel-noborder x-hide-display" style="width: 1249px;"><div class="x-panel-bwrap" id="ext-gen31"><div class="x-panel-body x-panel-body-noheader x-panel-body-noborder" id="ext-gen32" style="width: 1249px; height: 646px;"><iframe algin="right" src="/Mini-MDM/miniMDM/basic/homepage/init" width="100%" height="100%" frameborder="0" id="homeFrame_Mini_MDM_Homepage_comm" name="homeFrame_Mini_MDM_Homepage_comm"></iframe></div></div></div><div id="AmiPS_RawDataReport_2" class=" x-panel x-panel-noborder" style="width: 959px;"><div class="x-panel-bwrap" id="ext-gen45"><div class="x-panel-body x-panel-body-noheader x-panel-body-noborder" id="ext-gen46" style="width: 959px; height: 645px;"><iframe algin="right" src="/Mini-MDM/PS/amiPSPakistan/controller/rawDataReport/init?timestamp=1784149216604&amp;menuid=AmiPS_RawDataReport&amp;menupath=Raw%20Data%20Report&amp;curTabId=AmiPS_RawDataReport" width="100%" height="100%" frameborder="0" id="mainFrame2" name="mainFrame2"></iframe></div></div></div></div></div></div></div></div></div><div class="x-layout-collapsed x-layout-collapsed-west" id="ws-xcollapsed" style="display: none; left: 5px; top: 45px; width: 20px; height: 675px; visibility: hidden;"><div class="x-tool x-tool-expand-west" id="ext-gen34">&nbsp;</div></div></div></div></div>
+<input type="hidden" name="sbgjFlag" id="sbgjFlag" value="false" style="">
+
+<div id="sub-nav" class="sub-nav" style="display: none;">
+	
+<table id="subMeter-Reading" class="sub-nav-container" data-leaf="2" style="display: none;">
+		<tbody><tr><td class="sub-nav-col">
+		<h3><i class="icon-hes_read"></i>Real-time Read</h3><a href="javascript:;" id="hes_basic_sjzc_lssjzc" data-url="/mdc/basic/sjzc/historicalDataRead/init" data-text="Historical Data Reading" data-isrepurl="">
+						<i class="icon-dot"></i>Historical Data Reading</a><a href="javascript:;" id="hes_basic_sjzc_sssjzc" data-url="/mdc/basic/sjzc/sssjzc/init" data-text="On Demand Reading" data-isrepurl="">
+						<i class="icon-dot"></i>On Demand Reading</a>
+	</td>
+</tr></tbody></table>
+			
+<table id="subDevice-Configration" class="sub-nav-container" data-leaf="2" style="display: none;">
+		<tbody><tr><td class="sub-nav-col">
+		<h3><i class="icon-hes_fhkz"></i>Load Control</h3><a href="javascript:;" id="hes_basic_csgl_lhz" data-url="/mdc/basic/lhz/init" data-text="Relay disconnect/connect" data-isrepurl="">
+						<i class="icon-dot"></i>Relay disconnect/connect</a>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-hes_clock"></i>Clock</h3><a href="javascript:;" id="hes_basic_csgl_sddsgl" data-url="/mdc/basic/csgl/sddsgl/init" data-text="Synchronization" data-isrepurl="">
+						<i class="icon-dot"></i>Synchronization</a>
+	</td>
+</tr></tbody></table>
+			
+<table id="subData-Explorer" class="sub-nav-container" data-leaf="8" style="display: none;">
+		<tbody><tr><td class="sub-nav-col">
+		<h3><i class="icon-platform_publicData"></i>Reading Data Query</h3><a href="javascript:;" id="TMS_Statistics_Report" data-url="/common/generalQuery/init" data-text="Data query" data-isrepurl="">
+						<i class="icon-dot"></i>Data query</a>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-platform_publicDataUip"></i>Customer Report</h3><a href="javascript:;" id="platform_publicData_ReportUip2" data-url="/common/view/publicData/curveData/initQueryuip2" data-text="No Customer electricity meter report" data-isrepurl="">
+						<i class="icon-dot"></i>No Customer electricity meter report</a><a href="javascript:;" id="platform_publicData_Reportconnect_detail" data-url="/mdc/basic/lhzReport/initdetail" data-text="Connect/Disconnect Report Detail" data-isrepurl="">
+						<i class="icon-dot"></i>Connect/Disconnect Report Detail</a><a href="javascript:;" id="platform_publicData_ReportUip3" data-url="/common/view/publicData/curveData/initQueryuip3" data-text="DCU meter reading analysis report" data-isrepurl="">
+						<i class="icon-dot"></i>DCU meter reading analysis report</a><a href="javascript:;" id="platform_publicData_Reportconnect" data-url="/mdc/basic/lhzReport/init" data-text="Connect/Disconnect Report" data-isrepurl="">
+						<i class="icon-dot"></i>Connect/Disconnect Report</a><a href="javascript:;" id="platform_publicData_ReportUip1" data-url="/common/view/publicData/curveData/initQueryuip1" data-text="Install statistical reports" data-isrepurl="">
+						<i class="icon-dot"></i>Install statistical reports</a>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-hes_successRate"></i>Rate of Reading</h3><a href="javascript:;" id="hes_successRate_jzq" data-url="/mdc/basic/successRate/jzqSuccessRate/init" data-text="Rate of DCU Reading" data-isrepurl="">
+						<i class="icon-dot"></i>Rate of DCU Reading</a>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-hes_online"></i>Online Monitor</h3><a href="javascript:;" id="hes_online_status" data-url="/mdc/basic/online/onlineStatus/init" data-text="Online Status" data-isrepurl="">
+						<i class="icon-dot"></i>Online Status</a>
+	</td>
+</tr></tbody></table>
+			
+<table id="subAsset-Manager" class="sub-nav-container" data-leaf="1" style="display: none;">
+		<tbody><tr><td class="sub-nav-col">
+		
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-archives_equiment"></i>Equipment Management</h3><a href="javascript:;" id="archives_datygl_sbdagl" data-url="/common/archives/dagl/datygl/initDb" data-text="Equipment Management" data-isrepurl="">
+						<i class="icon-dot"></i>Equipment Management</a>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-archives_customer"></i>Customer Management</h3>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-hes_archives"></i>Running Meter</h3>
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-archives_fileimport"></i>Archives Import</h3>
+	</td>
+</tr></tbody></table>
+			
+<table id="subAdministration" class="sub-nav-container" data-leaf="1" style="display: none;">
+		<tbody><tr><td class="sub-nav-col">
+		
+					</td>
+					<td class="sub-nav-col">
+					<h3><i class="icon-platform_record"></i>History Log</h3><a href="javascript:;" id="platform_record_txrz" data-url="/common/txrz/init" data-text="Communication" data-isrepurl="">
+						<i class="icon-dot"></i>Communication</a>
+	</td>
+</tr></tbody></table>
+			
+<table id="subData-Analysis" class="sub-nav-container" data-leaf="2" style="display: table;">
+		<tbody><tr><td class="sub-nav-col">
+		<h3><i class="icon-AmiPS_Pakistan_Report"></i>Customized Report</h3><a href="javascript:;" id="AmiPS_RawDataReport" data-url="/PS/amiPSPakistan/controller/rawDataReport/init" data-text="Raw Data Report" data-isrepurl="">
+						<i class="icon-dot"></i>Raw Data Report</a><a href="javascript:;" id="AmiPS_Pakistan_Count_of_Raw_Data" data-url="/PS/amiPSPakistan/controller/countOfRawData/init" data-text="Count of Raw Data for period" data-isrepurl="">
+						<i class="icon-dot"></i>Count of Raw Data for period</a>
+	</td>
+</tr></tbody></table>
+			
+</div>
+
+<script type="text/javascript">
+//function openUrl(url,text,id){
+//	if(url == "" || url =="null")return;
+//	url = ctx + url +'?timestamp=' + new Date().getTime();
+//	openpageOnTree(text,id,text,'',url,'yes',1);
+//} 
+jQuery(document).ready(function($){
+	var siteHeaderAction = {
+			setVar : function(){
+				siteHeaderAction.sub_nav_listener = $("#sub-nav");
+				siteHeaderAction.sub_nav_trigger_parent = $('.nav-menu-area');
+				siteHeaderAction.sub_nav_trigger = $('.nav-menu-area .ui-nav-item');
+				
+				siteHeaderAction.dropdown_trigger = $('#user-menu');
+				siteHeaderAction.dropdown_listener = $('#user-menu').find('.dropdown');
+			},
+			
+			bindOpenTreeHandler : function(){
+				siteHeaderAction.sub_nav_listener.delegate('a','click',function(){
+					var id = $(this).attr("id");
+					var url = $(this).attr("data-url");
+					var text = $(this).attr("data-text");
+					if(!url || url == null || url == "null")return false;
+					var isRepUrl = $(this).attr("data-isRepUrl");
+					if("1"==isRepUrl){
+						jQuery.ajax({    
+							url:'http://172.16.7.140:37799/WebReport/ReportServer?op=fs_load=sso',//单点登录的报表服务器    
+							dataType:"jsonp",//跨域采用jsonp方式    
+							data:{"fr_username":'demon',"fr_password":'123456'},    
+							jsonp:"callback",    
+							timeout:5000,//超时时间（单位：毫秒）    
+							success:function(data) {    
+								if (data.status === "success") {    
+									url = url + (url.indexOf('?')>-1?'&':'?')+'timestamp=' + new Date().getTime();
+									openpageOnTree(text,id,text,'',url,'yes',1);
+									siteHeaderAction.sub_nav_listener.hide();
+							    }else if (data.status === "fail"){
+									top.Wg.alert(common_repUrl_loginFailed);//登录失败（用户名或密码错误）    
+								}    
+							},error:function(){    
+								top.Wg.alert(common_repUrl_error); // 登录失败（超时或服务器其他错误）    
+							}
+						}); 
+					}else{
+						url = ctx + url + (url.indexOf('?')>-1?'&':'?')+'timestamp=' + new Date().getTime();
+						openpageOnTree(text,id,text,'',url,'yes',1);
+						siteHeaderAction.sub_nav_listener.hide();
+					}
+				})
+			},
+			subMenuMouseenter : function(){
+				siteHeaderAction.sub_nav_trigger_parent.delegate('.ui-nav-item', 'mouseenter', function(){
+					siteHeaderAction.sub_nav_trigger.removeClass('ui-nav-item-active');
+					$(this).addClass('ui-nav-item-active');
+					var txt = $(this).attr('id');
+					siteHeaderAction.sub_nav_listener.find('table').hide();
+					siteHeaderAction.sub_nav_listener.find('#sub'+txt).show();
+					siteHeaderAction.sub_nav_listener.show();
+				});
+			},
+			subMenuMouseleave : function(){
+				$('.logo-area').on('mouseenter',function(e){
+					siteHeaderAction.sub_nav_trigger.removeClass('ui-nav-item-active');
+					siteHeaderAction.sub_nav_listener.hide();
+				});
+				$('.nav-respond-area').on('mouseenter',function(e){
+					siteHeaderAction.sub_nav_trigger.removeClass('ui-nav-item-active');
+					siteHeaderAction.sub_nav_listener.hide();
+				});
+				
+				siteHeaderAction.sub_nav_listener.on('mouseleave', function(){
+					siteHeaderAction.sub_nav_trigger.removeClass('ui-nav-item-active');
+					siteHeaderAction.sub_nav_listener.hide();
+				});
+			},
+			initSubMenu : function(){
+				siteHeaderAction.bindOpenTreeHandler();
+				siteHeaderAction.subMenuMouseenter();
+				siteHeaderAction.subMenuMouseleave();
+			},
+			
+			initDropdown : function(){
+				siteHeaderAction.dropdown_trigger.on('mouseenter', function(){
+					siteHeaderAction.dropdown_trigger.addClass('ui-nav-item-active');
+					siteHeaderAction.dropdown_listener.show();
+				})
+				siteHeaderAction.dropdown_trigger.on('mouseleave', function(){
+					siteHeaderAction.dropdown_trigger.removeClass('ui-nav-item-active');
+					siteHeaderAction.dropdown_listener.hide();
+				})
+			},
+			
+			init : function(){
+				siteHeaderAction.setVar();
+				siteHeaderAction.initSubMenu();
+				siteHeaderAction.initDropdown();
+			}
+	}
+
+	
+	siteHeaderAction.init();
+});
+</script>
+<div class="WdateDiv" id="cele_date" style="display: none; left: 69px; position: absolute; top: 159px; z-index: 120;"><div class="dpTitle"><div class="NavImg NavImgll"><a href="###" onclick="P$dp.sd_change_date(-1,-1)" onmouseover="P$dp.sd_getlayerfocus()"></a></div><div class="NavImg NavImgl"><a href="###" onclick="P$dp.sd_change_date(-1,1)" onmouseover="P$dp.sd_getlayerfocus()"></a></div><div style="float:left;"><select name="cele_date_year" id="cele_date_year" language="javascript" onchange="P$dp.sd_change_date(this.value,0)" onmouseover="P$dp.sd_getlayerfocus()" onblur="P$dp.sd_getlayerfocus()" class="yearSelect"><option value="1389">1389</option><option value="1390">1390</option><option value="1391">1391</option><option value="1392">1392</option><option value="1393">1393</option><option value="1394">1394</option><option value="1395">1395</option><option value="1396">1396</option><option value="1397">1397</option><option value="1398">1398</option><option value="1399">1399</option><option value="1400">1400</option><option value="1401">1401</option><option value="1402">1402</option><option value="1403">1403</option><option value="1404">1404</option><option value="1405">1405</option><option value="1406">1406</option><option value="1407">1407</option><option value="1408">1408</option><option value="1409">1409</option><option value="1410">1410</option><option value="1411">1411</option><option value="1412">1412</option><option value="1413">1413</option><option value="1414">1414</option><option value="1415">1415</option></select></div><div style="float:left;"><select name="cele_date_month" id="cele_date_month" language="javascript" onchange="P$dp.sd_change_date(this.value,2)" onmouseover="P$dp.sd_getlayerfocus()" onblur="P$dp.sd_getlayerfocus()" class="monthSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div><div class="NavImg NavImgr"><a href="###" onclick="P$dp.sd_change_date(1,1)" onmouseover="P$dp.sd_getlayerfocus()"></a></div><div class="NavImg NavImgrr"><a href="###" onclick="P$dp.sd_change_date(1,-1)" onmouseover="P$dp.sd_getlayerfocus()"></a></div></div><div><table width="100%" class="WdayTable" border="0" cellspacing="0" cellpadding="0"><tbody><tr class="MTitle"><td width="22px">Sun</td><td width="22px">Mon</td><td width="22px">Tue</td><td width="22px">Wed</td><td width="22px">Thu</td><td width="22px">Fri</td><td width="22px">Sat</td></tr><tr><td id="c1_1" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c1_2" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c1_3" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c1_4" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c1_5" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c1_6" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c1_7" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td></tr><tr><td id="c2_1" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c2_2" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c2_3" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c2_4" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c2_5" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c2_6" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c2_7" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td></tr><tr><td id="c3_1" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c3_2" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c3_3" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c3_4" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c3_5" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c3_6" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c3_7" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td></tr><tr><td id="c4_1" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c4_2" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c4_3" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c4_4" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c4_5" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c4_6" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c4_7" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td></tr><tr><td id="c5_1" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c5_2" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c5_3" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c5_4" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c5_5" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c5_6" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c5_7" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td></tr><tr><td id="c6_1" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c6_2" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c6_3" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c6_4" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c6_5" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c6_6" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td><td id="c6_7" language="javascript" onmouseover="P$dp.sd_overcolor(this)" onmouseout="P$dp.sd_outcolor(this)" onclick="P$dp.sd_td_click(this)"></td></tr></tbody></table></div><div id="pdpTime" class="dpTime" onmouseover="P$dp.sd_getlayerfocus()"><div class="menuSel hhMenu"></div><div class="menuSel mmMenu"></div><div class="menuSel ssMenu"></div><table cellspacing="0" cellpadding="0" border="0"><tbody><tr><td rowspan="2"><span id="pdpTimeStr" class="dpTimeStr"></span>&nbsp;<input id="pdpHour" class="tB" maxlength="2" tabindex="3" onkeyup="P$dp.onlyInt(this,23)" onafterpaste="P$dp.onlyInt(this,23)" style=""><input id="pdpPreMinute" value=":" class="tm" readonly="" style=""><input id="pdpMinute" class="tE" maxlength="2" tabindex="4" onkeyup="P$dp.onlyInt(this,59)" onafterpaste="P$dp.onlyInt(this,59)" style=""><input id="pdpPreSecond" value=":" class="tm" readonly="" style=""><input id="pdpSecond" class="tE" maxlength="2" tabindex="5" onkeyup="P$dp.onlyInt(this,59)" onafterpaste="P$dp.onlyInt(this,59)" style=""></td><td><button id="pdpTimeUp" class="dpTimeUp"></button></td></tr><tr><td><button id="pdpTimeDown" class="dpTimeDown"></button></td></tr></tbody></table></div><div class="dpControl"><div class="clearBtn"><input type="button" tabindex="6" class="dpButton" onclick="P$dp.clear_date()" onmouseover="P$dp.sd_getlayerfocus()" style="" value="clear"></div><div class="okBtn"><input type="button" tabindex="7" class="dpButton" onclick="P$dp.ok_date()" onmouseover="P$dp.sd_getlayerfocus()" style="" value="OK"></div></div></div><div id="ext-comp-1004" class="x-tip" style="position: absolute; z-index: 20002; visibility: hidden; display: none;"><div class="x-tip-tl"><div class="x-tip-tr"><div class="x-tip-tc"><div class="x-tip-header x-unselectable" id="ext-gen36"><span class="x-tip-header-text"></span></div></div></div></div><div class="x-tip-bwrap" id="ext-gen37"><div class="x-tip-ml"><div class="x-tip-mr"><div class="x-tip-mc" id="ext-gen40"><div class="x-tip-body" id="ext-gen38" style="height: auto;"></div></div></div></div><div class="x-tip-bl x-panel-nofooter" id="ext-gen39"><div class="x-tip-br"><div class="x-tip-bc"></div></div></div></div><div class="x-tip-anchor x-tip-anchor-top" id="ext-gen41" style="z-index: 20003;"></div></div></body></html>

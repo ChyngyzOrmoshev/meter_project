@@ -17,12 +17,12 @@ import re
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Sync data from external website (every 12 hours)'
+    help = 'Sync data from external website for Period 1 with S34U18 CT model'
 
     def add_arguments(self, parser):
         parser.add_argument('--verbose', action='store_true', help='Подробный вывод')
         parser.add_argument('--data-type', choices=['all', 'current'], default='all', help='Тип данных')
-        parser.add_argument('--daemon', action='store_true', help='Режим демона с расписанием (03:00 и 15:00)')
+        parser.add_argument('--daemon', action='store_true', help='Режим демона с расписанием (04:00 и 16:00)')
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
@@ -40,10 +40,10 @@ class Command(BaseCommand):
             return
 
         if daemon:
-            self.stdout.write(self.style.SUCCESS("🤖 Website sync robot started in DAEMON mode (03:00 & 15:00)."))
+            self.stdout.write(self.style.SUCCESS("🤖 Website sync robot (Period 1, S34U18 CT) started in DAEMON mode (04:00 & 16:00)."))
             self.run_loop()
         else:
-            self.stdout.write(self.style.SUCCESS("🤖 Website sync robot started (single run)."))
+            self.stdout.write(self.style.SUCCESS("🤖 Website sync robot (Period 1, S34U18 CT) started (single run)."))
             try:
                 self.sync()
                 self.stdout.write(self.style.SUCCESS("✅ Sync completed successfully."))
@@ -55,11 +55,11 @@ class Command(BaseCommand):
         last_run = None
         while True:
             now = dt.now()
-            if (now.hour in [3, 15] and now.minute < 5) or last_run is None:
+            if (now.hour in [4, 16] and now.minute < 5) or last_run is None:
                 if last_run and last_run.hour == now.hour and last_run.day == now.day:
                     time.sleep(60)
                     continue
-                self.stdout.write(f"🔄 Scheduled sync at {now}")
+                self.stdout.write(f"🔄 Scheduled sync at {now} (Period 1, S34U18 CT)")
                 try:
                     self.sync()
                     self.stdout.write(self.style.SUCCESS("✅ Scheduled sync completed."))
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             time.sleep(60)
 
     def sync(self):
-        self.stdout.write("🔄 Starting website sync...")
+        self.stdout.write("🔄 Starting website sync (Period 1, S34U18 CT)...")
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             context = browser.new_context(accept_downloads=True)
@@ -104,9 +104,19 @@ class Command(BaseCommand):
                 profile_select = page.locator('.el-select[name="channelId"]')
                 profile_select.click()
                 page.wait_for_selector('div.el-select-dropdown.el-popper:not([style*="display: none"])', state='visible', timeout=10000)
-                page.locator('li:has-text("Load Profile with Period 2")').click()
+                page.locator('li:has-text("Load Profile with Period 1")').click()
                 page.wait_for_selector('div.el-select-dropdown.el-popper', state='hidden', timeout=5000)
                 time.sleep(0.5)
+
+                # Meter Model: S34U18 CT
+                self.stdout.write("🔧 Selecting meter model S34U18 CT...")
+                meter_model_select = page.locator('.el-select[name="meterTypeId"]')
+                meter_model_select.click()
+                page.wait_for_selector('div.el-select-dropdown.el-popper:not([style*="display: none"])', state='visible', timeout=10000)
+                page.get_by_text('S34U18 CT', exact=True).click()
+                page.wait_for_selector('div.el-select-dropdown.el-popper', state='hidden', timeout=5000)
+                time.sleep(0.5)
+
                 side_select = page.locator('.el-select[name="sideType"]')
                 side_select.click()
                 page.wait_for_selector('div.el-select-dropdown.el-popper:not([style*="display: none"])', state='visible', timeout=5000)
@@ -143,34 +153,59 @@ class Command(BaseCommand):
                 self.stdout.write("⏳ Waiting for file list dialog...")
                 page.wait_for_selector('span:has-text(".xml")', state='visible', timeout=180000)
 
+                # Получаем все спаны с .xml
                 file_spans = page.locator('span:has-text(".xml")').all()
                 if not file_spans:
                     raise Exception("No XML files found in the dialog.")
 
-                # Выбираем самый свежий
+                # Выводим список для отладки
+                self.stdout.write("📋 Found XML files:")
                 latest_span = None
                 latest_time = None
-                date_pattern = re.compile(r'(\d{4}-\d{2}-\d{2}_\d{2}_\d{2}_\d{2})')
+                date_patterns = [
+                    re.compile(r'(\d{4}-\d{2}-\d{2}_\d{2}_\d{2}_\d{2})'),  # YYYY-MM-DD_HH_MM_SS
+                    re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'),  # YYYY-MM-DD HH:MM:SS
+                    re.compile(r'(\d{4}\d{2}\d{2}_\d{2}\d{2}\d{2})'),      # YYYYMMDD_HHMMSS
+                    re.compile(r'(\d{4}-\d{2}-\d{2})'),                    # только дата
+                ]
 
                 for span in file_spans:
                     text = span.text_content().strip()
-                    match = date_pattern.search(text)
-                    if match:
-                        try:
-                            file_dt = dt.strptime(match.group(1), '%Y-%m-%d_%H_%M_%S')
-                            if latest_time is None or file_dt > latest_time:
-                                latest_time = file_dt
-                                latest_span = span
-                        except ValueError:
-                            continue
+                    self.stdout.write(f"  - {text}")
+                    matched = False
+                    for pattern in date_patterns:
+                        match = pattern.search(text)
+                        if match:
+                            date_str = match.group(1)
+                            try:
+                                if '_' in date_str and len(date_str) == 19:
+                                    file_dt = dt.strptime(date_str, '%Y-%m-%d_%H_%M_%S')
+                                elif ' ' in date_str and len(date_str) == 19:
+                                    file_dt = dt.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+                                elif '_' in date_str and len(date_str) == 15:
+                                    file_dt = dt.strptime(date_str, '%Y%m%d_%H%M%S')
+                                elif len(date_str) == 10:
+                                    file_dt = dt.strptime(date_str, '%Y-%m-%d')
+                                else:
+                                    continue
+                                if latest_time is None or file_dt > latest_time:
+                                    latest_time = file_dt
+                                    latest_span = span
+                                matched = True
+                                break
+                            except ValueError:
+                                continue
+                    if not matched:
+                        self.stdout.write(f"⚠️ Could not parse date from: {text}")
 
                 if latest_span is None:
                     latest_span = file_spans[0]
-                    self.stdout.write(self.style.WARNING("⚠️ Could not parse dates, using first XML file."))
+                    self.stdout.write(self.style.WARNING("⚠️ Could not parse any dates, using first XML file."))
 
                 file_name = latest_span.text_content().strip()
                 self.stdout.write(self.style.SUCCESS(f"✅ Selected latest file: {file_name}"))
 
+                # Находим родительский контейнер
                 parent = latest_span.locator('xpath=ancestor::div[contains(@class, "el-dialog") or contains(@class, "el-form-item") or contains(@class, "el-row")]').first
                 download_in_parent = parent.locator('button:has-text("Download")')
                 download_in_parent.wait_for(state='visible', timeout=60000)
@@ -273,9 +308,7 @@ class Command(BaseCommand):
                     if not sn:
                         continue
 
-                    # --- ПРОВЕРКА НА НАЛИЧИЕ ЗНАЧЕНИЯ ---
                     if value_elem is None or not value_elem.text or not value_elem.text.strip():
-                        # Нет значения – пропускаем запись
                         if self.verbose:
                             self.stdout.write(f"ℹ️ Skipping record with empty value for serial {sn}")
                         continue
@@ -302,7 +335,7 @@ class Command(BaseCommand):
                     Reading.objects.update_or_create(
                         device=device,
                         timestamp=dt_time,
-                        defaults={'reading_value': val, 'notes': 'Website sync'}
+                        defaults={'reading_value': val, 'notes': 'Website sync Period1 S34U18'}
                     )
                     count += 1
             return count
@@ -314,7 +347,7 @@ class Command(BaseCommand):
         def sync_update():
             close_old_connections()
             SyncStatus.objects.update_or_create(
-                robot_name='Sanxing_new_100A',
+                robot_name='Sanxing_new_5A',
                 defaults={
                     'status': status,
                     'last_update': django_timezone.now(),

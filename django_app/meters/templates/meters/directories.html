@@ -1,0 +1,174 @@
+{% extends 'meters/base.html' %}
+{% load custom_filters %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="page-title"><i class="fas fa-sitemap"></i> Справочники</h1>
+</div>
+
+<!-- Вкладки -->
+<ul class="nav nav-tabs mb-3" id="dirTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link {% if level == 'region' %}active{% endif %}" data-level="region" href="#">Районы</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link {% if level == 'substation' %}active{% endif %}" data-level="substation"
+            href="#">Подстанции</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link {% if level == 'feeder' %}active{% endif %}" data-level="feeder" href="#">Фидеры</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link {% if level == 'tp' %}active{% endif %}" data-level="tp" href="#">ТП</a>
+    </li>
+</ul>
+
+<!-- Карточка с таблицей и кнопкой добавления -->
+<div class="card-pastel">
+    <div class="card-body">
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-pastel-primary" data-bs-toggle="modal" data-bs-target="#objectModal">
+                <i class="fas fa-plus"></i> Добавить
+            </button>
+        </div>
+        <!-- Контейнер для таблицы -->
+        <div id="table-container">
+            {% include 'meters/_directories_table.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления/редактирования -->
+<div class="modal fade" id="objectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'directories' %}">
+                {% csrf_token %}
+                <input type="hidden" name="level" value="{{ level }}">
+                <input type="hidden" name="action" id="formAction" value="add">
+                <input type="hidden" name="id" id="objectId">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Добавить</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Название</label>
+                        <input type="text" name="name" id="name" class="form-control" required>
+                    </div>
+
+                    {% if level == 'substation' %}
+                    <div class="mb-3">
+                        <label for="region_id" class="form-label">Район</label>
+                        <select name="region_id" id="region_id" class="form-select" required>
+                            <option value="">—</option>
+                            {% for r in regions %}
+                            <option value="{{ r.id }}">{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% elif level == 'feeder' %}
+                    <div class="mb-3">
+                        <label for="substation_id" class="form-label">Подстанция</label>
+                        <select name="substation_id" id="substation_id" class="form-select" required>
+                            <option value="">—</option>
+                            {% for s in substations_all %}
+                            <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% elif level == 'tp' %}
+                    <div class="mb-3">
+                        <label for="feeder_id" class="form-label">Фидер</label>
+                        <select name="feeder_id" id="feeder_id" class="form-select" required>
+                            <option value="">—</option>
+                            {% for f in feeders_all %}
+                            <option value="{{ f.id }}">{{ f.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="head_meter_id" class="form-label">Головной счётчик</label>
+                        <select name="head_meter_id" id="head_meter_id" class="form-select">
+                            <option value="">—</option>
+                            {% for d in devices %}
+                            <option value="{{ d.id }}">{{ d.serial_number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-pastel-outline" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-pastel-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Обработка клика по вкладкам (AJAX)
+    document.querySelectorAll('#dirTabs .nav-link').forEach(tab => {
+        tab.addEventListener('click', function (e) {
+            e.preventDefault();
+            const level = this.dataset.level;
+
+            // Обновляем активную вкладку
+            document.querySelectorAll('#dirTabs .nav-link').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            // Обновляем hidden поле level в модалке
+            document.querySelector('#objectModal input[name="level"]').value = level;
+
+            // AJAX-запрос для получения таблицы
+            fetch(`/directories-table/?level=${level}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('table-container').innerHTML = html;
+                    // Переинициализируем кнопки редактирования
+                    initEditButtons();
+                })
+                .catch(error => console.error('Ошибка загрузки таблицы:', error));
+        });
+    });
+
+    // Инициализация кнопок редактирования
+    function initEditButtons() {
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('objectId').value = this.dataset.id;
+                document.getElementById('name').value = this.dataset.name;
+                document.getElementById('head_meter_id').value = this.dataset.head || '';
+                document.getElementById('formAction').value = 'edit';
+                document.getElementById('modalTitle').textContent = 'Редактировать';
+
+                if (this.dataset.region) {
+                    document.getElementById('region_id').value = this.dataset.region;
+                }
+                if (this.dataset.substation) {
+                    document.getElementById('substation_id').value = this.dataset.substation;
+                }
+                if (this.dataset.feeder) {
+                    document.getElementById('feeder_id').value = this.dataset.feeder;
+                }
+
+                new bootstrap.Modal(document.getElementById('objectModal')).show();
+            });
+        });
+    }
+
+    // Очистка формы при добавлении
+    document.querySelector('[data-bs-target="#objectModal"]').addEventListener('click', function () {
+        document.getElementById('objectId').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('head_meter_id').value = '';
+        document.getElementById('formAction').value = 'add';
+        document.getElementById('modalTitle').textContent = 'Добавить';
+        document.querySelectorAll('#objectModal select').forEach(sel => sel.value = '');
+    });
+
+    // Инициализация при загрузке
+    initEditButtons();
+</script>
+{% endblock %}
