@@ -2,94 +2,126 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="page-title mb-0"><i class="fas fa-server"></i>Реестр приборов</h1>
+
+</div>
+<div class="card-pastel mb-4">
     <div>
         <a href="{% url 'bulk_update_status_page' %}" class="btn btn-pastel-outline btn-sm me-2">
             <i class="fas fa-edit"></i> Групповое изменение статуса
         </a>
+        <a href="{% url 'bulk_update_category_page' %}" class="btn btn-pastel-outline btn-sm me-2">
+            <i class="fas fa-tags"></i> Групповое изменение категории
+        </a>
+        <a href="#" class="btn btn-pastel-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addToGroupModal">
+            <i class="fas fa-plus-circle"></i> Добавить в группу
+        </a>
         <a href="{% url 'add_device' %}" class="btn btn-pastel-primary btn-sm">
             <i class="fas fa-plus"></i> Добавить приборы
         </a>
+
+        <a href="{% url 'export_devices_csv' %}?{{ request.GET.urlencode }}" class="btn btn-pastel-primary btn-sm">
+            <i class="fas fa-file-csv"></i> CSV
+        </a>
+        <a href="{% url 'export_devices_xlsx' %}?{{ request.GET.urlencode }}" class="btn btn-pastel-success btn-sm">
+            <i class="fas fa-file-excel"></i> Excel
+        </a>
     </div>
 </div>
-
 <!-- Поиск и фильтры -->
 <div class="card-pastel mb-4">
     <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-2">
-                <input type="text" name="search" class="form-control form-control-pastel" placeholder="Поиск по номеру" value="{{ search }}">
-            </div>
+        <form method="get" class="row g-2 align-items-end">
+            <!-- Строка 1: основные фильтры -->
+
             <div class="col-md-2">
                 <select name="producer" class="form-select form-control-pastel">
-                    <option value="">Все производители</option>
+                    <option value="">Производители</option>
                     {% for display, code, selected in producers_with_selected %}
-                        <option value="{{ code }}" {% if selected %}selected{% endif %}>{{ display }}</option>
+                    <option value="{{ code }}" {% if selected %}selected{% endif %}>{{ display }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="model" class="form-select form-control-pastel">
-                    <option value="">Все модели</option>
+                    <option value="">Модели</option>
                     {% for m, selected in models_with_selected %}
-                        <option value="{{ m.id }}" {% if selected %}selected{% endif %}>{{ m.model_name }}</option>
+                    <option value="{{ m.id }}" {% if selected %}selected{% endif %}>{{ m.model_name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="status" class="form-select form-control-pastel">
-                    <option value="">Все статусы</option>
-                    {% for s, selected in statuses_with_selected %}
-                        <option value="{{ s }}" {% if selected %}selected{% endif %}>{{ s }}</option>
+                    <option value="">Статусы</option>
+                    {% for value, label, selected in statuses_with_selected %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-pastel-primary w-100"><i class="fas fa-filter"></i> Применить</button>
+                <select name="category" class="form-select form-control-pastel">
+                    <option value="">Категории</option>
+                    {% for val, label, selected in categories_with_selected %}
+                    <option value="{{ val }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="col-md-2">
-                <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс</a>
+                <input type="text" name="search" class="form-control form-control-pastel" placeholder="Поиск по номеру"
+                    value="{{ search }}">
             </div>
-        </form>
-        <!-- Фильтры по иерархии (вторая строка) -->
-        <form method="get" class="row g-3 mt-3">
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-primary w-100"><i class="fas fa-filter"></i>
+                    Применить</button>
+            </div>
+
+
+            <!-- Строка 2: иерархия и группы -->
             <div class="col-md-2">
                 <select name="region" class="form-select form-control-pastel">
-                    <option value="">Все районы</option>
-                    {% for r in regions %}
-                        <option value="{{ r.id }}" {% if r.id == selected_region|add:0 %}selected{% endif %}>{{ r.name }}</option>
+                    <option value="">Районы</option>
+                    {% for r, selected in regions_with_selected %}
+                    <option value="{{ r.id }}" {% if selected %}selected{% endif %}>{{ r.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="substation" class="form-select form-control-pastel">
-                    <option value="">Все подстанции</option>
-                    {% for s in substations %}
-                        <option value="{{ s.id }}" {% if s.id == selected_substation|add:0 %}selected{% endif %}>{{ s.name }}</option>
+                    <option value="">Подстанции</option>
+                    {% for s, selected in substations_with_selected %}
+                    <option value="{{ s.id }}" {% if selected %}selected{% endif %}>{{ s.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="feeder" class="form-select form-control-pastel">
-                    <option value="">Все фидеры</option>
-                    {% for f in feeders %}
-                        <option value="{{ f.id }}" {% if f.id == selected_feeder|add:0 %}selected{% endif %}>{{ f.name }}</option>
+                    <option value="">Фидеры</option>
+                    {% for f, selected in feeders_with_selected %}
+                    <option value="{{ f.id }}" {% if selected %}selected{% endif %}>{{ f.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="tp" class="form-select form-control-pastel">
-                    <option value="">Все ТП</option>
-                    {% for t in tps %}
-                        <option value="{{ t.id }}" {% if t.id == selected_tp|add:0 %}selected{% endif %}>{{ t.name }}</option>
+                    <option value="">ТП</option>
+                    {% for t, selected in tps_with_selected %}
+                    <option value="{{ t.id }}" {% if selected %}selected{% endif %}>{{ t.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-pastel-secondary w-100"><i class="fas fa-sitemap"></i> Фильтр по иерархии</button>
+                <select name="group" class="form-select form-control-pastel">
+                    <option value="">Группы</option>
+                    {% for g, selected in groups_with_selected %}
+                    <option value="{{ g.id }}" {% if selected %}selected{% endif %}>{{ g.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="col-md-2">
-                <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс иерархии</a>
+                <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс</a>
             </div>
+            <!-- <div class="col-md-2">
+                <a href="{% url 'devices' %}" class="btn btn-pastel-outline w-100">Сброс иерархии</a>
+            </div> -->
         </form>
     </div>
 </div>
@@ -97,33 +129,36 @@
 <!-- Форма массового обновления -->
 <form method="post" id="mass-update-form">
     {% csrf_token %}
-    <div class="card-pastel mb-3">
+    <!-- <div class="card-pastel mb-3">
         <div class="card-body">
             <div class="row g-2 align-items-end">
                 <div class="col-auto">
                     <label for="target_region" class="form-label small">Район</label>
-                    <select name="target_region" id="target_region" class="form-select form-select-sm form-control-pastel">
+                    <select name="target_region" id="target_region"
+                        class="form-select form-select-sm form-control-pastel">
                         <option value="">—</option>
                         {% for r in regions %}
-                            <option value="{{ r.id }}">{{ r.name }}</option>
+                        <option value="{{ r.id }}">{{ r.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-auto">
                     <label for="target_substation" class="form-label small">Подстанция</label>
-                    <select name="target_substation" id="target_substation" class="form-select form-select-sm form-control-pastel">
+                    <select name="target_substation" id="target_substation"
+                        class="form-select form-select-sm form-control-pastel">
                         <option value="">—</option>
                         {% for s in substations %}
-                            <option value="{{ s.id }}">{{ s.name }}</option>
+                        <option value="{{ s.id }}">{{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-auto">
                     <label for="target_feeder" class="form-label small">Фидер</label>
-                    <select name="target_feeder" id="target_feeder" class="form-select form-select-sm form-control-pastel">
+                    <select name="target_feeder" id="target_feeder"
+                        class="form-select form-select-sm form-control-pastel">
                         <option value="">—</option>
                         {% for f in feeders %}
-                            <option value="{{ f.id }}">{{ f.name }}</option>
+                        <option value="{{ f.id }}">{{ f.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -132,21 +167,24 @@
                     <select name="target_tp" id="target_tp" class="form-select form-select-sm form-control-pastel">
                         <option value="">—</option>
                         {% for t in tps %}
-                            <option value="{{ t.id }}">{{ t.name }}</option>
+                        <option value="{{ t.id }}">{{ t.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-pastel-success btn-sm" onclick="return confirm('Применить изменения к выбранным устройствам?')">
+                    <button type="submit" class="btn btn-pastel-success btn-sm"
+                        onclick="return confirm('Применить изменения к выбранным устройствам?')">
                         <i class="fas fa-save"></i> Применить к выбранным
-                    </button>
-                </div>
-                <div class="col-auto">
+                    </button> -->
+    <!-- </div> -->
+    <!-- <div class="col-auto">
                     <span class="text-muted small">(оставьте поле пустым, чтобы не менять)</span>
-                </div>
-            </div>
-        </div>
-    </div>
+                </div> -->
+
+    <!-- </div> -->
+
+    <!-- </div> -->
+    <!-- </div> -->
 
     <!-- Таблица -->
     <div class="card-pastel">
@@ -157,45 +195,85 @@
                         <tr>
                             <th style="width:30px"><input type="checkbox" id="select-all" class="form-check-input"></th>
                             <th>Заводской номер</th>
-                            <th>Модель</th>
+                            <th>Тип ПУ</th>
                             <th>Статус</th>
                             <th>Район</th>
-                            <th>Подстанция</th>
+                            <th>Категория</th>
+                            <!-- <th>Подстанция</th>
                             <th>Фидер</th>
-                            <th>ТП</th>
+                            <th>ТП</th> -->
+                            <th>Группы</th>
+                            <th>Статус связи</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for device in devices %}
+                        {% for device in devices %}
                         <tr>
-                            <td><input type="checkbox" name="selected_devices" value="{{ device.id }}" class="form-check-input device-checkbox"></td>
+                            <td><input type="checkbox" name="selected_devices" value="{{ device.id }}"
+                                    class="form-check-input device-checkbox"></td>
                             <td><strong>{{ device.serial_number }}</strong></td>
                             <td>{{ device.model.model_name|default:"—" }}</td>
                             <td>
                                 <span class="badge-pastel 
                                     {% if device.status == 'active' %}success
                                     {% elif device.status == 'repair' %}warning
-                                    {% else %}idle{% endif %}">
-                                    {{ device.status }}
+                                    {% elif device.status == 'inactive' %}idle
+                                    {% elif device.status == 'temporary_off' %}info
+                                    {% endif %}">
+                                    {{ device.get_status_display }}
                                 </span>
                             </td>
                             <td>{{ device.region.name|default:"—" }}</td>
-                            <td>{{ device.substation.name|default:"—" }}</td>
-                            <td>{{ device.feeder.name|default:"—" }}</td>
-                            <td>{{ device.tp.name|default:"—" }}</td>
+                            <td>{{ device.get_category_display|default:"—" }}</td>
+                            <!-- <td>{{ device.substation.name|default:"—" }}</td> -->
+                            <!-- <td>{{ device.feeder.name|default:"—" }}</td> -->
+                            <!-- <td>{{ device.tp.name|default:"—" }}</td> -->
                             <td>
-                                <a href="{% url 'edit_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm">
+                                {% for g in device.groups.all %}
+                                <span class="badge-pastel idle">{{ g.name }}</span>
+                                {% empty %}
+                                —
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if device.has_recent_reading %}
+                                <span class="badge-pastel success">🟢 Онлайн</span>
+                                {% else %}
+                                <span class="badge-pastel error">🔴 Оффлайн</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'edit_device' device.serial_number %}"
+                                    class="btn btn-pastel-outline btn-sm" title="Редактировать номер">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'delete_device' device.serial_number %}" class="btn btn-pastel-outline btn-sm text-danger">
+                                <a href="{% url 'delete_device' device.serial_number %}"
+                                    class="btn btn-pastel-outline btn-sm text-danger" title="Удалить">
                                     <i class="fas fa-trash-alt"></i>
                                 </a>
+                                <!-- Новая кнопка: добавить в группу (зелёная) -->
+                                <a href="{% url 'device_add_to_groups' device.id %}"
+                                    class="btn btn-pastel-outline btn-success btn-sm" title="Добавить в группу">
+                                    <i class="fas fa-plus-circle"></i>
+                                </a>
+                                <!-- Новая кнопка: удалить из группы (жёлтая) -->
+                                <a href="{% url 'device_remove_from_groups' device.id %}"
+                                    class="btn btn-pastel-outline btn-warning btn-sm" title="Удалить из группы">
+                                    <i class="fas fa-minus-circle"></i>
+                                </a>
+                                <a href="{% url 'device_coefficients' device.id %}"
+                                    class="btn btn-pastel-outline btn-sm" title="ТТ/ТН">
+                                    <i class="fas fa-cog"></i>
+                                </a>
                             </td>
+
                         </tr>
-                    {% empty %}
-                        <tr><td colspan="9" class="text-center text-muted">Нет устройств</td></tr>
-                    {% endfor %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">Нет устройств</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -203,41 +281,104 @@
     </div>
 </form>
 
+
 <!-- Пагинация -->
 {% if total_pages > 1 %}
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
-        <li class="page-item {% if page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page=1">⏮</a>
-        </li>
-        <li class="page-item {% if page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ page|add:"-1" }}">◀</a>
-        </li>
+        {% if page > 1 %}
+        <li class="page-item"><a class="page-link" href="?{{ current_params }}&page=1">⏮</a></li>
+        <li class="page-item"><a class="page-link" href="?{{ current_params }}&page={{ page|add:" -1" }}">◀</a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">⏮</span></li>
+        <li class="page-item disabled"><span class="page-link">◀</span></li>
+        {% endif %}
+
         {% for p in page_range %}
-            {% if p == page %}
-                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-            {% elif p == 1 or p == total_pages or p >= page|add:"-2" and p <= page|add:"2" %}
-                <li class="page-item"><a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ p }}">{{ p }}</a></li>
+        {% if p == page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+        {% elif p == 1 or p == total_pages or p >= page|add:"-2" and p <= page|add:"2" %} <li class="page-item"><a
+                class="page-link" href="?{{ current_params }}&page={{ p }}">{{ p }}</a></li>
             {% elif p == page|add:"-3" or p == page|add:"3" %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
+            <li class="page-item disabled"><span class="page-link">…</span></li>
             {% endif %}
-        {% endfor %}
-        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ page|add:"1" }}">▶</a>
-        </li>
-        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?search={{ search }}&producer={{ producer_filter }}&model={{ model_filter }}&status={{ status_filter }}&region={{ selected_region }}&substation={{ selected_substation }}&feeder={{ selected_feeder }}&tp={{ selected_tp }}&page={{ total_pages }}">⏭</a>
-        </li>
+            {% endfor %}
+
+            {% if page < total_pages %} <li class="page-item"><a class="page-link"
+                    href="?{{ current_params }}&page={{ page|add:" 1" }}">▶</a></li>
+                <li class="page-item"><a class="page-link" href="?{{ current_params }}&page={{ total_pages }}">⏭</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">▶</span></li>
+                <li class="page-item disabled"><span class="page-link">⏭</span></li>
+                {% endif %}
     </ul>
 </nav>
 {% endif %}
 
 <p class="text-muted small mt-3">Всего записей: {{ total }}</p>
 
+<!-- Модальное окно для добавления в группу -->
+<div class="modal fade" id="addToGroupModal" tabindex="-1" aria-labelledby="addToGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="addToGroupForm" action="{% url 'devices' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToGroupModalLabel">Добавить выбранные устройства в группы</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Выбрано устройств: <span id="selectedCount">0</span></p>
+                    <!-- Скрытые поля для выбранных устройств (заполняются JS) -->
+                    <div id="selectedDevicesContainer"></div>
+
+                    <div class="mb-3">
+                        <label for="group_ids_modal" class="form-label">Выберите группы (можно несколько)</label>
+                        <select name="group_ids" id="group_ids_modal" class="form-select form-control-pastel" multiple
+                            style="height: 150px;">
+                            {% for g in groups_all %}
+                            <option value="{{ g.id }}">{{ g.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Удерживайте Ctrl для выбора нескольких групп</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-pastel-outline" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" name="add_to_groups_modal" value="1"
+                        class="btn btn-pastel-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     // Выделить все чекбоксы
-    document.getElementById('select-all').addEventListener('change', function(e) {
+    document.getElementById('select-all').addEventListener('change', function (e) {
         document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = e.target.checked);
+    });
+    // Обработчик открытия модалки – собираем выбранные чекбоксы
+    document.getElementById('addToGroupModal').addEventListener('show.bs.modal', function (event) {
+        const checkboxes = document.querySelectorAll('.device-checkbox:checked');
+        const container = document.getElementById('selectedDevicesContainer');
+        const countSpan = document.getElementById('selectedCount');
+        container.innerHTML = ''; // очищаем
+        let count = 0;
+        checkboxes.forEach(function (cb) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_devices';
+            input.value = cb.value;
+            container.appendChild(input);
+            count++;
+        });
+        countSpan.textContent = count;
+        if (count === 0) {
+            alert('Пожалуйста, выберите хотя бы одно устройство в таблице.');
+            // Можно предотвратить открытие модалки, но проще оставить как есть
+        }
     });
 </script>
 {% endblock %}

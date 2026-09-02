@@ -1,0 +1,47 @@
+{% extends 'meters/base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="page-title"><i class="fas fa-file-excel"></i> Сверка с 1С</h1>
+
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-upload"></i> Загрузите выгрузку из 1С</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- ОБЯЗАТЕЛЬНЫЙ ВЫБОР РАЙОНА -->
+            <div class="mb-3">
+                <label class="form-label">Район загрузки <span class="text-danger">*</span></label>
+                <select name="region_id" class="form-select form-control-pastel" required>
+                    <option value="">— выберите район —</option>
+                    {% for region in regions %}
+                    <option value="{{ region.id }}">{{ region.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Все проблемные заявки будут отнесены к выбранному району.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Excel-файл (.xlsx)</label>
+                <input type="file" name="excel_file" class="form-control form-control-pastel" accept=".xlsx" required>
+                <div class="form-text">Файл должен содержать колонки: заводской номер, модель (опционально).</div>
+            </div>
+
+            <button type="submit" class="btn btn-pastel-primary">
+                <i class="fas fa-upload"></i> Загрузить и сравнить
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Кнопки перехода -->
+<div class="mt-4">
+    <a href="{% url 'compare_1c_issues' %}" class="btn btn-pastel-primary">
+        <i class="fas fa-tasks"></i> Перейти к заявкам
+    </a>
+    <!-- <a href="{% url 'compare_1c_stats' %}" class="btn btn-pastel-success">
+        <i class="fas fa-chart-bar"></i> Смотреть статистику
+    </a> -->
+</div>
+{% endblock %}

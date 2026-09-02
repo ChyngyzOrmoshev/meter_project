@@ -1,4 +1,4 @@
-<table class="table table-pastel mb-0">
+<table class="table table-pastel table-header-dark mb-0">
     <thead>
         <tr>
             <th>Производитель</th>
@@ -11,16 +11,12 @@
         {% for stat in producer_stats %}
         <tr>
             <td><strong>{{ stat.producer }}</strong></td>
-            <td>{{ stat.total }}</td>
-            <td>{{ stat.active }}</td>
+            <td class="number-cell">{{ stat.total }}</td>
+            <td class="number-cell">{{ stat.active }}</td>
             <td>
                 <div class="d-flex align-items-center">
                     <div class="progress-pastel flex-grow-1 me-2">
-                        <div class="progress-bar 
-                            {% if stat.percent >= 80 %}bg-success-pastel
-                            {% elif stat.percent >= 50 %}bg-warning-pastel
-                            {% else %}bg-danger-pastel{% endif %}" role="progressbar"
-                            style="width: {{ stat.percent|floatformat:0 }}%;"
+                        <div class="progress-bar" data-percent="{{ stat.percent|floatformat:0 }}" role="progressbar"
                             aria-valuenow="{{ stat.percent|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
                         </div>
                     </div>
@@ -37,3 +33,72 @@
         {% endfor %}
     </tbody>
 </table>
+<script>
+    (function () {
+        // Инициализация прогресс-баров с плавным заполнением
+        function initProgressBars() {
+            const bars = document.querySelectorAll('.progress-bar[data-percent]');
+            bars.forEach(function (bar, index) {
+                const percent = parseInt(bar.dataset.percent) || 0;
+                // Сбрасываем ширину на 0
+                bar.style.transition = 'none';
+                bar.style.width = '0%';
+                // Удаляем старые классы
+                bar.classList.remove('bg-success-pastel', 'bg-warning-pastel', 'bg-danger-pastel');
+                let cls = 'bg-success-pastel';
+                if (percent < 50) cls = 'bg-danger-pastel';
+                else if (percent < 80) cls = 'bg-warning-pastel';
+                bar.classList.add(cls);
+                // Запускаем анимацию с задержкой
+                setTimeout(function () {
+                    bar.style.transition = 'width 1.5s ease-in-out';
+                    bar.style.width = percent + '%';
+                }, 300 + index * 150);
+            });
+        }
+
+        // Анимация цифр (счётчик от 0 до значения)
+        function animateNumbers() {
+            const cells = document.querySelectorAll('.number-cell');
+            cells.forEach(function (cell) {
+                // Получаем целевое число из текста (удаляем пробелы и нецифровые символы)
+                const raw = cell.textContent.replace(/\s/g, '').replace(/[^\d]/g, '');
+                const target = parseInt(raw) || 0;
+                // Если target = 0, не анимируем
+                if (target === 0) return;
+                const duration = 1200; // 1.2 секунды
+                const startTime = performance.now();
+                const startValue = 0;
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // easeOutCubic
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = Math.round(eased * target);
+                    cell.textContent = current.toLocaleString();
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        cell.textContent = target.toLocaleString();
+                    }
+                }
+                requestAnimationFrame(update);
+            });
+        }
+
+        // Экспортируем функции в глобальный объект
+        window.initProgressBars = initProgressBars;
+        window.animateNumbers = animateNumbers;
+
+        // Запускаем при загрузке страницы (для первого рендера)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () {
+                initProgressBars();
+                animateNumbers();
+            });
+        } else {
+            initProgressBars();
+            animateNumbers();
+        }
+    })();
+</script>

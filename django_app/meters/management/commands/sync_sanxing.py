@@ -45,24 +45,26 @@ class Command(BaseCommand):
             self.stdout.write("Connected to Sanxing MS SQL")
 
             # ---- 1. Получаем только активные устройства Sanxing ----
-            devices = []
-            for d in Device.objects.filter(status='active').select_related('model'):
-                is_sanxing = False
+            # devices = []
+            # for d in Device.objects.filter(status='active').select_related('model'):
+            #     is_sanxing = False
 
-                # 1. Проверяем manufacturer в модели (содержит 'Sanxing')
-                if d.model and d.model.manufacturer and 'Sanxing_old' in d.model.manufacturer:
-                    is_sanxing = True
+            #     # 1. Проверяем manufacturer в модели (содержит 'Sanxing')
+            #     if d.model and d.model.manufacturer and 'Sanxing_old' in d.model.manufacturer:
+            #         is_sanxing = True
 
-                # # 2. Резерв: api_id начинается с 'SX'
-                # if not is_sanxing and d.api_id and d.api_id.upper().startswith('SX'):
-                #     is_sanxing = True
+            #     # # 2. Резерв: api_id начинается с 'SX'
+            #     # if not is_sanxing and d.api_id and d.api_id.upper().startswith('SX'):
+            #     #     is_sanxing = True
 
-                # # 3. Резерв: askue_id == 18
-                # if not is_sanxing and d.askue_id and str(d.askue_id) == "18":
-                #     is_sanxing = True
+            #     # # 3. Резерв: askue_id == 18
+            #     # if not is_sanxing and d.askue_id and str(d.askue_id) == "18":
+            #     #     is_sanxing = True
 
-                if is_sanxing:
-                    devices.append(d)
+            #     if is_sanxing:
+            #         devices.append(d)
+            from meters.utils import get_robot_devices
+            devices = list(get_robot_devices('Sanxing_old'))
 
             if not devices:
                 self.stdout.write("No active Sanxing devices found in MySQL.")
@@ -132,7 +134,8 @@ class Command(BaseCommand):
                     timestamp=dt,
                     defaults={
                         'reading_value': val,
-                        'notes': 'Авто-сбор: Sanxing_old'
+                        'notes': 'Авто-сбор: Sanxing_old',
+                        'direction': 'aplus'
                     }
                 )
                 count += 1

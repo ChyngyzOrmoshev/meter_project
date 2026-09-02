@@ -1,0 +1,29 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-minus-circle text-warning"></i> Удалить устройство из групп</h1>
+<div class="card-pastel">
+    <div class="card-body">
+        <p><strong>Устройство:</strong> {{ device.serial_number }} ({{ device.model.model_name|default:"—" }})</p>
+        {% if groups %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Выберите группы, из которых нужно удалить (можно несколько, удерживайте
+                    Ctrl)</label>
+                <select name="group_ids" multiple class="form-select form-control-pastel" size="10"
+                    style="height: 200px;">
+                    {% for g in groups %}
+                    <option value="{{ g.id }}">{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-warning"><i class="fas fa-minus-circle"></i> Удалить</button>
+            <a href="{% url 'devices' %}" class="btn btn-pastel-outline"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+        {% else %}
+        <div class="alert alert-info">Устройство не состоит ни в одной группе.</div>
+        <a href="{% url 'devices' %}" class="btn btn-pastel-outline">Назад</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

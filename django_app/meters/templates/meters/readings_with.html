@@ -1,0 +1,220 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-check-circle"></i>Счетчики с показаниями</h1>
+
+<!-- Форма фильтров -->
+<div class="card-pastel mb-4">
+    <div class="card-header col-12 d-flex justify-content-between align-items-center">
+        <div><i class="fas fa-sliders-h"></i>
+            Фильтры</div>
+        <div class="btn-group" role="group">
+            <a href="?{{ current_params }}&export=1" class="btn btn-pastel-outline">
+                <i class="fas fa-file-csv"></i> CSV
+            </a>
+            <a href="?{{ current_params }}&export=xlsx" class="btn btn-pastel-outline">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <form method="get" class="row g-2 align-items-end">
+            <!-- <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Период</label>
+                <select name="period" class="form-select form-control-pastel">
+                    {% for value, label, selected in periods %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+
+
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Производитель</label>
+                <select name="producer" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for display, code, selected in producers_with_selected %}
+                    <option value="{{ code }}" {% if selected %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Тип ПУ</label>
+                <select name="model" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for m, selected in models_with_selected %}
+                    <option value="{{ m.id }}" {% if selected %}selected{% endif %}>{{ m.model_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Статус</label>
+                <select name="status" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for s, selected in statuses_with_selected %}
+                    <option value="{{ s }}" {% if selected %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Район</label>
+                <select name="region" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for r, selected in regions_with_selected %}
+                    <option value="{{ r.id }}" {% if selected %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Группа</label>
+                <select name="group" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for g, selected in groups_with_selected %}
+                    <option value="{{ g.id }}" {% if selected %}selected{% endif %}>{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Категория</label>
+                <select name="category" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for val, label, selected in categories_with_selected %}
+                    <option value="{{ val }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label">Дата</label>
+                <input type="date" name="date" class="form-control form-control-pastel" value="{{ specific_date }}">
+            </div>
+            <!-- <div class="d-flex justify-content-end align-items-center"> -->
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-primary "><i class="fas fa-filter"></i>
+                    Применить</button>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'readings_with' %}" class="btn btn-pastel-outline w-100">Сброс</a>
+            </div>
+            <!-- </div> -->
+
+        </form>
+    </div>
+</div>
+
+<!-- Таблица -->
+<div class="card-pastel">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Заводской номер</th>
+                        <th>Тип ПУ</th>
+                        <!-- <th>Статус реестра</th> -->
+                        <th>Статус связи</th>
+                        <th>Производитель</th>
+                        <th>Категория</th>
+                        <th>Ток</th>
+                        <th>Фазность</th>
+                        {% if show_reading_value and specific_date %}
+                        <th>Значение на {{ specific_date }}</th>
+                        {% else %}
+                        <th>Последнее показание (дата)</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td>{{ forloop.counter|add:start_index }}</td>
+                        <td><strong>{{ device.serial_number }}</strong></td>
+                        <td>{{ device.model.model_name|default:"—" }}</td>
+                        <!-- <td>
+                            <span class="badge-pastel 
+                                {% if device.status == 'active' %}success
+                                {% elif device.status == 'repair' %}warning
+                                {% else %}idle{% endif %}">
+                                {{ device.status }}
+                            </span>
+                        </td> -->
+                        <td>
+                            {% if user.is_staff %}
+                            {% if device.has_recent_reading %}
+                            <span class="badge-pastel success">🟢 Онлайн</span>
+                            {% else %}
+                            <span class="badge-pastel error">🔴 Оффлайн</span>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ device.producer_display|default:"—" }}</td>
+                        <td>{{ device.get_category_display|default:"—" }}</td>
+                        <td>{{ device.nominal_current|default:"—" }}</td>
+                        <td>{{ device.model.phases|default:"—" }}</td>
+                        <td>
+                            {% if show_reading_value and specific_date %}
+                            {% if device.reading_on_date %}
+                            {{ device.reading_on_date|floatformat:3 }}
+                            {% else %}
+                            —
+                            {% endif %}
+                            {% else %}
+                            {% if device.last_reading_date %}
+                            {{ device.last_reading_date|date:"Y-m-d H:i:s" }}
+                            {% else %}
+                            —
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">Нет приборов с показаниями за выбранный период
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if total_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item"><a class="page-link" href="?{{ current_params }}&page=1">⏮</a></li>
+        <li class="page-item"><a class="page-link" href="?{{ current_params }}&page={{ page|add:" -1" }}">◀</a></li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">⏮</span></li>
+        <li class="page-item disabled"><span class="page-link">◀</span></li>
+        {% endif %}
+
+        {% for p in page_range %}
+        {% if p == page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+        {% elif p == 1 or p == total_pages or p >= page|add:"-2" and p <= page|add:"2" %} <li class="page-item"><a
+                class="page-link" href="?{{ current_params }}&page={{ p }}">{{ p }}</a></li>
+            {% elif p == page|add:"-3" or p == page|add:"3" %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages %} <li class="page-item"><a class="page-link"
+                    href="?{{ current_params }}&page={{ page|add:" 1" }}">▶</a></li>
+                <li class="page-item"><a class="page-link" href="?{{ current_params }}&page={{ total_pages }}">⏭</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">▶</span></li>
+                <li class="page-item disabled"><span class="page-link">⏭</span></li>
+                {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<p class="text-muted small mt-3">Всего приборов с показаниями: {{ total }}</p>
+{% endblock %}

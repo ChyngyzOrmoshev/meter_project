@@ -1,0 +1,199 @@
+{% extends 'meters/base.html' %}
+{% load static %}
+{% block content %}
+
+<h1 class="page-title"><i class="fas fa-chart-bar"></i> Сводный отчёт по всем ПС</h1>
+
+<form method="get" class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-sliders-h"></i> Фильтры</div>
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Год</label>
+                <input type="number" name="year" class="form-control form-control-pastel" value="{{ year }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Месяц</label>
+                <input type="number" name="month" class="form-control form-control-pastel" value="{{ month }}" min="1"
+                    max="12">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-primary w-100"><i class="fas fa-filter"></i>
+                    Применить</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'balance_report_all' %}" class="btn btn-pastel-outline w-100">Сброс</a>
+            </div>
+            <div class="col-md-2">
+                <a href="?{{ request.GET.urlencode }}&export=xlsx" class="btn btn-pastel-success w-100">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if data %}
+<div class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-table"></i> Детализация по ПС</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel table-header-dark mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ПС</th>
+                        <th>Поступление</th>
+                        <th>Отпуск</th>
+                        <th>Небаланс</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ row.substation.name }}</td>
+                        <td>{{ row.input|floatformat:3 }}</td>
+                        <td>{{ row.output|floatformat:3 }}</td>
+                        <td>{{ row.imbalance|floatformat:3 }}</td>
+                        <td>{{ row.percent|floatformat:2 }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="font-weight: bold; background: #f0f3f7;">
+                    <tr>
+                        <td colspan="2"><strong>ИТОГО</strong></td>
+                        <td>{{ total_input|floatformat:3 }}</td>
+                        <td>{{ total_output|floatformat:3 }}</td>
+                        <td>{{ total_imbalance|floatformat:3 }}</td>
+                        <td>{{ total_percent|floatformat:2 }}%</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Данные для диаграмм передаём через json_script -->
+{{ chart_labels|json_script:"chartLabels" }}
+{{ chart_imbalance|json_script:"chartImbalance" }}
+{{ chart_input|json_script:"chartInput" }}
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card-pastel">
+            <div class="card-header"><i class="fas fa-chart-bar"></i> Небаланс по ПС</div>
+            <div class="card-body">
+                <canvas id="imbalanceChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-pastel">
+            <div class="card-header"><i class="fas fa-chart-pie"></i> Доля поступлений</div>
+            <div class="card-body">
+                <canvas id="pieChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Получаем данные из json_script
+        const labels = JSON.parse(document.getElementById('chartLabels').textContent);
+        const imbalanceData = JSON.parse(document.getElementById('chartImbalance').textContent);
+        const inputData = JSON.parse(document.getElementById('chartInput').textContent);
+
+        // Столбчатая диаграмма небаланса
+        const ctxBar = document.getElementById('imbalanceChart');
+        if (ctxBar && labels.length > 0) {
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Небаланс, кВт·ч',
+                        data: imbalanceData,
+                        backgroundColor: imbalanceData.map(function (v) {
+                            return v >= 0 ? 'rgba(40, 167, 69, 0.7)' : 'rgba(220, 53, 69, 0.7)';
+                        }),
+                        borderColor: imbalanceData.map(function (v) {
+                            return v >= 0 ? '#28a745' : '#dc3545';
+                        }),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.parsed.y + ' кВт·ч';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Круговая диаграмма долей поступлений
+        const ctxPie = document.getElementById('pieChart');
+        if (ctxPie && labels.length > 0) {
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: inputData,
+                        backgroundColor: [
+                            '#ff6384', '#36a2eb', '#cc65fe', '#ffce56',
+                            '#4bc0c0', '#ff9f40', '#8ac24a', '#9966ff',
+                            '#ff6384', '#36a2eb', '#cc65fe', '#ffce56'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 10 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const total = context.dataset.data.reduce(function (a, b) {
+                                        return a + b;
+                                    }, 0);
+                                    const percent = total ? Math.round(context.parsed / total * 100) : 0;
+                                    return context.label + ': ' + context.parsed.toFixed(1) + ' кВт·ч (' + percent + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> Нет данных для выбранного периода.
+</div>
+{% endif %}
+
+{% endblock %}

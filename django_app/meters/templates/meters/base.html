@@ -280,7 +280,30 @@
         .progress-pastel .progress-bar {
             height: 100%;
             border-radius: 30px;
-            transition: width 0.4s ease;
+            transition: width 0.8s ease;
+        }
+
+        /* Плавное заполнение прогресс-баров */
+        .progress-bar {
+            transition: width 1.5s ease-in-out !important;
+        }
+
+        /* Анимация появления цифр (опционально) */
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated-number {
+            display: inline-block;
+            animation: countUp 0.6s ease-out;
         }
 
         .bg-success-pastel {
@@ -336,10 +359,378 @@
                 font-size: 1.6rem;
             }
         }
+
+        /* Улучшенные карточки */
+        .card-pastel {
+            border-radius: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card-pastel:hover {
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Заголовки карточек */
+        .card-pastel .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            padding: 1.2rem 1.8rem;
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: #2d3e50;
+        }
+
+        .card-pastel .card-header i {
+            color: #7fa3b8;
+            margin-right: 0.5rem;
+        }
+
+        /* Таблицы */
+        .table-pastel thead th {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.8rem 1rem;
+            border-bottom: 2px solid #eef2f6;
+        }
+
+        .table-pastel tbody td {
+            padding: 0.8rem 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .table-pastel tbody tr:hover {
+            background: #f7f9fc;
+        }
+
+        /* Прогресс-бары */
+        .progress-pastel {
+            height: 8px;
+            background: #eef2f6;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+
+        .progress-pastel .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        /* Кнопки-пилюли */
+        .btn-group-pill .btn {
+            border-radius: 30px !important;
+            padding: 0.25rem 1rem;
+            font-size: 0.85rem;
+            margin-right: 4px;
+            border: 1px solid transparent;
+        }
+
+        .btn-group-pill .btn-pastel-primary {
+            background: #7fa3b8;
+            color: #fff;
+        }
+
+        .btn-group-pill .btn-pastel-primary:hover {
+            background: #6a8fa6;
+        }
+
+        .btn-group-pill .btn-pastel-outline {
+            background: transparent;
+            border-color: #d0d9e4;
+            color: #4a6278;
+        }
+
+        .btn-group-pill .btn-pastel-outline:hover {
+            background: #f0f4f9;
+            border-color: #b0c0d0;
+        }
+
+        /* Тёмные заголовки таблиц */
+        .table-header-dark thead th {
+            background: #2d3e50 !important;
+            /* тёмный цвет из основной палитры */
+            color: #f0f4f8 !important;
+            /* светлый текст */
+            border-bottom: 2px solid #1e2f3e !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+            padding: 0.9rem 1rem;
+            white-space: nowrap;
+        }
+
+        /* При наведении на строку – лёгкое затемнение (опционально) */
+        .table-header-dark tbody tr:hover {
+            background: #f7f9fc;
+        }
+
+        /* Чтобы сохранить скругление таблицы, добавляем overflow:hidden родителю */
+        .table-header-dark {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* Убираем подчёркивание и меняем цвет ссылок в таблице районов */
+        .region-link {
+            text-decoration: none !important;
+            color: #2d3e50 !important;
+            /* стандартный тёмный цвет текста */
+        }
+
+        .region-link:hover {
+            color: #7fa3b8 !important;
+            /* опционально: цвет при наведении */
+            text-decoration: underline !important;
+            /* можно убрать или оставить */
+        }
+
+        /* Делаем фон таблиц прозрачным */
+        .table-pastel {
+            background: transparent !important;
+        }
+
+        .table-pastel thead th {
+            background: #2d3e50 !important;
+            /* оставляем темный фон заголовков, если нужно */
+            color: #f0f4f8 !important;
+
+        }
+
+        .table-pastel tbody td {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Если хотите убрать белую подложку у карточек с таблицами */
+        .card-pastel {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), 0 1px 4px rgba(0, 0, 0, 0.02), inset 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: box-shadow 0.25s ease;
+        }
+
+        /* ===== СОВРЕМЕННЫЕ КАРТОЧКИ С РАМКОЙ ПО ПЕРИМЕТРУ ===== */
+        .metric-modern {
+            background: #ffffff00;
+            border-radius: 16px;
+            padding: 1.2rem 0.8rem;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e171552f;
+            /* тонкая рамка по всему периметру */
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            min-height: 130px;
+            /* фиксируем минимальную высоту, чтобы текст помещался */
+        }
+
+        .metric-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+            border-color: #d0d9e4;
+        }
+
+        .metric-modern .metric-icon {
+            font-size: 2rem;
+            color: #7fa3b8;
+            margin-bottom: 0.2rem;
+            display: block;
+        }
+
+        .metric-modern h5 {
+            font-weight: 500;
+            color: #6f8a9e;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+            line-height: 1.3;
+        }
+
+        .metric-modern h2 {
+            font-weight: 300;
+            font-size: 1.8rem;
+            color: #2d3e50;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        /* Цветные акценты для иконок (по желанию можно оставить или убрать) */
+        .metric-modern:nth-child(1) .metric-icon {
+            color: #e17055;
+        }
+
+        .metric-modern:nth-child(2) .metric-icon {
+            color: #00b894;
+        }
+
+        .metric-modern:nth-child(3) .metric-icon {
+            color: #f39c12;
+        }
+
+        .metric-modern:nth-child(4) .metric-icon {
+            color: #0984e3;
+        }
+
+        .bg-light-warning {
+            background-color: #fff3cd50 !important;
+        }
+
+        .bg-light-primary {
+            background-color: #cfe2ff50 !important;
+        }
+
+        .bg-light-success {
+            background-color: #d1e7dd50 !important;
+        }
+
+        .bg-light-secondary {
+            background-color: #e9ecef !important;
+        }
+
+        .border-warning {
+            border-color: #ffc107 !important;
+        }
+
+        .border-primary {
+            border-color: #0d6efd !important;
+        }
+
+        .border-success {
+            border-color: #198754 !important;
+        }
+
+        .border-secondary {
+            border-color: #6c757d !important;
+        }
+
+        /* Метрики */
+        .metric-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.2rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 120px;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .metric-card .metric-icon {
+            font-size: 2.2rem;
+            width: 50px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .metric-card .metric-content {
+            flex: 1;
+        }
+
+        .metric-card .metric-content h5 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6f8a9e;
+            margin-bottom: 0.1rem;
+        }
+
+        .metric-card .metric-content h2 {
+            font-weight: 300;
+            font-size: 1.8rem;
+            color: #2d3e50;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .metric-card .metric-content small {
+            font-size: 0.75rem;
+            color: #8aa0b2;
+        }
+
+        /* Цвета для метрик */
+        .metric-total .metric-icon {
+            color: #6c757d;
+        }
+
+        .metric-new .metric-icon {
+            color: #ffc107;
+        }
+
+        .metric-progress .metric-icon {
+            color: #0d6efd;
+        }
+
+        .metric-fixed .metric-icon {
+            color: #198754;
+        }
+
+        .metric-auto .metric-icon {
+            color: #17a2b8;
+        }
+
+        .metric-ignored .metric-icon {
+            color: #6c757d;
+        }
+
+        .metric-offline .metric-icon {
+            color: #dc3545;
+        }
+
+        .metric-progress-bar .metric-icon {
+            color: #6f42c1;
+        }
+
+        /* Прогресс-бар внутри метрики */
+        .metric-card .progress-pastel {
+            height: 6px;
+            background: #eef2f6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .metric-card .progress-pastel .progress-bar {
+            border-radius: 10px;
+            transition: width 1.2s ease;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Приветственный оверлей -->
+    <div id="welcome-overlay"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s ease;">
+        <div style="text-align:center;padding:20px;">
+            <div style="font-size:4rem;color:#7fa3b8;margin-bottom:20px;">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h1 style="font-weight:300;color:#2d3e50;font-size:2.5rem;">Добро пожаловать в <strong
+                    style="font-weight:600;">ИнфоЭнерго</strong></h1>
+            <p style="color:#6f8a9e;font-size:1.2rem;margin-top:10px;">Система коммерческого учёта электроэнергии</p>
+            <div style="margin-top:30px;">
+                <div class="spinner-border text-secondary" role="status" style="width:3rem;height:3rem;">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p style="margin-top:15px;color:#8aa0b2;">Загрузка данных...</p>
+            </div>
+            <button id="skip-welcome"
+                style="margin-top:20px;background:transparent;border:1px solid #cbd5e0;border-radius:30px;padding:8px 25px;color:#4a6278;cursor:pointer;font-size:0.9rem;">Пропустить</button>
+        </div>
+    </div>
 
     <!-- НАВИГАЦИЯ -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
@@ -360,25 +751,93 @@
                         <a class="nav-link {% if request.resolver_match.url_name == 'readings' %}active{% endif %}"
                             href="{% url 'readings' %}"><i class="fas fa-history"></i> Показания</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'missing_readings' %}"><i class="fas fa-file-alt"></i>
-                            Отчеты</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-alt"></i> Отчеты
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'missing_readings' %}">Счетчики без показаний</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'readings_with' %}">Счетчики с показаниями</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- Сверка с 1С (выпадающее меню) -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="compare1cDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-excel"></i> Заявки
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="compare1cDropdown">
+                            {% if user.is_authenticated and user.is_staff or user.groups.all.0.name == 'operator' %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'compare_1c' %}">
+                                    <i class="fas fa-upload"></i> Загрузить выгрузку
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'compare_1c_issues' %}">
+                                    <i class="fas fa-tasks"></i> Активные заявки
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'compare_1c_stats' %}">
+                                    <i class="fas fa-chart-bar"></i> Аналитика заявок
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% if user.is_authenticated and user.is_staff or user.groups.all.0.name == 'operator' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'devices' %}active{% endif %}"
-                            href="{% url 'devices' %}"><i class="fas fa-server"></i> Реестр</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="catalogDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-book"></i> Управление
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="catalogDropdown">
+                            <li><a class="dropdown-item" href="{% url 'devices' %}"><i class="fas fa-server"></i> Реестр
+                                    приборов</a></li>
+                            <li><a class="dropdown-item" href="{% url 'bulk_update_region_page' %}"><i
+                                        class="fas fa-sitemap"></i> Групповое изменение района</a></li>
+                            <li><a class="dropdown-item" href="{% url 'models' %}"><i class="fas fa-cubes"></i>
+                                    Модели ПУ</a></li>
+                            <li><a class="dropdown-item" href="{% url 'groups_list' %}"><i
+                                        class="fas fa-object-group"></i> Группы</a></li>
+                            <li><a class="dropdown-item" href="{% url 'bulk_readings' %}"><i
+                                        class="fas fa-object-group"></i> Импорт показаний</a></li>
+                            <li><a class="dropdown-item" href="{% url 'register_devices_page' %}"><i
+                                        class="fas fa-user-plus"></i> АвтоРегистрация АСКУЭ</a></li>
+                            <li><a class="dropdown-item" href="{% url 'registered_devices_report' %}"><i
+                                        class="fas fa-clipboard-list"></i> Отчёт по регистрации</a></li>
+                            <li><a class="dropdown-item" href="{% url 'hierarchy_management' %}"><i
+                                        class="fas fa-sitemap"></i> Иерархия ПС/ТП</a></li>
+                            <li><a class="dropdown-item" href="{% url 'bulk_assign_tp' %}"><i class="fas fa-link"></i>
+                                    Привязка к ТП</a></li>
+                            <!-- <li><a class="dropdown-item" href="{% url 'compare_1c' %}"><i
+                                        class="fas fa-exchange-alt"></i> Сверка с 1С</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'compare_1c_issues' %}"><i class="fas fa-tasks"></i>
+                                    Заявки 1С</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'compare_1c_stats' %}"><i
+                                        class="fas fa-chart-pie"></i> Статистика по заявкам</a></li> -->
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'models' %}active{% endif %}"
-                            href="{% url 'models' %}"><i class="fas fa-cubes"></i> Модели</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="balanceDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-balance-scale"></i> Баланс
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'balance_readings' %}">Показания и расчёты</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'balance_summary' %}">Сводный баланс по ПС</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'balance_report_all' %}">Сводный отчёт по всем
+                                    ПС</a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'bulk_readings' %}active{% endif %}"
-                            href="{% url 'bulk_readings' %}"><i class="fas fa-upload"></i> Импорт показаний</a>
-                    </li>
-
-
                     <!-- <li class="nav-item">
                         <a class="nav-link" href="/admin/"><i class="fas fa-user-cog"></i> Админка</a>
                     </li> -->
@@ -420,6 +879,84 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script> -->
+    <script>
+
+        // (async function loadLibraries() {
+        //     // Функция для загрузки скрипта по URL
+        //     const loadScript = (src) =>
+        //         new Promise((resolve, reject) => {
+        //             const script = document.createElement('script');
+        //             script.src = src;
+        //             script.onload = resolve;
+        //             script.onerror = reject;
+        //             document.head.append(script);
+        //         });
+
+        //     try {
+        //         // Загружаем библиотеки строго по порядку
+        //         await loadScript('https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js');
+        //         await loadScript('https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js');
+        //         // await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+        //         console.log('Все библиотеки успешно загружены');
+        //     } catch (error) {
+        //         console.error('Ошибка загрузки:', error);
+        //     }
+        // })();
+
+        (function () {
+            // Проверяем, скрывали ли уже оверлей в этой сессии
+            if (sessionStorage.getItem('welcome_shown')) {
+                var overlay = document.getElementById('welcome-overlay');
+                if (overlay) overlay.style.display = 'none';
+                return;
+            }
+
+            var overlay = document.getElementById('welcome-overlay');
+            if (!overlay) return;
+
+            // Функция скрытия
+            function hideOverlay() {
+                overlay.style.opacity = '0';
+                setTimeout(function () {
+                    overlay.style.display = 'none';
+                    sessionStorage.setItem('welcome_shown', 'true');
+                }, 800);
+            }
+
+            // Скрываем через 10 секунд
+            var timer = setTimeout(hideOverlay, 2000);
+
+            // Кнопка "Пропустить"
+            var skipBtn = document.getElementById('skip-welcome');
+            if (skipBtn) {
+                skipBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    clearTimeout(timer);
+                    hideOverlay();
+                });
+            }
+
+            // Запасной вариант: если через 12 секунд всё ещё видно, скрываем принудительно
+            setTimeout(function () {
+                if (overlay.style.display !== 'none') {
+                    hideOverlay();
+                }
+            }, 10000);
+        })();
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    {% block extra_js %}{% endblock %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
 </body>
 
 </html>

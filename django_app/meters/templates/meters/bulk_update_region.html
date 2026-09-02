@@ -1,0 +1,63 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-sitemap"></i> Групповое изменение района</h1>
+
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-list"></i> Обновить иерархию для нескольких приборов</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Введите серийные номера (каждый с новой строки)</label>
+                <textarea name="serials" class="form-control form-control-pastel" rows="10"
+                    placeholder="084600001431&#10;084600001432"></textarea>
+                <div class="form-text">Минимум 1 номер.</div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Район</label>
+                    <select name="region_id" class="form-select form-control-pastel">
+                        <option value="">—</option>
+                        {% for r in regions %}
+                        <option value="{{ r.id }}">{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Подстанция</label>
+                    <select name="substation_id" class="form-select form-control-pastel">
+                        <option value="">—</option>
+                        {% for s in substations %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Фидер</label>
+                    <select name="feeder_id" class="form-select form-control-pastel">
+                        <option value="">—</option>
+                        {% for f in feeders %}
+                        <option value="{{ f.id }}">{{ f.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">ТП</label>
+                    <select name="tp_id" class="form-select form-control-pastel">
+                        <option value="">—</option>
+                        {% for t in tps %}
+                        <option value="{{ t.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Обновить</button>
+                <a href="{% url 'devices' %}" class="btn btn-pastel-outline"><i class="fas fa-times"></i> Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

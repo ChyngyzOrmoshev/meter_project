@@ -1,0 +1,43 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="page-title"><i class="fas fa-object-group"></i> Группы счетчиков</h1>
+    <a href="{% url 'group_create' %}" class="btn btn-pastel-primary">
+        <i class="fas fa-plus"></i> Создать группу
+    </a>
+</div>
+
+<div class="card-pastel">
+    <div class="card-body p-0">
+        <table class="table table-pastel mb-0">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Кол-во приборов</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group in groups %}
+                <tr>
+                    <td><strong>{{ group.name }}</strong></td>
+                    <td>{{ group.description|default:"—" }}</td>
+                    <td>{{ group.devices.count }}</td>
+                    <td>
+                        <a href="{% url 'group_edit' group.id %}" class="btn btn-pastel-outline btn-sm"><i
+                                class="fas fa-edit"></i></a>
+                        <a href="{% url 'group_delete' group.id %}" class="btn btn-pastel-outline btn-sm text-danger"><i
+                                class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Группы не созданы</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

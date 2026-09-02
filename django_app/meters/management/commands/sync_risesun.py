@@ -69,7 +69,10 @@ class Command(BaseCommand):
     def sync(self):
         self.stdout.write("🔄 Starting RiseSun sync (only last reading per day)...")
         try:
-            device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            # device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            from meters.utils import get_robot_devices
+            devices = get_robot_devices('RiseSun')
+            device_sns = set(devices.values_list('serial_number', flat=True))
             if not device_sns:
                 self.stdout.write("No active devices, sync skipped.")
                 SyncStatus.objects.update_or_create(
@@ -159,7 +162,8 @@ class Command(BaseCommand):
                         timestamp=dt,
                         defaults={
                             'reading_value': val,
-                            'notes': 'RiseSun'
+                            'notes': 'RiseSun',
+                            'direction': 'aplus'
                         }
                     )
                     count += 1

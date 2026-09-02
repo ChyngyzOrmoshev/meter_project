@@ -1,0 +1,347 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-chart-bar"></i> Статистика заявок</h1>
+
+<!-- Фильтр -->
+<div class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-sliders-h"></i> Фильтр</div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Район</label>
+                <select name="region" class="form-select form-control-pastel">
+                    {% for id, name, selected in region_choices %}
+                    <option value="{{ id }}" {% if selected %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-primary w-100"><i class="fas fa-filter"></i>
+                    Применить</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'compare_1c_stats' %}" class="btn btn-pastel-outline w-100">Сброс</a>
+            </div>
+        </form>
+    </div>
+</div>
+<p class="text-muted small">
+    <i class="far fa-calendar-alt"></i> Данные на {{ now|date:"d.m.Y H:i" }}
+</p>
+
+<!-- Метрики -->
+<div class="row g-3 mb-4">
+    <!-- Всего заявок -->
+    <div class="col-md-3">
+        <div class="metric-card metric-total">
+            <div class="metric-icon"><i class="fas fa-tasks"></i></div>
+            <div class="metric-content">
+                <h5>Всего заявок</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}{% if selected_region %}?region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.total|default:0 }}</a></h2>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- Новых -->
+    <div class="col-md-3">
+        <div class="metric-card metric-new">
+            <div class="metric-icon"><i class="fas fa-clock"></i></div>
+            <div class="metric-content">
+                <h5>Новых</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}?status=new{% if selected_region %}&region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.new|default:0 }}</a></h2>
+                <small class="text-muted">оффлайн: {{ total_stats.offline|default:0 }}</small>
+            </div>
+        </div>
+    </div>
+    <!-- В процессе -->
+    <div class="col-md-3">
+        <div class="metric-card metric-progress">
+            <div class="metric-icon"><i class="fas fa-spinner"></i></div>
+            <div class="metric-content">
+                <h5>В процессе</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}?status=in_progress{% if selected_region %}&region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.in_progress|default:0 }}</a></h2>
+            </div>
+        </div>
+    </div>
+    <!-- Исправлено -->
+    <div class="col-md-3">
+        <div class="metric-card metric-fixed">
+            <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="metric-content">
+                <h5>Исправлено</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}?status=fixed{% if selected_region %}&region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.fixed|default:0 }}</a></h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Вторая строка метрик -->
+<div class="row g-3 mb-4">
+    <!-- Автозакрыто -->
+    <div class="col-md-3">
+        <div class="metric-card metric-auto">
+            <div class="metric-icon"><i class="fas fa-robot"></i></div>
+            <div class="metric-content">
+                <h5>Автозакрыто</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}?status=auto_fixed{% if selected_region %}&region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.auto_fixed|default:0 }}</a></h2>
+            </div>
+        </div>
+    </div>
+    <!-- Пропущено -->
+    <div class="col-md-3">
+        <div class="metric-card metric-ignored">
+            <div class="metric-icon"><i class="fas fa-times-circle"></i></div>
+            <div class="metric-content">
+                <h5>Пропущено</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}?status=ignored{% if selected_region %}&region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.ignored|default:0 }}</a></h2>
+            </div>
+        </div>
+    </div>
+    <!-- Оффлайн (выделяем) -->
+    <div class="col-md-3">
+        <div class="metric-card metric-offline">
+            <div class="metric-icon"><i class="fas fa-wifi"></i></div>
+            <div class="metric-content">
+                <h5>Оффлайн</h5>
+                <h2><a href="{% url 'compare_1c_issues' %}?action=offline{% if selected_region %}&region={{ selected_region }}{% endif %}"
+                        class="text-decoration-none text-dark">{{ total_stats.offline|default:0 }}</a></h2>
+            </div>
+        </div>
+    </div>
+    <!-- Прогресс (например, процент закрытых) -->
+    <div class="col-md-3">
+        <div class="metric-card metric-progress-bar">
+            <div class="metric-icon"><i class="fas fa-percent"></i></div>
+            <div class="metric-content">
+                <h5>Закрыто</h5>
+                {% with closed=total_stats.fixed|add:total_stats.auto_fixed total=total_stats.total %}
+                {% if total > 0 %}
+                <h2>{{ total_stats.closed_percent|default:0 }}%</h2>
+                <small class="text-muted">({{ total_stats.closed|default:0 }} заявок)</small>
+                {% else %}
+                <h2>0%</h2>
+                <div class="progress-pastel mt-1">
+                    <div class="progress-bar bg-success-pastel" style="width: 0%;"></div>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Диаграммы -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card-pastel h-100">
+            <div class="card-header"><i class="fas fa-chart-pie"></i> Распределение по статусам</div>
+            <div class="card-body">
+                <canvas id="statusPieChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-pastel h-100">
+            <div class="card-header"><i class="fas fa-chart-bar"></i> Заявки по районам</div>
+            <div class="card-body">
+                <canvas id="regionBarChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Таблица -->
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-table"></i> Детализация по районам</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel table-header-dark mb-0">
+                <thead>
+                    <tr>
+                        <th>Район</th>
+                        <th>Всего</th>
+                        <th>Новых</th>
+                        <th>Оффлайн</th>
+                        <th>В процессе</th>
+                        <th>Исправлено</th>
+                        <th>Автозакрыто</th>
+                        <th>Пропущено</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in region_stats %}
+                    <tr>
+                        <td><strong>{{ stat.region__name|default:"Без района" }}</strong></td>
+                        <td>{{ stat.total }}</td>
+                        <td>{{ stat.new }}</td>
+                        <td><span class="badge-pastel error">{{ stat.offline }}</span></td>
+                        <td>{{ stat.in_progress }}</td>
+                        <td>{{ stat.fixed }}</td>
+                        <td><span class="badge-pastel info">{{ stat.auto_fixed }}</span></td>
+                        <td>{{ stat.ignored }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if region_stats %}
+                <tfoot style="font-weight: bold; background: #f0f3f7;">
+                    <tr>
+                        <td><strong>ИТОГО</strong></td>
+                        <td>{{ total_stats.total|default:0 }}</td>
+                        <td>{{ total_stats.new|default:0 }}</td>
+                        <td>{{ total_stats.offline|default:0 }}</td>
+                        <td>{{ total_stats.in_progress|default:0 }}</td>
+                        <td>{{ total_stats.fixed|default:0 }}</td>
+                        <td>{{ total_stats.auto_fixed|default:0 }}</td>
+                        <td>{{ total_stats.ignored|default:0 }}</td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопки перехода -->
+<div class="mt-4">
+    <a href="{% url 'compare_1c_issues' %}" class="btn btn-pastel-primary">
+        <i class="fas fa-list"></i> Перейти к заявкам
+    </a>
+    <!-- <a href="{% url 'compare_1c' %}" class="btn btn-pastel-outline">
+        <i class="fas fa-upload"></i> Загрузить новый файл
+    </a> -->
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+<!-- Подключаем Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Скрытые данные для диаграмм -->
+<script id="pieData" type="application/json">{{ pie_data_json|safe }}</script>
+<script id="barData" type="application/json">{{ bar_data_json|safe }}</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ---- Получаем данные из json_script тегов ----
+        let pieData = null;
+        let barData = null;
+        try {
+            const pieEl = document.getElementById('pieData');
+            const barEl = document.getElementById('barData');
+            if (pieEl) pieData = JSON.parse(pieEl.textContent);
+            if (barEl) barData = JSON.parse(barEl.textContent);
+        } catch (e) {
+            console.error('Ошибка парсинга данных для диаграмм:', e);
+            // Показываем сообщение об ошибке
+            document.querySelector('#statusPieChart').parentNode.innerHTML =
+                '<div class="text-muted text-center py-4">Ошибка данных диаграммы</div>';
+            document.querySelector('#regionBarChart').parentNode.innerHTML =
+                '<div class="text-muted text-center py-4">Ошибка данных диаграммы</div>';
+            return;
+        }
+
+        console.log('📊 pieData:', pieData);
+        console.log('📊 barData:', barData);
+
+        // ---- 1. КРУГОВАЯ ДИАГРАММА СТАТУСОВ ----
+        const hasPieData = pieData && pieData.values && pieData.values.some(v => v > 0);
+        if (hasPieData) {
+            const ctxPie = document.getElementById('statusPieChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: pieData.labels,
+                    datasets: [{
+                        data: pieData.values,
+                        backgroundColor: pieData.colors || ['#ffc107', '#0d6efd', '#198754', '#6c757d'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percent = total ? Math.round(context.parsed / total * 100) : 0;
+                                    return context.label + ': ' + context.parsed + ' (' + percent + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('✅ Круговая диаграмма построена');
+        } else {
+            document.getElementById('statusPieChart').parentNode.innerHTML =
+                '<div class="text-muted text-center py-4">Нет данных для круговой диаграммы</div>';
+            console.warn('⚠️ Нет данных для круговой диаграммы');
+        }
+
+        // ---- 2. СТОЛБЧАТАЯ ДИАГРАММА ПО РАЙОНАМ ----
+        const hasBarData = barData && barData.labels && barData.labels.length > 0 &&
+            barData.total && barData.total.some(v => v > 0);
+        if (hasBarData) {
+            const ctxBar = document.getElementById('regionBarChart').getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: barData.labels,
+                    datasets: [
+                        {
+                            label: 'Всего',
+                            data: barData.total,
+                            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                            borderColor: '#0d6efd',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Новых',
+                            data: barData.new,
+                            backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                            borderColor: '#ffc107',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Оффлайн',
+                            data: barData.offline,
+                            backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                            borderColor: '#dc3545',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { ticks: { maxRotation: 30 } }
+                    }
+                }
+            });
+            console.log('✅ Столбчатая диаграмма построена');
+        } else {
+            document.getElementById('regionBarChart').parentNode.innerHTML =
+                '<div class="text-muted text-center py-4">Нет данных для столбчатой диаграммы</div>';
+            console.warn('⚠️ Нет данных для столбчатой диаграммы');
+        }
+    });
+</script>
+{% endblock %}

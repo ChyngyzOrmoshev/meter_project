@@ -1,0 +1,149 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ label }}: {{ obj.name }}</h5>
+        <span class="badge bg-secondary">{{ type }}</span>
+    </div>
+    <div class="card-body">
+        <form id="node-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ obj.id }}">
+            <input type="hidden" name="level" value="{{ type }}">
+
+            <div class="mb-3">
+                <label class="form-label">Название</label>
+                <input type="text" name="name" class="form-control" value="{{ obj.name }}" required>
+            </div>
+
+            {% if parent_label %}
+            <div class="mb-3">
+                <label class="form-label">{{ parent_label }}</label>
+                <select name="parent_id" class="form-select">
+                    <option value="">—</option>
+                    {% for pid, pname, selected in parent_choices %}
+                    <option value="{{ pid }}" {% if selected %}selected{% endif %}>{{ pname }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if show_head_meter %}
+            <div class="mb-3" id="headMeterContainer">
+                <label class="form-label">Головной счётчик</label>
+                <div style="position: relative;">
+                    <input type="text" id="headMeterInput" class="form-control" placeholder="Начните вводить номер..."
+                        autocomplete="off" value="{% if obj.head_meter %}{{ obj.head_meter.serial_number }}{% endif %}">
+                    <input type="hidden" name="head_meter_id" id="headMeterId"
+                        value="{% if obj.head_meter %}{{ obj.head_meter.id }}{% endif %}">
+                    <div id="headMeterSuggestions" class="list-group"
+                        style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; background: white; border: 1px solid #ced4da; border-radius: 0 0 4px 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if parent_field %}
+            <input type="hidden" name="parent_field" value="{{ parent_field }}">
+            {% endif %}
+
+            {% if type == 'feeder' %}
+            <div class="mb-3">
+                <label class="form-label">Тип фидера</label>
+                <select name="feeder_type" class="form-select">
+                    {% for value, label, selected in feeder_type_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-pastel-primary">Сохранить</button>
+            <button type="button" class="btn btn-pastel-outline" onclick="location.reload()">Отмена</button>
+        </form>
+
+        <hr>
+        <h6>Действия</h6>
+        <button class="btn btn-sm btn-outline-success add-child-from-details" data-id="{{ obj.id }}"
+            data-type="{{ type }}">
+            <i class="fas fa-plus"></i> Добавить дочерний
+        </button>
+        <button class="btn btn-sm btn-outline-danger delete-node-from-details" data-id="{{ obj.id }}"
+            data-type="{{ type }}">
+            <i class="fas fa-trash-alt"></i> Удалить
+        </button>
+    </div>
+</div>
+
+<script>
+    // Автодополнение для головного счётчика
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('headMeterInput');
+        const hidden = document.getElementById('headMeterId');
+        const suggestions = document.getElementById('headMeterSuggestions');
+
+        input.addEventListener('input', function () {
+            const term = this.value.trim();
+            if (term.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            fetch(`/api/search-devices/?term=${encodeURIComponent(term)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestions.innerHTML = '';
+                    if (data.length === 0) {
+                        suggestions.style.display = 'none';
+                        return;
+                    }
+                    data.forEach(device => {
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.textContent = device.text;
+                        item.dataset.id = device.id;
+                        item.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            input.value = this.textContent;
+                            hidden.value = this.dataset.id;
+                            suggestions.style.display = 'none';
+                        });
+                        suggestions.appendChild(item);
+                    });
+                    suggestions.style.display = 'block';
+                })
+                .catch(() => {
+                    suggestions.style.display = 'none';
+                });
+        });
+
+        input.addEventListener('blur', function () {
+            setTimeout(() => {
+                suggestions.style.display = 'none';
+            }, 200);
+        });
+
+        // Отправка формы редактирования
+        document.getElementById('node-edit-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const id = formData.get('id');
+            const level = formData.get('level');
+            let url = '/hierarchy/add/';
+            if (id) {
+                url = `/hierarchy/edit/${id}/`;
+            }
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Сохранено успешно');
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                })
+                .catch(error => alert('Ошибка: ' + error));
+        });
+    });
+</script>

@@ -1,0 +1,73 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-cog"></i> Коэффициенты счётчика</h1>
+
+<div class="card-pastel mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Заводской номер:</strong> {{ device.serial_number }}</p>
+                <p><strong>Тип ПУ:</strong> {{ device.model.model_name|default:"—" }}</p>
+                <p><strong>Текущий ТТ:</strong> {{ device.tt_ratio|default:"—" }}</p>
+                <p><strong>Текущий ТН:</strong> {{ device.tn_ratio|default:"—" }}</p>
+                <p><strong>Расчётный коэф.:</strong> {{ device.calc_coefficient|floatformat:2|default:"—" }}</p>
+            </div>
+            <div class="col-md-6">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Новый ТТ</label>
+                        <input type="number" step="0.01" name="tt_ratio" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Новый ТН</label>
+                        <input type="number" step="0.01" name="tn_ratio" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата начала действия</label>
+                        <input type="date" name="start_date" class="form-control" value="{% now 'Y-m-d' %}">
+                        <div class="form-text">Если не указать, будет использована сегодняшняя дата.</div>
+                    </div>
+                    <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Установить
+                        коэффициенты</button>
+                    <a href="{% url 'devices' %}" class="btn btn-pastel-outline">Назад в реестр</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-history"></i> История изменений</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>Дата начала</th>
+                        <th>Дата окончания</th>
+                        <th>ТТ</th>
+                        <th>ТН</th>
+                        <th>Расчётный коэффициент</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                    <tr>
+                        <td>{{ item.start_date|date:"d.m.Y" }}</td>
+                        <td>{{ item.end_date|date:"d.m.Y"|default:"н.в." }}</td>
+                        <td>{{ item.tt_ratio }}</td>
+                        <td>{{ item.tn_ratio }}</td>
+                        <td>{{ item.calc_coeff|floatformat:2 }}</td> <!-- теперь это готовое число -->
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Нет истории изменений</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

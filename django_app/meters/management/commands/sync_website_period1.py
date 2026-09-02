@@ -274,26 +274,35 @@ class Command(BaseCommand):
 
     def parse_xml_and_import(self, content):
         close_old_connections()
-        all_devices = Device.objects.select_related('model').all()
-        devices_by_full = {}
-        devices_by_last8 = {}
+        # all_devices = Device.objects.select_related('model').all()
+        # devices_by_full = {}
+        # devices_by_last8 = {}
 
-        for d in all_devices:
-            devices_by_full[d.serial_number] = d
-            is_sanxing = False
-            if hasattr(d, 'api_id') and d.api_id and d.api_id.upper().startswith('SX'):
-                is_sanxing = True
-            if not is_sanxing and hasattr(d, 'model') and d.model:
-                if hasattr(d.model, 'manufacturer') and d.model.manufacturer:
-                    if 'Sanxing' in d.model.manufacturer or 'sanxing' in d.model.manufacturer.lower():
-                        is_sanxing = True
-                elif hasattr(d.model, 'name') and d.model.name:
-                    if 'Sanxing' in d.model.name or 'sanxing' in d.model.name.lower():
-                        is_sanxing = True
-            if is_sanxing and len(d.serial_number) >= 8:
+        # for d in all_devices:
+        #     devices_by_full[d.serial_number] = d
+        #     is_sanxing = False
+        #     if hasattr(d, 'api_id') and d.api_id and d.api_id.upper().startswith('SX'):
+        #         is_sanxing = True
+        #     if not is_sanxing and hasattr(d, 'model') and d.model:
+        #         if hasattr(d.model, 'manufacturer') and d.model.manufacturer:
+        #             if 'Sanxing' in d.model.manufacturer or 'sanxing' in d.model.manufacturer.lower():
+        #                 is_sanxing = True
+        #         elif hasattr(d.model, 'name') and d.model.name:
+        #             if 'Sanxing' in d.model.name or 'sanxing' in d.model.name.lower():
+        #                 is_sanxing = True
+        #     if is_sanxing and len(d.serial_number) >= 8:
+        #         last8 = d.serial_number[-8:]
+        #         if last8 not in devices_by_last8:
+        #             devices_by_last8[last8] = d
+
+        from meters.utils import get_robot_devices
+        devices = get_robot_devices('Sanxing_new_5A')
+        devices_by_full = {d.serial_number: d for d in devices}
+        devices_by_last8 = {}
+        for d in devices:
+            if len(d.serial_number) >= 8:
                 last8 = d.serial_number[-8:]
-                if last8 not in devices_by_last8:
-                    devices_by_last8[last8] = d
+                devices_by_last8[last8] = d
 
         count = 0
         try:
@@ -335,7 +344,7 @@ class Command(BaseCommand):
                     Reading.objects.update_or_create(
                         device=device,
                         timestamp=dt_time,
-                        defaults={'reading_value': val, 'notes': 'Website sync Period1 S34U18'}
+                        defaults={'reading_value': val, 'notes': 'Website sync Period1 S34U18', 'direction': 'aplus'}
                     )
                     count += 1
             return count

@@ -2,58 +2,94 @@
 {% block content %}
 <h1 class="page-title"><i class="fas fa-chart-pie"></i>Аналитика по приборам учета</h1>
 
-<div class="row g-4 mb-5">
-    <div class="col-md-3">
-        <div class="metric-pastel">
+<div class="row g-3 mb-4 justify-content-center">
+    <div class="col-lg-3 col-md-3 col-sm-4 col-6">
+        <div class="metric-modern">
             <div class="metric-icon"><i class="fas fa-cubes"></i></div>
             <h5>Всего приборов</h5>
             <h2>{{ total_devices }}</h2>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="metric-pastel">
+    <div class="col-lg-3 col-md-3 col-sm-4 col-6">
+        <div class="metric-modern">
             <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
             <h5>Активных на текущий день</h5>
             <h2>{{ active_today }}</h2>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="metric-pastel">
+    <div class="col-lg-3 col-md-3 col-sm-4 col-6">
+        <div class="metric-modern">
             <div class="metric-icon"><i class="fas fa-percent"></i></div>
             <h5>% чтения</h5>
             <h2>{{ active_percent }}%</h2>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="metric-pastel">
+    <div class="col-lg-3 col-md-3 col-sm-4 col-6">
+        <div class="metric-modern">
             <div class="metric-icon"><i class="fas fa-edit"></i></div>
             <h5>Ручных показаний</h5>
             <h2>{{ manual_today }}</h2>
         </div>
     </div>
 </div>
-
+<!-- Статистика по районам -->
+<div class="card-pastel mb-5">
+    <div class="card-header">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span><i class="fas fa-map-marker-alt me-2"></i>Статистика по районам</span>
+            <div class="btn-group btn-group-pill" role="group" id="region-period-btns">
+                <a href="#" data-period="today" class="btn btn-pastel-primary rounded-pill">Сегодня</a>
+                <a href="#" data-period="3d" class="btn btn-pastel-outline rounded-pill">3 дня</a>
+                <a href="#" data-period="7d" class="btn btn-pastel-outline rounded-pill">7 дней</a>
+                <a href="#" data-period="30d" class="btn btn-pastel-outline rounded-pill">30 дней</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body" id="region-stats-container">
+        <div class="text-center py-4">
+            <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted" style="font-size: 0.9rem;">Загрузка данных...</p>
+        </div>
+    </div>
+</div>
+<!-- Диаграмма для районов (столбчатая) -->
+<div class="mt-4">
+    <!-- <h6 class="text-muted"><i class="fas fa-chart-bar me-2"></i>Сравнение районов по количеству приборов</h6> -->
+    <div id="region-chart-container" style="height:500px; width:100%; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));">
+    </div>
+</div>
+<!-- Модальное окно для статистики по району -->
+<div class="modal fade" id="regionModal" tabindex="-1" aria-labelledby="regionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="regionModalLabel">Статистика по категории: <span
+                        id="regionModalName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="regionModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Загрузка данных...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Статистика по производителям -->
 <div class="card-pastel mb-5">
     <div class="card-header">
         <div class="d-flex align-items-center gap-3 flex-wrap">
             <span><i class="fas fa-industry me-2"></i>Активность по производителям</span>
-            <div class="btn-group btn-group-sm" role="group">
-                <a href="?period=today"
-                    class="btn {% if period == 'today' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
-                    <i class="fas fa-calendar-day me-1"></i>Сегодня
-                </a>
-                <a href="?period=3d"
-                    class="btn {% if period == '3d' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
-                    <i class="fas fa-calendar-alt me-1"></i>3 дня
-                </a>
-                <a href="?period=7d"
-                    class="btn {% if period == '7d' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
-                    <i class="fas fa-calendar-alt me-1"></i>7 дней
-                </a>
-                <a href="?period=30d"
-                    class="btn {% if period == '30d' %}btn-pastel-primary{% else %}btn-pastel-outline{% endif %} rounded-pill">
-                    <i class="fas fa-calendar-alt me-1"></i>30 дней
-                </a>
+            <div class="btn-group btn-group-pill" role="group" id="producer-period-btns">
+                <a href="#" data-period="today" class="btn btn-pastel-primary rounded-pill">Сегодня</a>
+                <a href="#" data-period="3d" class="btn btn-pastel-outline rounded-pill">3 дня</a>
+                <a href="#" data-period="7d" class="btn btn-pastel-outline rounded-pill">7 дней</a>
+                <a href="#" data-period="30d" class="btn btn-pastel-outline rounded-pill">30 дней</a>
             </div>
         </div>
     </div>
@@ -66,6 +102,14 @@
         </div>
     </div>
 </div>
+<!-- Диаграмма для производителей (столбчатая) -->
+<div class="mt-4 ">
+    <!-- <h6 class="text-muted"><i class="fas fa-chart-bar me-2"></i>Распределение приборов по производителям</h6> -->
+    <div id="producer-chart-container" style="height:500px; width:100%; filter: drop-shadow(0 4px 8px rgba(0,0,0,0));">
+    </div>
+</div>
+<div style="height:30px;"></div>
+
 {% if user.is_staff %}
 <div class="card-pastel">
     <div class="card-header">
@@ -99,7 +143,9 @@
                         </td>
                         <td>{{ s.last_update|date:"Y-m-d H:i:s" }}</td>
                         <td>{{ s.records_processed }}</td>
-                        <td>{{ s.error|default:"—" }}</td>
+                        <td title="{{ s.error|default:''|escape }}">
+                            {{ s.error|truncatechars:80|default:"—"|escape }}
+                        </td>
                         <td>
                             {% if s.robot_name %}
                             <button class="btn btn-pastel-outline btn-sm restart-btn" data-robot="{{ s.robot_name }}">
@@ -121,20 +167,81 @@
     </div>
 </div>
 {% endif %}
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const period = new URLSearchParams(window.location.search).get('period') || 'today';
-        fetch('{% url "producer_stats_table" %}?period=' + period)
+    // Функция инициализации прогресс-баров (определена глобально)
+    window.initProgressBars = function () {
+        document.querySelectorAll('.progress-bar[data-percent]').forEach(function (bar) {
+            const percent = parseInt(bar.dataset.percent) || 0;
+            bar.style.width = percent + '%';
+            bar.classList.remove('bg-success-pastel', 'bg-warning-pastel', 'bg-danger-pastel');
+            let cls = 'bg-success-pastel';
+            if (percent < 50) cls = 'bg-danger-pastel';
+            else if (percent < 80) cls = 'bg-warning-pastel';
+            bar.classList.add(cls);
+        });
+    };
+
+    // Функция загрузки статистики по производителям
+    function loadProducerStats(period) {
+        const container = document.getElementById('producer-stats-container');
+        // Показываем спиннер сразу
+        container.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted" style="font-size: 0.9rem;">Загрузка данных...</p>
+        </div>
+    `;
+        const startTime = Date.now();
+        fetch('/producer-stats/?period=' + period)
             .then(response => response.text())
             .then(html => {
-                document.getElementById('producer-stats-container').innerHTML = html;
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, 500 - elapsed); // минимум 500 мс ожидания
+                setTimeout(() => {
+                    container.innerHTML = html;
+                    if (window.initProgressBars) window.initProgressBars();
+                    if (window.animateNumbers) window.animateNumbers();
+                    if (typeof buildProducerChart === 'function') buildProducerChart();
+                }, delay);
             })
             .catch(error => {
-                document.getElementById('producer-stats-container').innerHTML =
-                    '<div class="alert alert-warning">Ошибка загрузки данных</div>';
+                container.innerHTML = '<div class="alert alert-warning">Ошибка загрузки данных</div>';
                 console.error('Error loading producer stats:', error);
             });
-    });
+    }
+
+    function loadRegionStats(period) {
+        const container = document.getElementById('region-stats-container');
+        container.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted" style="font-size: 0.9rem;">Загрузка данных...</p>
+        </div>
+    `;
+        const startTime = Date.now();
+        fetch('/region-stats-table/?period=' + period)
+            .then(response => response.text())
+            .then(html => {
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, 500 - elapsed);
+                setTimeout(() => {
+                    container.innerHTML = html;
+                    if (window.initProgressBars) window.initProgressBars();
+                    if (window.animateNumbers) window.animateNumbers();
+                    if (typeof buildRegionChart === 'function') buildRegionChart();
+                }, delay);
+            })
+            .catch(error => {
+                container.innerHTML = '<div class="alert alert-warning">Ошибка загрузки данных</div>';
+                console.error('Error loading region stats:', error);
+            });
+    }
+
     // Получение CSRF-токена из cookie
     function getCookie(name) {
         let cookieValue = null;
@@ -150,37 +257,452 @@
         }
         return cookieValue;
     }
-    const csrftoken = getCookie('csrftoken');
 
-    document.querySelectorAll('.restart-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const robot = this.dataset.robot;
-            if (!robot) {
-                alert('Ошибка: имя робота не указано');
+    // Основная инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function () {
+        const period = new URLSearchParams(window.location.search).get('period') || 'today';
+
+        // Загружаем статистику по производителям
+        loadProducerStats(period);
+
+        // Загружаем статистику по районам
+        loadRegionStats(period);
+
+
+
+        // Обработчики для кнопок производителей
+        document.querySelectorAll('#producer-period-btns .btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const period = this.dataset.period;
+                document.querySelectorAll('#producer-period-btns .btn').forEach(b => b.classList.remove('btn-pastel-primary'));
+                this.classList.add('btn-pastel-primary');
+                loadProducerStats(period);
+            });
+        });
+
+        // Обработчики для кнопок районов
+        document.querySelectorAll('#region-period-btns .btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const period = this.dataset.period;
+                document.querySelectorAll('#region-period-btns .btn').forEach(b => b.classList.remove('btn-pastel-primary'));
+                this.classList.add('btn-pastel-primary');
+                loadRegionStats(period);
+            });
+        });
+
+        // Кнопки перезапуска роботов
+        const csrftoken = getCookie('csrftoken');
+        document.querySelectorAll('.restart-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const robot = this.dataset.robot;
+                if (!robot) {
+                    alert('Ошибка: имя робота не указано');
+                    return;
+                }
+                if (!confirm(`Перезапустить синхронизацию для ${robot}?`)) return;
+                fetch(`/restart-robot/${encodeURIComponent(robot)}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => { throw new Error(text); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message || data.error || 'Запрос выполнен');
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Ошибка: ' + err.message);
+                    });
+            });
+        });
+        // Обработка кликов по ссылкам районов
+        // Делегирование событий для ссылок районов (обрабатывает динамически добавленные элементы)
+        document.getElementById('region-stats-container').addEventListener('click', function (e) {
+            const link = e.target.closest('.region-link');
+            if (!link) return;
+            e.preventDefault();
+
+            const regionId = link.dataset.regionId;
+            const regionName = link.dataset.regionName;
+            if (!regionId) return;
+
+            // Проверяем, доступен ли Bootstrap
+            if (typeof bootstrap === 'undefined') {
+                alert('Bootstrap не загружен. Пожалуйста, обновите страницу.');
                 return;
             }
-            if (!confirm(`Перезапустить синхронизацию для ${robot}?`)) return;
-            fetch(`/restart-robot/${encodeURIComponent(robot)}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/json',
-                },
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(text); });
-                    }
-                    return response.json();
+
+            // Показываем модальное окно
+            const modalElement = document.getElementById('regionModal');
+            const modal = new bootstrap.Modal(modalElement);
+            document.getElementById('regionModalName').textContent = regionName;
+
+            const body = document.getElementById('regionModalBody');
+            body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Загрузка данных...</p>
+                </div>
+            `;
+            modal.show();
+
+            // Загружаем данные для выбранного района
+            const currentPeriod = new URLSearchParams(window.location.search).get('period') || 'today';
+            fetch('/category-stats/?period=' + currentPeriod + '&region_id=' + regionId)
+                .then(response => response.text())
+                .then(html => {
+                    body.innerHTML = html;
+                    if (window.initProgressBars) window.initProgressBars();
+                    if (window.animateNumbers) window.animateNumbers();
                 })
-                .then(data => {
-                    alert(data.message || data.error || 'Запрос выполнен');
-                })
-                .catch(err => {
-                    console.error('Error:', err);
-                    alert('Ошибка: ' + err.message);
+                .catch(error => {
+                    body.innerHTML = '<div class="alert alert-warning">Ошибка загрузки данных</div>';
+                    console.error('Error loading region producer stats:', error);
                 });
         });
     });
+    // Диаграмма
+    let producerChartInstance = null;
+
+    function buildProducerChart() {
+        const dom = document.getElementById('producer-chart-container');
+        if (!dom) return;
+        const table = document.querySelector('#producer-stats-container table');
+        if (!table) return;
+        const rows = table.querySelectorAll('tbody tr');
+        const labels = [];
+        const data = [];
+        const totalData = [];
+        const activeData = [];
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 4) {
+                const label = cells[0].textContent.trim();
+                const total = parseInt(cells[1].textContent.replace(/\s/g, '')) || 0;
+                const active = parseInt(cells[2].textContent.replace(/\s/g, '')) || 0;
+                const percentText = cells[3].textContent.trim();
+                const percent = parseFloat(percentText.replace('%', '').replace(',', '.')) || 0;
+                labels.push(label);
+                data.push(percent);
+                totalData.push(total);
+                activeData.push(active);
+            }
+        });
+        if (labels.length === 0) return;
+
+        // Набор ярких цветов (красный, зеленый, синий, оранжевый, фиолетовый и т.д.)
+        const colors = [
+            '#e74c3c', '#2ecc71', '#3498db', '#f39c12',
+            '#9b59b6', '#1abc9c', '#e67e22', '#34495e'
+        ];
+
+        if (producerChartInstance) {
+            producerChartInstance.dispose();
+            producerChartInstance = null;
+        }
+        producerChartInstance = echarts.init(dom);
+
+        // Для второго ряда (цветной) создаём данные с itemStyle
+        const colorSeriesData = data.map((val, idx) => ({
+            value: val,
+            itemStyle: {
+                color: colors[idx % colors.length],
+                borderRadius: 20,
+                shadowBlur: 15,                      // размытие тени
+                shadowColor: 'rgba(0,0,0,0.3)',     // цвет тени (тёмный с прозрачностью)
+                shadowOffsetY: 8                     // смещение тени вниз
+            }
+        }));
+
+        const option = {
+            title: {
+                text: '% чтения по производителям',
+                left: 'center',
+                textStyle: {
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    color: '#2d3e50'
+                },
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function (params) {
+                    const idx = params[0].dataIndex;
+                    return `<strong>${labels[idx]}</strong><br/>Активных: ${activeData[idx]}<br/>Всего: ${totalData[idx]}<br/>% чтения: ${data[idx]}%`;
+                }
+            },
+            grid: {
+                left: '15%',
+                right: '20%',
+                top: 10,
+                bottom: 30,
+                containLabel: false
+            },
+            xAxis: {
+                type: 'value',
+
+                max: 100,
+                axisLabel: {
+                    formatter: '{value}%',
+                    fontSize: 11,
+                    color: '#5a6b7c'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: 'rgba(0,0,0,0)',
+                        type: 'dashed'
+                    }
+                },
+                axisLine: { show: false },
+                axisTick: { show: false }
+            },
+            yAxis: {
+                type: 'category',
+
+                data: labels,
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: {
+                    show: false,
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    color: '#2d3e50'
+                }
+            },
+            series: [
+                // 1️⃣ Серый фон
+                {
+                    name: 'Фон',
+                    type: 'bar',
+                    data: labels.map(() => 100),
+                    barWidth: 40,
+
+                    itemStyle: {
+                        color: 'rgba(0,0,0,0)',
+                        borderRadius: 20
+                    },
+                    z: 1,
+                    silent: true,
+                    label: { show: false }
+                },
+                // 2️⃣ Цветные столбцы (с индивидуальными цветами)
+                {
+                    name: 'Процент',
+                    type: 'bar',
+                    data: colorSeriesData,
+                    barWidth: 40,
+                    z: 2,
+                    label: {
+                        show: true,
+                        position: 'insideRight',
+                        formatter: function (params) {
+                            var name = labels[params.dataIndex] || '';
+                            var value = Math.round(params.value);
+                            return name + ' ' + value + '%';
+                        },
+                        color: '#ffffff',
+                        fontWeight: 'bold',
+                        fontSize: 16,
+                        padding: 0
+                    }
+                },
+                // 3️⃣ Прозрачный столбец для текста справа
+                {
+                    name: 'Количество',
+                    type: 'bar',
+                    // data: labels.map(() => 0),
+                    barWidth: 28,
+                    z: 3,
+                    itemStyle: { color: 'transparent' },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function (params) {
+                            const idx = params.dataIndex;
+                            // return activeData[idx] + ' / ' + totalData[idx];
+                        },
+                        color: '#2d3e50',
+                        fontWeight: 'bold',
+                        fontSize: 13,
+                        padding: [0, 0, 0, 10]
+                    }
+                }
+            ]
+        };
+
+        producerChartInstance.setOption(option);
+        window.addEventListener('resize', function () {
+            if (producerChartInstance) {
+                producerChartInstance.resize();
+            }
+        });
+    }
+    // диаграмма район
+    let regionChartInstance = null;
+
+    function buildRegionChart() {
+        const dom = document.getElementById('region-chart-container');
+        if (!dom) return;
+        const table = document.querySelector('#region-stats-container table');
+        if (!table) return;
+        const rows = table.querySelectorAll('tbody tr');
+        const labels = [];
+        const percentData = [];
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 4) {
+                const label = cells[0].textContent.trim();
+                const percentText = cells[4].textContent.trim();
+                const percent = parseFloat(percentText.replace('%', '').replace(',', '.')) || 0;
+                labels.push(label);
+                percentData.push(percent);
+            }
+        });
+        if (labels.length === 0) return;
+
+        // Яркая палитра для районов
+        const colors = [
+            '#e74c3c', '#3498db', '#2ecc71', '#f39c12',
+            '#9b59b6', '#1abc9c', '#e67e22', '#2980b9',
+            '#34495e', '#d35400', '#27ae60', '#8e44ad'
+        ];
+
+        // Вспомогательные функции затемнения/осветления hex-цвета
+        function darkenColor(hex, amount) {
+            let r = parseInt(hex.slice(1, 3), 16);
+            let g = parseInt(hex.slice(3, 5), 16);
+            let b = parseInt(hex.slice(5, 7), 16);
+            r = Math.max(0, r - amount);
+            g = Math.max(0, g - amount);
+            b = Math.max(0, b - amount);
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+        function lightenColor(hex, amount) {
+            let r = parseInt(hex.slice(1, 3), 16);
+            let g = parseInt(hex.slice(3, 5), 16);
+            let b = parseInt(hex.slice(5, 7), 16);
+            r = Math.min(255, r + amount);
+            g = Math.min(255, g + amount);
+            b = Math.min(255, b + amount);
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+
+        // Создаём данные с градиентами для каждого столбца
+        const gradientData = percentData.map((val, idx) => {
+            const baseColor = colors[idx % colors.length];
+            const dark = darkenColor(baseColor, 40);
+            const light = lightenColor(baseColor, 40);
+            const gradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: light },
+                { offset: 1, color: dark }
+            ]);
+            return {
+                value: val,
+                itemStyle: {
+                    color: gradient,
+                    borderRadius: 20,
+                    shadowBlur: 8,
+                    shadowColor: 'rgba(0,0,0,0.15)',
+                    shadowOffsetY: 4
+                }
+            };
+        });
+
+        if (regionChartInstance) {
+            regionChartInstance.dispose();
+            regionChartInstance = null;
+        }
+        regionChartInstance = echarts.init(dom);
+
+        const option = {
+            title: {
+                text: '% чтения по районам',
+                left: 'center',
+                textStyle: {
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    color: '#2d3e50'
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function (params) {
+                    const idx = params[0].dataIndex;
+                    return `<strong>${labels[idx]}</strong><br/>% чтения: ${percentData[idx]}%`;
+                }
+            },
+            grid: {
+                left: '8%',
+                right: '8%',
+                top: '15%',
+                bottom: '20%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: labels,
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: {
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    color: '#2d3e50',
+                    interval: 0,
+                    rotate: 30
+                }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 100,
+                axisLabel: {
+                    fontSize: 11,
+                    color: '#5a6b7c',
+                    formatter: '{value}%'
+                },
+                splitLine: { show: false },
+                axisLine: { show: false },
+                axisTick: { show: false }
+            },
+            series: [
+                {
+                    name: '% чтения',
+                    type: 'bar',
+                    data: gradientData,
+                    barWidth: '45%',   // увеличенная ширина
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function (params) {
+                            return params.value + '%';
+                        },
+                        fontSize: 13,
+                        fontWeight: 'bold',
+                        color: '#2d3e50'
+                    }
+                }
+            ]
+        };
+
+        regionChartInstance.setOption(option);
+        window.addEventListener('resize', function () {
+            if (regionChartInstance) {
+                regionChartInstance.resize();
+            }
+        });
+    }
 </script>
 {% endblock %}

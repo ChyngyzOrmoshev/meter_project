@@ -1,0 +1,65 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-file-excel"></i> Сверка с 1С – выбор колонок</h1>
+
+<div class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-table"></i> Предпросмотр данных</div>
+    <div class="card-body">
+        <p>Всего строк: {{ total_rows }}</p>
+        <div class="table-responsive">
+            <table class="table table-pastel table-sm">
+                <thead>
+                    <tr>
+                        {% for i in columns_count|make_list %}
+                        <th>Колонка {{ forloop.counter0 }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in sample %}
+                    <tr>
+                        {% for cell in row %}
+                        <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-link"></i> Укажите, в каких колонках находятся данные</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="confirm" value="1">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Колонка с заводским номером *</label>
+                    <select name="col_serial" class="form-select form-control-pastel" required>
+                        <option value="">— выберите —</option>
+                        {% for i in columns_count|make_list %}
+                        <option value="{{ forloop.counter0 }}">Колонка {{ forloop.counter0 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Колонка с Тип ПУ (опционально)</label>
+                    <select name="col_model" class="form-select form-control-pastel">
+                        <option value="">— не использовать —</option>
+                        {% for i in columns_count|make_list %}
+                        <option value="{{ forloop.counter0 }}">Колонка {{ forloop.counter0 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-check"></i> Начать сверку</button>
+                <a href="{% url 'compare_1c' %}" class="btn btn-pastel-outline"><i class="fas fa-times"></i> Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

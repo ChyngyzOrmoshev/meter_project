@@ -1,0 +1,85 @@
+<table class="table table-pastel table-header-dark mb-0">
+    <thead>
+        <tr>
+            <th>Категория</th>
+            <th>Всего приборов</th>
+            <th>Активных</th>
+            <th>% чтения</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stat in category_stats %}
+        <tr>
+            <td><strong>{{ stat.category_display }}</strong></td>
+            <td class="number-cell">{{ stat.total }}</td>
+            <td class="number-cell">{{ stat.active }}</td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="progress-pastel flex-grow-1 me-2">
+                        <div class="progress-bar" data-percent="{{ stat.percent|floatformat:0 }}"></div>
+                    </div>
+                    <span style="font-size: 0.9rem; min-width: 3.5rem; text-align: right;">
+                        {{ stat.percent|floatformat:1 }}%
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center text-muted">Нет данных</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    (function () {
+        function initProgressBars() {
+            document.querySelectorAll('.progress-bar[data-percent]').forEach(function (bar) {
+                const percent = parseInt(bar.dataset.percent) || 0;
+                bar.style.width = '0%';
+                bar.classList.remove('bg-success-pastel', 'bg-warning-pastel', 'bg-danger-pastel');
+                let cls = 'bg-success-pastel';
+                if (percent < 50) cls = 'bg-danger-pastel';
+                else if (percent < 80) cls = 'bg-warning-pastel';
+                bar.classList.add(cls);
+                setTimeout(function () {
+                    bar.style.transition = 'width 1.5s ease-in-out';
+                    bar.style.width = percent + '%';
+                }, 300);
+            });
+        }
+        function animateNumbers() {
+            document.querySelectorAll('.number-cell').forEach(function (cell) {
+                const raw = cell.textContent.replace(/\s/g, '').replace(/[^\d]/g, '');
+                const target = parseInt(raw) || 0;
+                if (target === 0) return;
+                const duration = 1200;
+                const startTime = performance.now();
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = Math.round(eased * target);
+                    cell.textContent = current.toLocaleString();
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        cell.textContent = target.toLocaleString();
+                    }
+                }
+                requestAnimationFrame(update);
+            });
+        }
+        window.initProgressBars = initProgressBars;
+        window.animateNumbers = animateNumbers;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () {
+                initProgressBars();
+                animateNumbers();
+            });
+        } else {
+            initProgressBars();
+            animateNumbers();
+        }
+    })();
+</script>

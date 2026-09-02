@@ -1,0 +1,257 @@
+{% extends 'meters/base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="page-title"><i class="fas fa-file-excel"></i> Сверка с 1С</h1>
+
+{% if not has_results %}
+<!-- Форма загрузки -->
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-upload"></i> Загрузите выгрузку из 1С</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Excel-файл (.xlsx)</label>
+                <input type="file" name="excel_file" class="form-control form-control-pastel" accept=".xlsx" required>
+                <div class="form-text">Файл должен содержать колонки: заводской номер, Тип ПУ (опционально).</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Район загрузки (для всех записей из этого файла)</label>
+                <select name="region_id" class="form-select form-control-pastel">
+                    <option value="">— не указывать —</option>
+                    {% for region in regions %}
+                    <option value="{{ region.id }}">{{ region.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Если выбран район, все записи из этого файла будут привязаны к этому району.
+                </div>
+            </div>
+            <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-upload"></i> Загрузить и
+                сравнить</button>
+        </form>
+    </div>
+</div>
+{% else %}
+
+<!-- Информация о загруженных данных -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="metric-pastel">
+            <h5>Всего записей загружено</h5>
+            <h2>{{ total_loaded }}</h2>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="metric-pastel">
+            <h5>Найдено в базе</h5>
+            <h2>{{ total_results }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-sliders-h"></i> Фильтры</div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Найден в базе</label>
+                <select name="found" class="form-select form-control-pastel">
+                    {% for value, label, selected in found_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Статус связи</label>
+                <select name="online" class="form-select form-control-pastel">
+                    {% for value, label, selected in online_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Совпадение модели</label>
+                <select name="model_match" class="form-select form-control-pastel">
+                    {% for value, label, selected in model_match_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Район</label>
+                <select name="region" class="form-select form-control-pastel">
+                    {% for value, label, selected in region_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Действие</label>
+                <select name="action" class="form-select form-control-pastel">
+                    {% for value, label, selected in action_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-pastel-primary w-100"><i class="fas fa-filter"></i>
+                    Применить</button>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <a href="?clear=1" class="btn btn-pastel-outline w-100"
+                    onclick="return confirm('Очистить все данные сверки?')"><i class="fas fa-trash-alt"></i>
+                    Очистить</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Кнопка экспорта и повторной загрузки -->
+<div class="d-flex justify-content-between mb-3">
+    <a href="{% url 'compare_1c_export' %}" class="btn btn-pastel-success"><i class="fas fa-file-excel"></i> Скачать
+        отчёт (Excel)</a>
+    {% if upload_success %}
+    <div class="alert alert-success">
+        {{ messages }} <!-- или вывести из messages -->
+        <a href="{% url 'compare_1c_issues' %}" class="btn btn-pastel-primary">Перейти к заявкам</a>
+        <a href="{% url 'compare_1c' %}" class="btn btn-pastel-outline">Загрузить ещё файл</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Таблица результатов -->
+<div class="card-pastel">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Заводской номер (1С)</th>
+                        <th>Найден в базе</th>
+                        <th>Тип ПУ (1С)</th>
+                        <th>Тип ПУ (база)</th>
+                        <th>Совпадение модели</th>
+                        <th>Последнее показание</th>
+                        <th>Дата показания</th>
+                        <th>Статус связи</th>
+                        <th>Район</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                        <td><strong>{{ item.serial_1c }}</strong></td>
+                        <td>
+                            {% if item.found %}
+                            <span class="badge-pastel success">Да</span>
+                            {% else %}
+                            <span class="badge-pastel error">Нет</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.model_1c|default:"—" }}</td>
+                        <td>{{ item.model_db|default:"—" }}</td>
+                        <td>
+                            {% if item.found %}
+                            {% if item.model_match_type == 'exact' %}
+                            <span class="badge-pastel success">Полное</span>
+                            {% elif item.model_match_type == 'partial' %}
+                            <span class="badge-pastel warning">Частичное</span>
+                            {% else %}
+                            <span class="badge-pastel error">Не совпадает</span>
+                            {% endif %}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td>{{ item.last_reading_value|default:"—" }}</td>
+                        <td>{{ item.last_reading_date|default:"—" }}</td>
+                        <td>
+                            {% if item.found %}
+                            {% if item.is_online %}
+                            <span class="badge-pastel success">🟢 Онлайн</span>
+                            {% else %}
+                            <span class="badge-pastel error">🔴 Оффлайн</span>
+                            {% endif %}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td>{{ item.region|default:"—" }}</td>
+                        <td>
+                            {% if item.action_type == 'ok' %}
+                            <span class="badge-pastel success">{{ item.action_text }}</span>
+                            {% elif item.action_type == 'fix_model' %}
+                            <span class="badge-pastel warning" data-bs-toggle="tooltip"
+                                title="{{ item.action_text }}">⚠️ {{ item.action_text|truncatechars:40 }}</span>
+                            {% elif item.action_type == 'offline' %}
+                            <span class="badge-pastel warning" data-bs-toggle="tooltip"
+                                title="{{ item.action_text }}">📶 {{ item.action_text|truncatechars:40 }}</span>
+                            {% elif item.action_type == 'not_found' %}
+                            <span class="badge-pastel error" data-bs-toggle="tooltip" title="{{ item.action_text }}">❌
+                                {{ item.action_text|truncatechars:40 }}</span>
+                            {% else %}
+                            {{ item.action_text }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted">Нет записей, соответствующих фильтрам</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link"
+                href="?page=1&found={{ filter_found }}&online={{ filter_online }}&model_match={{ filter_model_match }}&region={{ filter_region }}">⏮</a>
+        </li>
+        <li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}&found={{ filter_found }}&online={{ filter_online }}&model_match={{ filter_model_match }}&region={{ filter_region }}">◀</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">⏮</span></li>
+        <li class="page-item disabled"><span class="page-link">◀</span></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %} <li class="page-item"><a
+                class="page-link"
+                href="?page={{ num }}&found={{ filter_found }}&online={{ filter_online }}&model_match={{ filter_model_match }}&region={{ filter_region }}">{{
+                num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link"
+                    href="?page={{ page_obj.next_page_number }}&found={{ filter_found }}&online={{ filter_online }}&model_match={{ filter_model_match }}&region={{ filter_region }}">▶</a>
+            </li>
+            <li class="page-item"><a class="page-link"
+                    href="?page={{ page_obj.paginator.num_pages }}&found={{ filter_found }}&online={{ filter_online }}&model_match={{ filter_model_match }}&region={{ filter_region }}">⏭</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">▶</span></li>
+            <li class="page-item disabled"><span class="page-link">⏭</span></li>
+            {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<p class="text-muted small mt-3">Всего записей: {{ total_results }} (из {{ total_loaded }} загруженных)</p>
+{% endif %}
+
+{% endblock %}

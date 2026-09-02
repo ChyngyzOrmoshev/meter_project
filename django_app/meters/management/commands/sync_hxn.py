@@ -242,18 +242,27 @@ class Command(BaseCommand):
                 root = tree.getroot()
 
                 # Загружаем все активные устройства Hexing
-                all_devices = Device.objects.filter(status='active').select_related('model')
-                devices_by_full = {}
-                devices_by_last8 = {}
+                # all_devices = Device.objects.filter(status='active').select_related('model')
+                # devices_by_full = {}
+                # devices_by_last8 = {}
 
-                for d in all_devices:
-                    devices_by_full[d.serial_number] = d
-                    is_hexing = False
-                    if d.askue_id and str(d.askue_id) == '5':
-                        is_hexing = True
-                    elif d.api_id and d.api_id.upper().startswith('HX'):
-                        is_hexing = True
-                    if is_hexing and len(d.serial_number) >= 8:
+                # for d in all_devices:
+                #     devices_by_full[d.serial_number] = d
+                #     is_hexing = False
+                #     if d.askue_id and str(d.askue_id) == '5':
+                #         is_hexing = True
+                #     elif d.api_id and d.api_id.upper().startswith('HX'):
+                #         is_hexing = True
+                #     if is_hexing and len(d.serial_number) >= 8:
+                #         last8 = d.serial_number[-8:]
+                #         devices_by_last8[last8] = d
+
+                from meters.utils import get_robot_devices
+                devices = get_robot_devices('Hexing_POP')
+                devices_by_full = {d.serial_number: d for d in devices}
+                devices_by_last8 = {}
+                for d in devices:
+                    if len(d.serial_number) >= 8:
                         last8 = d.serial_number[-8:]
                         devices_by_last8[last8] = d
 
@@ -297,7 +306,7 @@ class Command(BaseCommand):
                     Reading.objects.update_or_create(
                         device=device,
                         timestamp=dt_time,
-                        defaults={'reading_value': val, 'notes': 'Hexing Raw sync'}
+                        defaults={'reading_value': val, 'notes': 'Hexing Raw sync', 'direction': 'aplus'}
                     )
                     imported += 1
                     if imported % 1000 == 0:

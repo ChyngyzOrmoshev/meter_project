@@ -46,7 +46,10 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to Hexing KUK MySQL")
 
-            device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            # device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            from meters.utils import get_robot_devices
+            devices = get_robot_devices('Hexing_KUK')
+            device_sns = set(devices.values_list('serial_number', flat=True))
             if not device_sns:
                 self.stdout.write("No devices in MySQL, sync skipped.")
                 SyncStatus.objects.update_or_create(
@@ -106,7 +109,8 @@ class Command(BaseCommand):
                     timestamp=dt,
                     defaults={
                         'reading_value': val,
-                        'notes': 'Hexing KUK'
+                        'notes': 'Hexing KUK',
+                        'direction': 'aplus'
                     }
                 )
                 count += 1

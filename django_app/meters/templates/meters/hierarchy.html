@@ -1,0 +1,139 @@
+{% extends 'meters/base.html' %}
+{% load static %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-sitemap"></i> Управление иерархией</h1>
+
+<div class="row">
+    <!-- Левая колонка: дерево -->
+    <div class="col-md-4">
+        <div class="card-pastel">
+            <div class="card-header">
+                <i class="fas fa-tree"></i> Иерархия
+                <button class="btn btn-sm btn-pastel-primary float-end" id="add-root-btn">
+                    <i class="fas fa-plus"></i> Добавить район
+                </button>
+            </div>
+            <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+                <ul class="tree" style="list-style: none; padding-left: 0;">
+                    {% for node in tree %}
+                    {% include 'meters/_tree_node.html' with node=node %}
+                    {% empty %}
+                    <li class="text-muted">Нет данных</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка: детали -->
+    <div class="col-md-8">
+        <div class="card-pastel">
+            <div class="card-header"><i class="fas fa-info-circle"></i> Детали</div>
+            <div class="card-body" id="node-details-container">
+                <p class="text-muted text-center py-5">Выберите элемент дерева для просмотра и редактирования</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Раскрытие/сворачивание дерева
+        document.querySelectorAll('.toggle-icon').forEach(icon => {
+            icon.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const li = this.closest('li');
+                const ul = li.querySelector('.children-list');
+                if (ul) {
+                    if (ul.style.display === 'none') {
+                        ul.style.display = 'block';
+                        this.textContent = '▼';
+                    } else {
+                        ul.style.display = 'none';
+                        this.textContent = '▶';
+                    }
+                }
+            });
+        });
+
+        // Клик по элементу дерева (загрузка деталей)
+        document.querySelectorAll('.tree-item').forEach(item => {
+            item.addEventListener('click', function (e) {
+                // Игнорируем клики по кнопкам
+                if (e.target.closest('button')) return;
+                const li = this.closest('li');
+                const id = li.dataset.id;
+                const type = li.dataset.type;
+                if (!id || !type) return;
+
+                fetch(`/hierarchy/node-details/?id=${id}&type=${type}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('node-details-container').innerHTML = html;
+                    })
+                    .catch(error => {
+                        document.getElementById('node-details-container').innerHTML =
+                            '<div class="alert alert-danger">Ошибка загрузки</div>';
+                    });
+            });
+        });
+
+        // Добавление района (корневой)
+        document.getElementById('add-root-btn').addEventListener('click', function () {
+            const name = prompt('Введите название нового района:');
+            if (!name) return;
+            fetch('/hierarchy/add/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'level': 'region',
+                    'name': name,
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Район добавлен');
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                })
+                .catch(error => alert('Ошибка: ' + error));
+        });
+
+        // Удаление (через делегирование)
+        document.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.delete-node');
+            if (deleteBtn) {
+                e.preventDefault();
+                const li = deleteBtn.closest('li');
+                const id = li.dataset.id;
+                const type = li.dataset.type;
+                if (!confirm(`Удалить ${type}?`)) return;
+                fetch(`/hierarchy/delete/${id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({ 'level': type })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Удалено');
+                            location.reload();
+                        } else {
+                            alert('Ошибка: ' + data.error);
+                        }
+                    })
+                    .catch(error => alert('Ошибка: ' + error));
+            }
+        });
+    });
+</script>
+{% endblock %}

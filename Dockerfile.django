@@ -48,7 +48,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем код приложения
 COPY django_app/ .
 
+# Создаём папку для статики и собираем её
+# RUN mkdir -p /app/staticfiles && python manage.py collectstatic --noinput
+
+# Сбор статики (один раз при сборке)
+RUN python manage.py collectstatic --noinput
+
 # Устанавливаем браузер Chromium (без установки системных зависимостей, так как они уже есть)
 RUN playwright install chromium
 
 CMD ["sh", "-c", "python wait_for_mysql.py && python manage.py runserver 0.0.0.0:8000"]
+# CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn --workers 3 --preload --bind 0.0.0.0:8000 config.wsgi:application"]

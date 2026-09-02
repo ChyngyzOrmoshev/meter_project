@@ -44,7 +44,10 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to cEnergo MS SQL")
 
-            device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            # device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            from meters.utils import get_robot_devices
+            devices = get_robot_devices('cEnergo')
+            device_sns = set(devices.values_list('serial_number', flat=True))
             if not device_sns:
                 self.stdout.write("No devices in MySQL, sync skipped.")
                 SyncStatus.objects.update_or_create(
@@ -97,7 +100,8 @@ class Command(BaseCommand):
                     timestamp=dt,
                     defaults={
                         'reading_value': val,
-                        'notes': 'Авто-сбор: База cEnergo'
+                        'notes': 'Авто-сбор: База cEnergo',
+                        'direction': 'aplus'
                     }
                 )
                 count += 1

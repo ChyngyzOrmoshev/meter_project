@@ -42,8 +42,7 @@ services:
       - MYSQL_DATABASE=infoenergo
       - MYSQL_USER=infoenergo
       - MYSQL_PASSWORD=infopass
-    command: python manage.py runserver 0.0.0.0:8000
-
+    command: sh -c "python wait_for_mysql.py && python manage.py runserver 0.0.0.0:8000"
   # Службы синхронизации
   sync-mssql:
     build:

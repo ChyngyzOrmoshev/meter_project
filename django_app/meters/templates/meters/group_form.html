@@ -1,0 +1,26 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-{% if action == 'create' %}plus{% else %}edit{% endif %}"></i>
+    {% if action == 'create' %}Создание{% else %}Редактирование{% endif %} группы
+</h1>
+
+<div class="card-pastel">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Название *</label>
+                <input type="text" name="name" class="form-control form-control-pastel"
+                    value="{{ group.name|default:'' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Описание</label>
+                <textarea name="description" class="form-control form-control-pastel"
+                    rows="3">{{ group.description|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-save"></i> Сохранить</button>
+            <a href="{% url 'groups_list' %}" class="btn btn-pastel-outline"><i class="fas fa-times"></i> Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

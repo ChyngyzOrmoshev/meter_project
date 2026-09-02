@@ -7,3 +7,6 @@ python-dotenv>=1.0
 mysql-connector-python==8.1.0
 openpyxl>=3.1.5
 playwright==1.45.0
+psycopg2-binary>=2.9.10
+gunicorn>=20.0
+whitenoise>=6.0

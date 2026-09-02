@@ -1,0 +1,36 @@
+{% if can_verify %}
+<div class="mt-2 d-flex align-items-center justify-content-between">
+    <div class="form-check form-switch">
+        <input class="form-check-input verify-checkbox" type="checkbox" data-id="{{ issue.id }}"
+            id="verify-{{ issue.id }}" {% if issue.verified %}checked{% endif %}>
+
+        <label class="form-check-label" for="verify-{{ issue.id }}">
+            <span class="badge-pastel {% if issue.verified %}success{% else %}idle{% endif %}">
+                {% if issue.verified %}
+                ✅ Проверено
+                {% else %}
+                ⬜ Не проверено
+                {% endif %}
+            </span>
+        </label>
+    </div>
+
+    <small class="text-muted">
+        {% if issue.verified %}
+        Отмечено
+        {% else %}
+        Требуется проверка
+        {% endif %}
+    </small>
+</div>
+{% else %}
+<div class="mt-2">
+    <span class="badge-pastel {% if issue.verified %}success{% else %}idle{% endif %}">
+        {% if issue.verified %}
+        ✅ Проверено
+        {% else %}
+        ⬜ Не проверено
+        {% endif %}
+    </span>
+</div>
+{% endif %}

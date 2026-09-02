@@ -1,0 +1,18 @@
+<li class="tree-node" data-id="{{ node.id }}" data-type="{{ node.type }}">
+    <div class="tree-item d-flex align-items-center py-1 px-2 rounded"
+        style="cursor: pointer; '{% if node.type == 'region' %}'font-weight: bold;'{% endif %}'">
+        {% if node.children %}
+        <span class="toggle-icon me-1" style="cursor: pointer; width: 20px; text-align: center;">▶</span>
+        {% else %}
+        <span class="toggle-icon me-1" style="width: 20px; text-align: center;">•</span>
+        {% endif %}
+        <span class="node-name flex-grow-1">{{ node.name }}</span>
+    </div>
+    {% if node.children %}
+    <ul class="children-list" style="display: none; list-style: none; padding-left: 20px;">
+        {% for child in node.children %}
+        {% include 'meters/_tree_node.html' with node=child %}
+        {% endfor %}
+    </ul>
+    {% endif %}
+</li>

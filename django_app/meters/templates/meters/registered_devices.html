@@ -1,0 +1,139 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-clipboard-list"></i> Зарегистрированные счётчики</h1>
+
+<!-- Фильтры -->
+<div class="card-pastel mb-4">
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-2 align-items-end">
+                <div class="row g-2">
+                    <!-- Источник -->
+                    <div class="col-md-2">
+                        <label for="source" class="form-label">Источник</label>
+                        <select name="source" id="source" class="form-select form-control-pastel">
+                            <option value="">Все</option>
+                            {% for code, name, selected in sources %}
+                            <option value="{{ code }}" {% if selected %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Поиск -->
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Поиск по номеру</label>
+                        <input type="text" name="search" id="search" class="form-control form-control-pastel"
+                            placeholder="Введите номер" value="{{ search }}">
+                    </div>
+                    <!-- Дата с -->
+                    <div class="col-md-2">
+                        <label for="date_from" class="form-label">Дата с</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control form-control-pastel"
+                            value="{{ date_from }}">
+                    </div>
+                    <!-- Дата по -->
+                    <div class="col-md-2">
+                        <label for="date_to" class="form-label">Дата по</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control form-control-pastel"
+                            value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_to" class="form-label"> </label>
+                        <a href="?source={{ selected_source }}&search={{ search }}&date_from={{ date_from }}&date_to={{ date_to }}&export=xlsx"
+                            class="btn btn-pastel-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </a>
+                    </div>
+                    <!-- Кнопки (в той же строке) -->
+                </div>
+            </div>
+            <div class="row g-2 mt-3">
+                <div class=" gap-2">
+                    <button type="submit" class="btn btn-pastel-primary"><i class="fas fa-filter"></i>
+                        Применить</button>
+                    <a href="{% url 'registered_devices_report' %}" class="btn btn-pastel-outline">Сброс</a>
+
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Таблица -->
+<div class="card-pastel">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Заводской номер</th>
+                        <th>Тип ПУ</th>
+                        <th>Источник</th>
+                        <th>Дата регистрации</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td>{{ forloop.counter|add:start_index }}</td>
+                        <td><strong>{{ device.serial_number }}</strong></td>
+                        <td>{{ device.model.model_name|default:"—" }}</td>
+                        <td>{{ device.api_id|default:"—" }}</td>
+                        <td>{{ device.created_at|date:"Y-m-d H:i:s" }}</td>
+                        <td>
+                            <span
+                                class="badge-pastel {% if device.status == 'active' %}success{% else %}idle{% endif %}">
+                                {{ device.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Нет зарегистрированных устройств</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if total_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item"><a class="page-link" href="?source={{ selected_source }}&page=1">⏮</a></li>
+        <li class="page-item"><a class="page-link" href="?source={{ selected_source }}&page={{ page|add:" -1" }}">◀</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">⏮</span></li>
+        <li class="page-item disabled"><span class="page-link">◀</span></li>
+        {% endif %}
+
+        {% for p in page_range %}
+        {% if p == page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+        {% elif p == 1 or p == total_pages or p >= page|add:"-2" and p <= page|add:"2" %} <li class="page-item"><a
+                class="page-link" href="?source={{ selected_source }}&page={{ p }}">{{ p }}</a></li>
+            {% elif p == page|add:"-3" or p == page|add:"3" %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages %} <li class="page-item"><a class="page-link"
+                    href="?source={{ selected_source }}&page={{ page|add:" 1" }}">▶</a></li>
+                <li class="page-item"><a class="page-link"
+                        href="?source={{ selected_source }}&page={{ total_pages }}">⏭</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">▶</span></li>
+                <li class="page-item disabled"><span class="page-link">⏭</span></li>
+                {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<p class="text-muted small mt-3">Всего зарегистрировано: {{ total }}</p>
+{% endblock %}

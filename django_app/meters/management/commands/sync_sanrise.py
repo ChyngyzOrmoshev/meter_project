@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from meters.models import Device, Reading, SyncStatus
-from meters.utils import find_device  # <-- импорт новой функции
+from meters.utils import find_device, get_robot_devices
 import pyodbc
 import os
 import time
@@ -14,6 +14,14 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = 'Sync data from SunRise MS SQL to MySQL'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--days',
+            type=int,
+            default=30,
+            help='Количество дней истории при первом запуске (по умолчанию 30)',
+        )
+
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
         server = os.getenv("SANRISE_MSSQL_SERVER")
@@ -22,6 +30,7 @@ class Command(BaseCommand):
         db = os.getenv("SANRISE_MSSQL_DB")
 
         conn_str = f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        self.days = options.get('days', 30)
 
         while True:
             try:
@@ -45,9 +54,11 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to SunRise MS SQL")
 
-            device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
+            # Получаем устройства SunRise через централизованную функцию
+            devices = get_robot_devices('SunRise')
+            device_sns = set(devices.values_list('serial_number', flat=True))
             if not device_sns:
-                self.stdout.write("No devices in MySQL, sync skipped.")
+                self.stdout.write("No SunRise devices found in MySQL.")
                 SyncStatus.objects.update_or_create(
                     robot_name='SunRise',
                     defaults={
@@ -59,29 +70,24 @@ class Command(BaseCommand):
                 )
                 return
 
+            # Определяем дату начала загрузки
             last_reading = Reading.objects.filter(notes="Авто-сбор: SunRise").order_by('-timestamp').first()
             if last_reading:
-                last_time = last_reading.timestamp - timedelta(hours=2)
-                query = """
-                    SET NOCOUNT ON;
-                    SELECT RTRIM(LTRIM(M.MSNO)) as SerialNumber, D.DATA_TIME, D.KWH_IMPORT_ABS
-                    FROM DATA_C_DAILY D
-                    INNER JOIN ACHV_METER M ON D.METER_ID = M.ID
-                    WHERE D.DATA_TIME >= ? AND D.KWH_IMPORT_ABS IS NOT NULL
-                    ORDER BY D.DATA_TIME ASC
-                """
-                cursor.execute(query, (last_time,))
+                start_time = last_reading.timestamp - timedelta(hours=2)
+                self.stdout.write(f"🔄 Incremental sync from {start_time}")
             else:
-                self.stdout.write("First run: fetching all history...")
-                query = """
-                    SET NOCOUNT ON;
-                    SELECT RTRIM(LTRIM(M.MSNO)) as SerialNumber, D.DATA_TIME, D.KWH_IMPORT_ABS
-                    FROM DATA_C_DAILY D
-                    INNER JOIN ACHV_METER M ON D.METER_ID = M.ID
-                    WHERE D.KWH_IMPORT_ABS IS NOT NULL
-                    ORDER BY D.DATA_TIME ASC
-                """
-                cursor.execute(query)
+                start_time = datetime.now() - timedelta(days=self.days)
+                self.stdout.write(f"🔄 First run: fetching last {self.days} days (from {start_time})")
+
+            query = """
+                SET NOCOUNT ON;
+                SELECT RTRIM(LTRIM(M.MSNO)) as SerialNumber, D.DATA_TIME, D.KWH_IMPORT_ABS
+                FROM DATA_C_DAILY D
+                INNER JOIN ACHV_METER M ON D.METER_ID = M.ID
+                WHERE D.DATA_TIME >= ? AND D.KWH_IMPORT_ABS IS NOT NULL
+                ORDER BY D.DATA_TIME ASC
+            """
+            cursor.execute(query, (start_time,))
 
             count = 0
             for row in cursor:
@@ -89,9 +95,12 @@ class Command(BaseCommand):
                 if not db_sn:
                     continue
 
-                # Ищем устройство с помощью find_device (по суффиксу)
-                device = find_device(db_sn)  # <-- заменяем прямой запрос
+                device = find_device(db_sn)
                 if device is None:
+                    continue
+
+                # *** ВАЖНО: проверяем, что устройство относится к SunRise ***
+                if device.serial_number not in device_sns:
                     continue
 
                 dt = row.DATA_TIME
@@ -104,7 +113,8 @@ class Command(BaseCommand):
                     timestamp=dt,
                     defaults={
                         'reading_value': val,
-                        'notes': 'Авто-сбор: SunRise'
+                        'notes': 'Авто-сбор: SunRise',
+                        'direction': 'aplus'
                     }
                 )
                 count += 1

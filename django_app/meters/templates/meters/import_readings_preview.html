@@ -64,6 +64,22 @@
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label">Направление (опционально)</label>
+                    <select name="col_direction" class="form-select form-control-pastel">
+                        <option value="">— не использовать —</option>
+                        {% for col in columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Направление по умолчанию</label>
+                    <select name="default_direction" class="form-select form-control-pastel">
+                        <option value="aplus">A+ (приём)</option>
+                        <option value="aminus">A- (отдача)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">Примечание (опционально)</label>
                     <select name="col_notes" class="form-select form-control-pastel">
                         <option value="">— не использовать —</option>
@@ -92,7 +108,8 @@
     </div>
 </div>
 <!-- Оверлей загрузки -->
-<div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
+<div id="loading-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center;">
     <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;">
         <span class="visually-hidden">Загрузка...</span>
     </div>
@@ -100,7 +117,7 @@
 
 <script>
     // Показываем оверлей при отправке формы на этой странице
-    document.querySelector('form').addEventListener('submit', function() {
+    document.querySelector('form').addEventListener('submit', function () {
         document.getElementById('loading-overlay').style.display = 'flex';
     });
 </script>
