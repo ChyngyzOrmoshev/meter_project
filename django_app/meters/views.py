@@ -3657,27 +3657,41 @@ def hierarchy_edit(request, pk):
             obj = get_object_or_404(Region, id=pk)
             obj.name = name
             obj.save()
+
         elif level == 'substation':
+            if not parent_id:
+                return JsonResponse({'error': 'Выберите район'}, status=400)
             obj = get_object_or_404(Substation, id=pk)
             obj.name = name
             obj.region_id = parent_id
             obj.save()
+
         elif level == 'feeder':
+            if not parent_id:
+                return JsonResponse({'error': 'Выберите подстанцию'}, status=400)
+            if not feeder_type:
+                return JsonResponse({'error': 'Выберите тип фидера'}, status=400)
             obj = get_object_or_404(Feeder, id=pk)
             obj.name = name
             obj.substation_id = parent_id
             obj.feeder_type = feeder_type
             obj.head_meter_id = head_meter_id or None
             obj.save()
+
         elif level == 'tp':
+            if not parent_id:
+                return JsonResponse({'error': 'Выберите фидер'}, status=400)
             obj = get_object_or_404(TransformerSubstation, id=pk)
             obj.name = name
             obj.feeder_id = parent_id
             obj.head_meter_id = head_meter_id or None
             obj.save()
+
         else:
             return JsonResponse({'error': 'Неверный уровень'}, status=400)
+
         return JsonResponse({'success': True})
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
