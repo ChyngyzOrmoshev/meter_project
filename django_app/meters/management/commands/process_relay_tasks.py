@@ -19,6 +19,10 @@ class Command(BaseCommand):
     help = 'Обработчик очереди задач на управление реле (Многопоточный)'
     STUCK_TIMEOUT_MIN = 30  # через сколько минут 'processing' считается зависшей
     CENERGO_WINDOW_MIN = 10  # окно повторов на стороне cEnergo (настройка сервера cEnergo)
+    SUNRISE_POLL_SEC = 60  # интервал проверки состояния реле после отправки команды SunRise
+    SUNRISE_WAIT_MIN = 5   # сколько ждём подтверждения состояния, потом ошибка и обычные ретраи
+    RISESUN_POLL_SEC = 60  # интервал опроса статуса пакета MMWS (регламент: не чаще 1 раза в 10 сек)
+    RISESUN_WAIT_MIN = 15  # сколько ждём терминального статуса пакета, потом ошибка и обычные ретраи
     HEXING_RESULT_DELAY_SEC = 125  # через сколько запрашивать результат команды Hexing (по регламенту ~2 мин)
 
     def add_arguments(self, parser):
@@ -241,32 +245,100 @@ class Command(BaseCommand):
         # 2. SunRise
         elif device.askue_id == '26' or (device.api_id and device.api_id.upper().startswith('SR')):
             service = SunRiseService()
-            
-            # 1. Отправляем команду
+
+            # Фаза 2: команда отправлена — читаем фактическое состояние реле (в реальном
+            # времени, опрос счётчика). Пока состояние не совпало или счётчик не ответил,
+            # ждём до дедлайна и команду заново НЕ шлём; по дедлайну — ошибка и обычные
+            # ретраи 5/10/20 мин (команда отправится заново).
+            if task.hexing_payload:
+                payload = json.loads(task.hexing_payload)
+                try:
+                    current_state = 'on' if service.get_relay_status(device.serial_number) else 'off'
+                    note = None if current_state == action else f"состояние: {current_state}, ожидали: {action}"
+                except Exception as e:
+                    note = str(e)
+
+                if note is None:
+                    RelayCommandHistory.objects.create(
+                        device=device, user=task.created_by, action=action, status='success'
+                    )
+                    task.hexing_payload = None
+                    return None
+
+                if time.time() > payload['deadline']:
+                    raise Exception(f"SunRise: команда не подтверждена за {self.SUNRISE_WAIT_MIN} мин ({note})")
+
+                task.status = 'pending'
+                task.scheduled_at = timezone.now() + timedelta(seconds=self.SUNRISE_POLL_SEC)
+                task.save(update_fields=['status', 'scheduled_at'])
+                return 'deferred'
+
+            # Фаза 1: отправка команды (исключение здесь — обычный ретрай)
             service.set_relay(device.serial_number, action)
-            
-            # 2. Даем серверу SunRise 5 секунд, чтобы попытаться передать её на счетчик
-            time.sleep(5)
-            
-            # 3. Проверяем, физически ли выполнилась команда
-            # Если счетчик офлайн, метод get_relay_status выбросит Exception("Счетчик офлайн...")
-            # и задача автоматически уйдет в ретрай (5 минут), благодаря нашему _execute_task_safe.
-            is_on = service.get_relay_status(device.serial_number)
-            current_state = 'on' if is_on else 'off'
-            
-            if current_state != action:
-                raise Exception(f"Счетчик не изменил статус. Текущий: {current_state}, ожидали: {action}")
-                
-            # 4. Если мы дошли сюда, значит счетчик ответил и подтвердил смену статуса!
-            RelayCommandHistory.objects.create(device=device, user=task.created_by, action=action, status='success')
+            RelayCommandHistory.objects.create(
+                device=device, user=task.created_by, action=action, status='pending',
+                error_message='Команда отправлена в SunRise, ждём подтверждения состояния реле'
+            )
+            task.hexing_payload = json.dumps({
+                'provider': 'sunrise',
+                'deadline': time.time() + self.SUNRISE_WAIT_MIN * 60,
+            })
+            task.status = 'pending'
+            task.error_message = None
+            task.scheduled_at = timezone.now() + timedelta(seconds=self.SUNRISE_POLL_SEC)
+            task.save(update_fields=['hexing_payload', 'status', 'error_message', 'scheduled_at'])
+            return 'deferred'
 
         # 3. RiseSun
         elif device.askue_id == '24' or (device.api_id and device.api_id.upper().startswith('RS')):
             service = RiseSunService()
+
+            # Фаза 2: пакет принят MMWS (202) — опрашиваем его статус (регламент: не чаще раза
+            # в 10 сек, терминальные статусы completed / completed_with_errors / failed)
+            if task.hexing_payload:
+                payload = json.loads(task.hexing_payload)
+                try:
+                    res = service.get_item_result(payload['batch_id'], device.serial_number)
+                except Exception as e:
+                    # Сбой опроса статуса не повод слать команду заново: ждём до дедлайна
+                    res = {'state': 'pending', 'note': str(e)}
+
+                if res['state'] == 'done':
+                    RelayCommandHistory.objects.create(
+                        device=device, user=task.created_by, action=action,
+                        status='success', batch_id=payload['batch_id']
+                    )
+                    task.hexing_payload = None
+                    return None
+                if res['state'] == 'failed':
+                    raise Exception(f"RiseSun: {res['error']}")
+
+                if time.time() > payload['deadline']:
+                    note = f" ({res['note']})" if res.get('note') else ''
+                    raise Exception(
+                        f"RiseSun: пакет {payload['batch_id']} не завершился за "
+                        f"{self.RISESUN_WAIT_MIN} мин{note}"
+                    )
+                task.status = 'pending'
+                task.scheduled_at = timezone.now() + timedelta(seconds=self.RISESUN_POLL_SEC)
+                task.save(update_fields=['status', 'scheduled_at'])
+                return 'deferred'
+
+            # Фаза 1: постановка пакета
             batch_id = service.set_relay(device.serial_number, action)
             RelayCommandHistory.objects.create(
                 device=device, user=task.created_by, action=action, status='pending', batch_id=batch_id
             )
+            task.hexing_payload = json.dumps({
+                'provider': 'risesun',
+                'batch_id': batch_id,
+                'deadline': time.time() + self.RISESUN_WAIT_MIN * 60,
+            })
+            task.status = 'pending'
+            task.error_message = None
+            task.scheduled_at = timezone.now() + timedelta(seconds=self.RISESUN_POLL_SEC)
+            task.save(update_fields=['hexing_payload', 'status', 'error_message', 'scheduled_at'])
+            return 'deferred'
 
         # 4. cEnergo (Энергомера)
         elif device.askue_id == '23' or (device.api_id and device.api_id.upper().startswith('EM')):
