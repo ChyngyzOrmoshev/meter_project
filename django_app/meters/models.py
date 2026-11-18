@@ -106,6 +106,12 @@ class MeterModel(models.Model):
 
     def __str__(self):
         return f"{self.model_name} ({self.catalog_code})"
+    @property
+    def display_name(self):
+        """Красивое название для выпадающих списков"""
+        current = self.nominal_current or "—"
+        phases = self.phases or "—"
+        return f"{self.model_name} ({current}, {phases}ф)"
 
 
 class Device(models.Model):
@@ -167,6 +173,10 @@ class Device(models.Model):
 
     class Meta:
         db_table = 'devices'
+        indexes = [
+            models.Index(fields=['status'], name='idx_devices_status'),
+            models.Index(fields=['status', 'region'], name='idx_devices_status_region'),
+        ]
 
     def __str__(self):
         return f"{self.serial_number} ({self.model.model_name if self.model else 'No model'})"
@@ -232,6 +242,8 @@ class CompareResult(models.Model):
 
     serial_1c = models.CharField(max_length=50, db_index=True)
     model_1c = models.CharField(max_length=100, blank=True)
+    account_1c = models.CharField(max_length=50, blank=True, null=True, verbose_name='Лицевой счет (1С)')
+    subscriber_1c = models.CharField(max_length=255, blank=True, null=True, verbose_name='Абонент (1С)')
     
     device = models.ForeignKey('Device', on_delete=models.SET_NULL, null=True, blank=True)
     model_db = models.CharField(max_length=100, blank=True)
@@ -389,3 +401,84 @@ class BalanceResult(models.Model):
 
     def __str__(self):
         return f"{self.substation.name} {self.period.month}.{self.period.year} — небаланс {self.imbalance_kwh:.3f} кВт·ч"
+
+class RelayCommandHistory(models.Model):
+    ACTION_CHOICES = [
+        ('on', 'Включение'),
+        ('off', 'Отключение'),
+        ('status', 'Проверка статуса'),
+    ]
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, verbose_name='Счётчик')
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES, verbose_name='Действие')
+    user = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, verbose_name='Пользователь')
+    status = models.CharField(max_length=20, verbose_name='Результат') # success / error
+    error_message = models.TextField(blank=True, null=True, verbose_name='Текст ошибки')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время')
+    batch_id = models.CharField(max_length=100, blank=True, null=True, verbose_name='ID пакета')
+
+    class Meta:
+        db_table = 'relay_command_history'
+        ordering = ['-created_at']
+
+# ==========================================
+# МОДЕЛИ ДЛЯ УПРАВЛЕНИЯ РЕЛЕ И АБОНЕНТОВ
+# ==========================================
+
+class Subscriber(models.Model):
+    """Данные абонента из биллинга 1С"""
+    device = models.OneToOneField('Device', on_delete=models.CASCADE, related_name='subscriber', verbose_name='Счётчик')
+    account_number = models.CharField(max_length=50, db_index=True, verbose_name='Лицевой счёт')
+    full_name = models.CharField(max_length=255, blank=True, null=True, verbose_name='ФИО')
+    address = models.CharField(max_length=500, blank=True, null=True, verbose_name='Адрес')
+    region = models.CharField(max_length=100, blank=True, null=True, verbose_name='Район (из 1С)')
+    subscriber_type = models.CharField(max_length=50, blank=True, null=True, verbose_name='Тип абонента')
+    debt = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Долг')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления данных')
+
+    class Meta:
+        db_table = 'subscribers'
+        ordering = ['-debt']
+
+    def __str__(self):
+        return f"{self.account_number} - {self.full_name} (Долг: {self.debt})"
+
+
+class RelayTask(models.Model):
+    """Очередь задач на управление реле"""
+    STATUS_CHOICES = [
+        ('pending', 'Ожидание'),
+        ('processing', 'В процессе'),
+        ('success', 'Успешно'),
+        ('error', 'Ошибка'),
+        ('cancelled', 'Отменено'),
+    ]
+    ACTION_CHOICES = [
+        ('on', 'Включение'),
+        ('off', 'Отключение'),
+    ]
+
+    device = models.ForeignKey('Device', on_delete=models.CASCADE, related_name='relay_tasks', verbose_name='Счётчик')
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES, verbose_name='Действие')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='Статус')
+    
+    scheduled_at = models.DateTimeField(verbose_name='Запланировано на')
+    error_message = models.TextField(blank=True, null=True, verbose_name='Текст ошибки')
+    debt_snapshot = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name='Долг при создании')
+    
+    created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Создал')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    retry_count = models.IntegerField(default=0, verbose_name='Количество попыток')
+    # JSON {"correlation_id", "xml_b64"}: команда Hexing отправлена и принята (ACK),
+    # результат запрашивается вторым проходом без блокировки потока воркера.
+    hexing_payload = models.TextField(blank=True, null=True, verbose_name='Состояние команды Hexing (ожидание результата)')
+
+    class Meta:
+        db_table = 'relay_tasks'
+        ordering = ['scheduled_at', 'id']
+        indexes = [
+            models.Index(fields=['status', 'scheduled_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.device.serial_number} - {self.action} ({self.status})"

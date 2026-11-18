@@ -1,3 +1,4 @@
+import json
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
@@ -17,6 +18,7 @@ from meters.sanxing_service import SanxingService
 class Command(BaseCommand):
     help = 'Обработчик очереди задач на управление реле (Многопоточный)'
     STUCK_TIMEOUT_MIN = 30  # через сколько минут 'processing' считается зависшей
+    HEXING_RESULT_DELAY_SEC = 125  # через сколько запрашивать результат команды Hexing (по регламенту ~2 мин)
 
     def add_arguments(self, parser):
         parser.add_argument('--once', action='store_true', help='Обработать пачку задач и выйти')
@@ -71,6 +73,7 @@ class Command(BaseCommand):
         error_count = 0
         cancelled_count = 0
         retry_count = 0
+        deferred_count = 0
 
         # Обрабатываем пачку в пуле потоков (5 потоков параллельно)
         with ThreadPoolExecutor(max_workers=5) as executor:
@@ -83,12 +86,15 @@ class Command(BaseCommand):
                     cancelled_count += 1
                 elif res['status'] == 'retry':
                     retry_count += 1
+                elif res['status'] == 'deferred':
+                    deferred_count += 1
                 else:
                     error_count += 1
 
         self.stdout.write(self.style.SUCCESS(
             f"✅ Пачка: Успешно: {success_count}, Ошибок: {error_count}, "
-            f"Отложено на повтор: {retry_count}, Отменено (долг): {cancelled_count}"
+            f"Отложено на повтор: {retry_count}, Ждут результата Hexing: {deferred_count}, "
+            f"Отменено (долг): {cancelled_count}"
         ))
 
     def _cancel_if_debt_paid(self, task):
@@ -139,20 +145,25 @@ class Command(BaseCommand):
         try:
             # Проверка актуального долга перед отключением.
             # Ошибка 1С попадает в общий except ниже → ретраи 5/10/20 мин.
-            if task.action == 'off' and self._cancel_if_debt_paid(task):
+            # (на второй фазе Hexing команда уже отправлена — долг не перепроверяем)
+            if task.action == 'off' and not task.hexing_payload and self._cancel_if_debt_paid(task):
                 return {'id': task.id, 'status': 'cancelled'}
 
-            self._execute_relay_command(task)
-                       
+            if self._execute_relay_command(task) == 'deferred':
+                return {'id': task.id, 'status': 'deferred'}
+
             # УСПЕХ
             task.status = 'success'
             task.error_message = None
-            task.save(update_fields=['status', 'error_message'])
+            task.hexing_payload = None
+            task.save(update_fields=['status', 'error_message', 'hexing_payload'])
             return {'id': task.id, 'status': 'success'}
-            
+
         except Exception as e:
             # ОШИБКА
             task.error_message = str(e)[:500]
+            # При повторе команда Hexing отправляется заново (новый correlation_id)
+            task.hexing_payload = None
             
             # Если попыток меньше 3, ставим в очередь на повтор с нарастающим интервалом
             if task.retry_count < 3:
@@ -163,7 +174,7 @@ class Command(BaseCommand):
                 task.retry_count += 1
                 task.status = 'pending'
                 task.scheduled_at = timezone.now() + timedelta(minutes=delay_minutes)
-                task.save(update_fields=['status', 'scheduled_at', 'retry_count', 'error_message'])
+                task.save(update_fields=['status', 'scheduled_at', 'retry_count', 'error_message', 'hexing_payload'])
                 
                 self.stderr.write(self.style.WARNING(
                     f"⚠️ Задача #{task.id} ({task.device.serial_number}): {e}. "
@@ -174,7 +185,7 @@ class Command(BaseCommand):
             # Если это была 3-я попытка, окончательно фиксируем ошибку
             else:
                 task.status = 'error'
-                task.save(update_fields=['status', 'error_message'])
+                task.save(update_fields=['status', 'error_message', 'hexing_payload'])
                 self.stderr.write(self.style.ERROR(
                     f"❌ Задача #{task.id} ({task.device.serial_number}): {e}. "
                     f"Исчерпаны все 3 попытки."
@@ -188,19 +199,40 @@ class Command(BaseCommand):
         # 1. Hexing KUK (HES)
         if device.askue_id == '25' or (device.api_id and device.api_id.upper().startswith('UK')):
             service = HexingService()
-            result = service.set_relay(device.serial_number, action)
-            
-            if result['status'] == 'error':
-                raise Exception(result.get('message'))
-                
-            if result['status'] == 'pending':
-                time.sleep(125) # Ждем 2 минуты по регламенту Hexing
-                final = service.check_pending(result['correlation_id'], result['xml_b64'], action)
+
+            # Фаза 2: команда уже принята (ACK) — запрашиваем результат тем же XML
+            if task.hexing_payload:
+                payload = json.loads(task.hexing_payload)
+                final = service.check_pending(payload['correlation_id'], payload['xml_b64'], action)
                 if final['status'] == 'error':
                     raise Exception(final.get('message'))
-            else:
-                time.sleep(2) # Быстрый ответ, маленькая пауза
-                    
+                RelayCommandHistory.objects.create(
+                    device=device, action=action,
+                    status='success' if final['status'] == 'success' else 'pending',
+                    batch_id=payload['correlation_id'],
+                )
+                task.hexing_payload = None
+                return None
+
+            # Фаза 1: отправка команды
+            result = service.set_relay(device.serial_number, action)
+
+            if result['status'] == 'error':
+                raise Exception(result.get('message'))
+
+            if result['status'] == 'pending':
+                # По регламенту Hexing результат готов через ~2 минуты. Поток не держим:
+                # возвращаем задачу в очередь, второй проход запросит результат.
+                task.hexing_payload = json.dumps({
+                    'correlation_id': result['correlation_id'],
+                    'xml_b64': result['xml_b64'],
+                })
+                task.status = 'pending'
+                task.error_message = None
+                task.scheduled_at = timezone.now() + timedelta(seconds=self.HEXING_RESULT_DELAY_SEC)
+                task.save(update_fields=['hexing_payload', 'status', 'error_message', 'scheduled_at'])
+                return 'deferred'
+
             RelayCommandHistory.objects.create(
                 device=device, action=action, status='success', batch_id=result.get('correlation_id')
             )
