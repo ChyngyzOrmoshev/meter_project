@@ -3,12 +3,10 @@ services:
     image: mysql:8.0
     container_name: meters_mysql
     restart: always
+    env_file:
+      - ./app/cEnergo.env   # MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD
     environment:
       TZ: Asia/Bishkek
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: infoenergo
-      MYSQL_USER: infoenergo
-      MYSQL_PASSWORD: infopass
     ports:
       - "3306:3306"
     volumes:
@@ -48,9 +46,6 @@ services:
     environment:
       - TZ=Asia/Bishkek
       - MYSQL_HOST=mysql
-      - MYSQL_DATABASE=infoenergo
-      - MYSQL_USER=infoenergo
-      - MYSQL_PASSWORD=infopass
     deploy:
       resources:
         limits:
@@ -74,9 +69,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -102,9 +94,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -130,9 +119,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -158,9 +144,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -186,9 +169,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   command: python manage.py sync_risesun
 
   # sync-sanxing-new-100a:
@@ -208,9 +188,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -236,9 +213,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -264,9 +238,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -292,9 +263,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -320,9 +288,6 @@ services:
   #     - ./app/cEnergo.env:/app/cEnergo.env
   #   environment:
   #     - MYSQL_HOST=mysql
-  #     - MYSQL_DATABASE=infoenergo
-  #     - MYSQL_USER=infoenergo
-  #     - MYSQL_PASSWORD=infopass
   #   deploy:
   #     resources:
   #       limits:
@@ -350,9 +315,6 @@ services:
     environment:
       - TZ=Asia/Bishkek
       - MYSQL_HOST=mysql
-      - MYSQL_DATABASE=infoenergo
-      - MYSQL_USER=infoenergo
-      - MYSQL_PASSWORD=infopass
     deploy:
       resources:
         limits:
