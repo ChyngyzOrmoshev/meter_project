@@ -82,11 +82,10 @@ def start():
         coalesce=True,
     )
 
-    # Проверка оплаты долгов (раз в час в :40 минут)
+    # Проверка оплаты долгов для автовключения (каждые 10 минут)
     sched.add_job(
         run_command,
         IntervalTrigger(minutes=10),
-        # CronTrigger(seconds=30),
         args=['check_debts_auto_on'],
         id='check_debts_auto_on',
         max_instances=1,
@@ -114,10 +113,10 @@ def start():
         )
 
 
-    # Воркер обработки очереди реле (каждые 5 секунд)
+    # Воркер обработки очереди реле (каждую минуту)
     sched.add_job(
         run_command,
-        IntervalTrigger(seconds=60),        # Ждем 5 секунд
+        IntervalTrigger(seconds=60),
         args=['process_relay_tasks', '--once'],  # ОБЯЗАТЕЛЬНО передаем --once!
         id='process_relay_tasks',
         max_instances=1,

@@ -39,7 +39,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     curl\
     gnupg\
-    docker.io\
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем и устанавливаем Python-зависимости

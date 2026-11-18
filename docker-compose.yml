@@ -8,13 +8,13 @@ services:
     environment:
       TZ: Asia/Bishkek
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"   # только локально, наружу не публикуем
     volumes:
       - mysql_data:/var/lib/mysql
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 7G
     command: --innodb-buffer-pool-size=5G --innodb-buffer-pool-instances=3 --max-connections=200
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
@@ -41,7 +41,6 @@ services:
       - ./Catalog.xlsx:/app/Catalog.xlsx
       - ./app/cEnergo.env:/app/cEnergo.env
       - ./1c_reports:/app/1c_reports
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./django_app/exports:/app/exports
     environment:
       - TZ=Asia/Bishkek
