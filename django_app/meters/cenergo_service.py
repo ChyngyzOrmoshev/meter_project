@@ -2,6 +2,23 @@ import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
 
+# Расшифровка кодов ConfirmationMessage из WSDL cEnergo
+ERROR_TEXTS = {
+    'SetMeterStateFailed': 'Сбой отправки команды управления реле',
+    'DataSourceUnavailable': 'Источник данных cEnergo недоступен',
+    'InvalidParameterValue': 'Неверное значение параметра запроса',
+    'MeterNotFound': 'Счетчик не найден в cEnergo',
+    'NoMeterReadings': 'Нет показаний счетчика',
+    'UnknownError': 'Неизвестная ошибка cEnergo',
+}
+
+
+def error_text(msg):
+    """Понятный текст ошибки: «Русский текст (КодcEnergo)»."""
+    text = ERROR_TEXTS.get(msg)
+    return f"{text} ({msg})" if text else f"Ошибка cEnergo: {msg}"
+
+
 class CEnergoService:
     def __init__(self):
         self.soap_url = "http://192.168.144.95:9090/soap/v1"
@@ -62,9 +79,9 @@ class CEnergoService:
         elif res['msg'] == 'UnknownMeterState':
             return 'unknown' # Сервер не знает состояние
         elif res['msg'] == 'MeterNotFound':
-            raise Exception("Счетчик не найден в cEnergo")
+            raise Exception(error_text('MeterNotFound'))
         else:
-            raise Exception(f"Ошибка cEnergo: {res['msg']}")
+            raise Exception(error_text(res['msg']))
 
     def set_status(self, serial, action):
         status_code = '1' if action == 'on' else '2'
@@ -88,6 +105,6 @@ class CEnergoService:
         elif res['msg'] == 'TimeoutExpired':
             return 'queued' # Команда принята, но счетчик спит
         elif res['msg'] == 'MeterNotFound':
-            raise Exception("Счетчик не найден в cEnergo")
+            raise Exception(error_text('MeterNotFound'))
         else:
-            raise Exception(f"Ошибка cEnergo: {res['msg']}")
+            raise Exception(error_text(res['msg']))

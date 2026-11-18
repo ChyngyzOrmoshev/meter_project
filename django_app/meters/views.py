@@ -4145,6 +4145,51 @@ def search_devices(request):
 def can_manage_relay(user):
     return user.is_staff or user.groups.filter(name__in=['operator', 'Инженер АСКУЭ']).exists()
 
+
+# Минимальная длина «хвоста» серийника для неточного поиска и серверный
+# минимум времени до запланированного отключения (фронт требует 1 час,
+# здесь запас на разницу часовых поясов браузера и сервера).
+RELAY_MIN_SERIAL_SUFFIX = 5
+RELAY_MIN_LEAD_MINUTES = 30
+
+
+def find_relay_device(serial):
+    """
+    Единый поиск счётчика для управления реле: (device, error).
+    Сначала точное совпадение; иначе — только однозначное совпадение по
+    окончанию номера (без ведущих нулей, не короче RELAY_MIN_SERIAL_SUFFIX).
+    Пустой или неоднозначный номер счётчик не выбирает.
+    """
+    serial = (serial or '').strip()
+    if not serial:
+        return None, 'Не указан серийный номер'
+
+    device = Device.objects.filter(serial_number=serial).first()
+    if device:
+        return device, None
+
+    suffix = serial.lstrip('0')
+    if len(suffix) < RELAY_MIN_SERIAL_SUFFIX:
+        return None, 'Счетчик не найден в базе'
+
+    candidates = list(Device.objects.filter(serial_number__endswith=suffix)[:2])
+    if len(candidates) == 1:
+        return candidates[0], None
+    if len(candidates) > 1:
+        return None, 'Номер неоднозначен: найдено несколько счётчиков, укажите полный серийный номер'
+    return None, 'Счетчик не найден в базе'
+
+
+def relay_region_denied(user, device):
+    """
+    True, если пользователь ограничен районом (группа ASKUE:<район>) и счётчик
+    не из его района. Счётчик без района для ограниченного пользователя закрыт.
+    """
+    user_region = get_user_region(user)
+    if not user_region:
+        return False
+    return not (device.region and device.region.name == user_region)
+
 from .models import Subscriber, RelayTask
 from django.utils.dateparse import parse_datetime
 
@@ -4217,42 +4262,68 @@ def relay_mass_create_tasks(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
         
     device_ids = request.POST.getlist('device_ids[]')
-    action = request.POST.get('action', 'off')
+    action = request.POST.get('action')
     scheduled_str = request.POST.get('scheduled_at')
     orphan_devices_json = request.POST.get('orphan_devices', '[]')
     region_name = request.POST.get('region_name', '')
-    
+
+    if action not in ('on', 'off'):
+        return JsonResponse({'error': 'Неверное действие'}, status=400)
+
+    # Время обязательно: молча подставлять «сейчас» нельзя — отключение
+    # уйдёт на счётчики немедленно вместо запланированного времени.
+    if not scheduled_str:
+        return JsonResponse({'error': 'Не указано время выполнения'}, status=400)
     try:
-        scheduled_at = parse_datetime(scheduled_str) if scheduled_str else timezone.now()
-        if not scheduled_at:
-            scheduled_at = timezone.now()
-        if getattr(scheduled_at, 'tzinfo', None) is not None:
-            scheduled_at = scheduled_at.replace(tzinfo=None)
-    except Exception:
-        scheduled_at = timezone.now()
+        scheduled_at = parse_datetime(scheduled_str)
+    except ValueError:
+        scheduled_at = None
+    if not scheduled_at:
+        return JsonResponse({'error': 'Неверный формат даты и времени'}, status=400)
+    if getattr(scheduled_at, 'tzinfo', None) is not None:
+        scheduled_at = scheduled_at.replace(tzinfo=None)
+    if scheduled_at < timezone.now() + timedelta(minutes=RELAY_MIN_LEAD_MINUTES):
+        return JsonResponse(
+            {'error': 'Время выполнения должно быть минимум через 1 час от текущего момента'},
+            status=400
+        )
 
     created_tasks = 0
+    skipped_region = 0
+    skipped_duplicate = 0
     # 1. Создаем обычные задачи
-    for dev_id in device_ids:
+    for dev_id in dict.fromkeys(device_ids):  # без повторов, порядок сохраняется
         try:
-            device = Device.objects.get(id=dev_id)
-            
-            # Отменяем старые противоположные задачи
-            opposite_action = 'on' if action == 'off' else 'off'
-            RelayTask.objects.filter(
-                device=device, action=opposite_action, status__in=['pending', 'processing']
-            ).update(status='cancelled', error_message='Отменено из-за создания новой задачи')
-            
-            sub = getattr(device, 'subscriber', None)
-            current_debt = sub.debt if sub else 0
-            
-            RelayTask.objects.create(
-                device=device, action=action, scheduled_at=scheduled_at,
-                created_by=request.user, status='pending', debt_snapshot=current_debt
-            )
-            created_tasks += 1
-        except Device.DoesNotExist:
+            device = Device.objects.select_related('region').get(id=dev_id)
+        except (Device.DoesNotExist, ValueError):
             continue
+
+        # Инженер района не может ставить задачи на чужие счётчики
+        if relay_region_denied(request.user, device):
+            skipped_region += 1
+            continue
+
+        # Такая же активная задача уже есть (например, двойной клик)
+        if RelayTask.objects.filter(
+            device=device, action=action, status__in=['pending', 'processing']
+        ).exists():
+            skipped_duplicate += 1
+            continue
+
+        # Отменяем старые противоположные задачи
+        opposite_action = 'on' if action == 'off' else 'off'
+        RelayTask.objects.filter(
+            device=device, action=opposite_action, status__in=['pending', 'processing']
+        ).update(status='cancelled', error_message='Отменено из-за создания новой задачи')
+
+        sub = getattr(device, 'subscriber', None)
+        current_debt = sub.debt if sub else 0
+
+        RelayTask.objects.create(
+            device=device, action=action, scheduled_at=scheduled_at,
+            created_by=request.user, status='pending', debt_snapshot=current_debt
+        )
+        created_tasks += 1
 
     # 2. Создаем заявки (CompareResult) для ненайденных
     created_issues = 0
@@ -4289,10 +4360,18 @@ def relay_mass_create_tasks(request):
     except Exception as e:
         print(f"Ошибка при создании заявок для сирот: {e}")
 
+    message = f'Успешно создано задач: {created_tasks}. Заявок на проверку: {created_issues}.'
+    if skipped_duplicate:
+        message += f' Пропущено (уже есть такая задача): {skipped_duplicate}.'
+    if skipped_region:
+        message += f' Пропущено (чужой район): {skipped_region}.'
+
     return JsonResponse({
-        'message': f'Успешно создано задач: {created_tasks}. Заявок на проверку: {created_issues}.', 
+        'message': message,
         'count_tasks': created_tasks,
-        'count_issues': created_issues
+        'count_issues': created_issues,
+        'skipped_duplicate': skipped_duplicate,
+        'skipped_region': skipped_region,
     })
 
 @login_required
@@ -4418,10 +4497,13 @@ def relay_task_retry(request):
     task_id = request.POST.get('task_id')
     try:
         task = RelayTask.objects.get(id=task_id)
-        if task.status in ['error', 'cancelled']:
+        if task.status == 'error':
             task.status = 'pending'
             task.scheduled_at = timezone.now()
             task.error_message = None
+            # Иначе первая же новая ошибка сразу даст 'error' без повторов
+            task.retry_count = 0
+            task.hexing_payload = None
             task.save()
             return JsonResponse({'message': 'Задача возвращена в очередь'})
         return JsonResponse({'error': 'Можно переотправить только упавшие задачи'}, status=400)
@@ -4945,16 +5027,12 @@ from .hexing_service import HexingService
 @login_required
 @user_passes_test(can_manage_relay)
 def relay_api_status(request):
-    serial = request.GET.get('serial', '').strip()
-    
-    # Умный поиск устройства
-    device = Device.objects.filter(serial_number=serial).first()
+    # Тот же поиск, что и в relay_api_action: на экране и в команде один счётчик
+    device, error = find_relay_device(request.GET.get('serial', ''))
     if not device:
-        candidates = Device.objects.filter(serial_number__endswith=serial).order_by('-id')
-        if candidates.exists():
-            device = candidates.first()
-    if not device:
-        return JsonResponse({'error': 'Счетчик не найден в базе'}, status=404)
+        return JsonResponse({'error': error}, status=404)
+    if relay_region_denied(request.user, device):
+        return JsonResponse({'error': 'Счётчик не из вашего района'}, status=403)
 
     # Сбор информации о приборе (оставляем как было)
     last_reading = Reading.objects.filter(device=device).order_by('-timestamp').first()
@@ -5040,15 +5118,15 @@ def relay_api_status(request):
 @user_passes_test(can_manage_relay)
 @require_POST
 def relay_api_action(request):
-    serial = request.POST.get('serial', '').strip()
     action = request.POST.get('action')
-    
-    device = Device.objects.filter(serial_number__endswith=serial).first()
-    if not device:
-         return JsonResponse({'error': 'Счетчик не найден в базе'}, status=404)
-
     if action not in ['on', 'off']:
         return JsonResponse({'error': 'Неверное действие'}, status=400)
+
+    device, error = find_relay_device(request.POST.get('serial', ''))
+    if not device:
+        return JsonResponse({'error': error}, status=404)
+    if relay_region_denied(request.user, device):
+        return JsonResponse({'error': 'Счётчик не из вашего района'}, status=403)
 
     # Отменяем все старые висящие задачи для этого счетчика, чтобы не было спама
     RelayTask.objects.filter(
@@ -5080,33 +5158,71 @@ from django.core.management import call_command
 @user_passes_test(can_manage_relay)
 @require_POST
 def relay_bulk_start(request):
+    """
+    Массовое управление реле по списку серийных номеров.
+    Команды на счётчики не отправляются напрямую: для каждого номера создаётся
+    RelayTask, дальше всё делает воркер process_relay_tasks (проверка долга в 1С
+    перед отключением, ретраи, история). Результат пишется в тот же JSON-файл,
+    который читает relay_bulk_status.
+    """
     serials_text = request.POST.get('serials', '')
     action = request.POST.get('action')
-    
-    if not serials_text or not action:
-        return JsonResponse({'error': 'Нет данных'}, status=400)
 
-    # Сохраняем список во временный файл
-    fd, temp_path = tempfile.mkstemp()
-    with os.fdopen(fd, 'w', encoding='utf-8') as f:
-        f.write(serials_text)
-        
-    result_path = '/app/exports/bulk_relay_result.json'
-    if os.path.exists(result_path):
-        os.remove(result_path)
+    if not serials_text or action not in ('on', 'off'):
+        return JsonResponse({'error': 'Нет данных или неверное действие'}, status=400)
 
-    # Запускаем в фоне
-    def run_task():
-        import subprocess
-        subprocess.Popen(
-            ['python', 'manage.py', 'bulk_relay_control', '--file', temp_path, '--action', action],
-            cwd='/app'
+    # Без повторов, порядок сохраняется
+    serials = list(dict.fromkeys(
+        line.strip() for line in serials_text.splitlines() if line.strip()
+    ))
+    if len(serials) > 2000:
+        return JsonResponse({'error': 'Слишком длинный список (максимум 2000 номеров)'}, status=400)
+
+    now = timezone.now()
+    # Отключение — не раньше, чем через RELAY_MIN_LEAD_MINUTES: время проверить задачи
+    # в мониторинге и отменить. Включение выполняется сразу.
+    scheduled_at = now + timedelta(minutes=RELAY_MIN_LEAD_MINUTES) if action == 'off' else now
+    opposite_action = 'on' if action == 'off' else 'off'
+
+    results = {'status': 'running', 'total': len(serials), 'processed': 0, 'success': 0, 'errors': []}
+
+    for serial in serials:
+        results['processed'] += 1
+        device, error = find_relay_device(serial)
+        if not device:
+            results['errors'].append(f'{serial}: {error}')
+            continue
+        if relay_region_denied(request.user, device):
+            results['errors'].append(f'{serial}: счётчик не из вашего района')
+            continue
+        if RelayTask.objects.filter(
+            device=device, action=action, status__in=['pending', 'processing']
+        ).exists():
+            results['errors'].append(f'{serial}: уже есть активная задача')
+            continue
+
+        RelayTask.objects.filter(
+            device=device, action=opposite_action, status__in=['pending', 'processing']
+        ).update(status='cancelled', error_message='Отменено из-за создания новой задачи')
+
+        sub = getattr(device, 'subscriber', None)
+        RelayTask.objects.create(
+            device=device, action=action, scheduled_at=scheduled_at,
+            created_by=request.user, status='pending',
+            debt_snapshot=sub.debt if sub else 0,
         )
+        results['success'] += 1
 
-    import threading
-    threading.Thread(target=run_task).start()
-    
-    return JsonResponse({'message': 'Запущено'})
+    results['status'] = 'completed'
+    os.makedirs('/app/exports', exist_ok=True)
+    with open('/app/exports/bulk_relay_result.json', 'w', encoding='utf-8') as f:
+        json.dump(results, f, ensure_ascii=False)
+
+    return JsonResponse({
+        'message': f'Поставлено в очередь задач: {results["success"]} из {results["total"]}',
+        'scheduled_at': scheduled_at.strftime('%Y-%m-%d %H:%M'),
+        'errors_count': len(results['errors']),
+    })
 
 @login_required
 @user_passes_test(can_manage_relay)

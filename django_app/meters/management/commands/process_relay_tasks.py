@@ -18,6 +18,7 @@ from meters.sanxing_service import SanxingService
 class Command(BaseCommand):
     help = 'Обработчик очереди задач на управление реле (Многопоточный)'
     STUCK_TIMEOUT_MIN = 30  # через сколько минут 'processing' считается зависшей
+    CENERGO_WINDOW_MIN = 10  # окно повторов на стороне cEnergo (настройка сервера cEnergo)
     HEXING_RESULT_DELAY_SEC = 125  # через сколько запрашивать результат команды Hexing (по регламенту ~2 мин)
 
     def add_arguments(self, parser):
@@ -207,7 +208,7 @@ class Command(BaseCommand):
                 if final['status'] == 'error':
                     raise Exception(final.get('message'))
                 RelayCommandHistory.objects.create(
-                    device=device, action=action,
+                    device=device, user=task.created_by, action=action,
                     status='success' if final['status'] == 'success' else 'pending',
                     batch_id=payload['correlation_id'],
                 )
@@ -234,7 +235,7 @@ class Command(BaseCommand):
                 return 'deferred'
 
             RelayCommandHistory.objects.create(
-                device=device, action=action, status='success', batch_id=result.get('correlation_id')
+                device=device, user=task.created_by, action=action, status='success', batch_id=result.get('correlation_id')
             )
 
         # 2. SunRise
@@ -257,39 +258,65 @@ class Command(BaseCommand):
                 raise Exception(f"Счетчик не изменил статус. Текущий: {current_state}, ожидали: {action}")
                 
             # 4. Если мы дошли сюда, значит счетчик ответил и подтвердил смену статуса!
-            RelayCommandHistory.objects.create(device=device, action=action, status='success')
+            RelayCommandHistory.objects.create(device=device, user=task.created_by, action=action, status='success')
 
         # 3. RiseSun
         elif device.askue_id == '24' or (device.api_id and device.api_id.upper().startswith('RS')):
             service = RiseSunService()
             batch_id = service.set_relay(device.serial_number, action)
             RelayCommandHistory.objects.create(
-                device=device, action=action, status='pending', batch_id=batch_id
+                device=device, user=task.created_by, action=action, status='pending', batch_id=batch_id
             )
 
         # 4. cEnergo (Энергомера)
         elif device.askue_id == '23' or (device.api_id and device.api_id.upper().startswith('EM')):
             service = CEnergoService()
+
+            # Фаза 2: cEnergo приняла команду в свою очередь (повтор каждые 5 мин, окно 10 мин,
+            # потом «Сбой отправки команды управления реле»). Итог сама не сообщает —
+            # проверяем по фактическому состоянию счётчика (GetMeterState, только чтение).
+            if task.hexing_payload:
+                state = service.get_status(device.serial_number)
+                if state != action:
+                    raise Exception(
+                        f"cEnergo: команда не выполнена за {self.CENERGO_WINDOW_MIN} мин "
+                        f"(состояние счётчика: {state}, ожидали: {action})"
+                    )
+                RelayCommandHistory.objects.create(
+                    device=device, user=task.created_by, action=action, status='success'
+                )
+                task.hexing_payload = None
+                return None
+
             result = service.set_status(device.serial_number, action)
-            
+
             if result == 'success':
                 time.sleep(5)
-                RelayCommandHistory.objects.create(device=device, action=action, status='success')
+                RelayCommandHistory.objects.create(device=device, user=task.created_by, action=action, status='success')
             elif result == 'queued':
-                # cEnergo приняла задачу и будет пытаться выполнить её каждые 5 минут в течение 4 часов.
-                # Мы записываем статус 'pending', но НЕ выбрасываем ошибку, чтобы наш воркер не делал ретраи.
+                # Счётчик спит: cEnergo будет пытаться сама ~10 минут. Возвращаем задачу в очередь
+                # и проверяем итог второй фазой; если не сработало — обычные ретраи 5/10/20 мин
+                # (команда отправится заново, для отключения долг проверится ещё раз).
                 RelayCommandHistory.objects.create(
-                    device=device, action=action, status='pending', 
-                    error_message="cEnergo взяла в работу (авто-повтор до 4 часов)"
+                    device=device, user=task.created_by, action=action, status='pending',
+                    error_message=f"cEnergo взяла в работу (авто-повтор ~{self.CENERGO_WINDOW_MIN} мин)"
                 )
-                self.stdout.write(f"  ⏳ cEnergo приняла задачу. Счетчик офлайн, сервер сам будет пытаться до 4 часов.")
+                task.hexing_payload = json.dumps({'provider': 'cenergo'})
+                task.status = 'pending'
+                task.error_message = None
+                task.scheduled_at = timezone.now() + timedelta(minutes=self.CENERGO_WINDOW_MIN + 1)
+                task.save(update_fields=['hexing_payload', 'status', 'error_message', 'scheduled_at'])
+                self.stdout.write(
+                    f"  ⏳ cEnergo приняла задачу (счётчик спит). Итог проверим через {self.CENERGO_WINDOW_MIN + 1} мин."
+                )
+                return 'deferred'
 
         # 5. Sanxing (SanPlat) - Работает быстро через HTTP (requests + ddddocr)
         elif device.askue_id == '22' or (device.api_id and device.api_id.upper().startswith('SX')):
             service = SanxingService()
             service.set_relay(device.serial_number, action)
             time.sleep(3) # Короткая пауза для сервера Sanxing
-            RelayCommandHistory.objects.create(device=device, action=action, status='success')
+            RelayCommandHistory.objects.create(device=device, user=task.created_by, action=action, status='success')
             
         else:
             raise Exception(f"Неподдерживаемый тип счетчика: askue_id={device.askue_id}")
