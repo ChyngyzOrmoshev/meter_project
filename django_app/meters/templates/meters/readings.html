@@ -21,11 +21,11 @@
                     <p><strong>Тип ПУ:</strong> {{ device.model.model_name|default:"—" }}</p>
                     <p><strong>Статус ПУ:</strong>
                         <span class="badge-pastel 
-                                    {% if device.status == 'active' %}success
-                                    {% elif device.status == 'repair' %}warning
-                                    {% elif device.status == 'inactive' %}idle
-                                    {% elif device.status == 'temporary_off' %}info
-                                    {% endif %}">
+            {% if device.status == 'active' %}success
+            {% elif device.status == 'repair' %}warning
+            {% elif device.status == 'inactive' %}idle
+            {% elif device.status == 'temporary_off' %}info
+            {% endif %}">
                             {{ device.get_status_display }}
                         </span>
                     </p>
@@ -42,28 +42,13 @@
                     <p><strong>Фазность:</strong> {{ device.model.phases|default:"—" }}</p>
                     {% if device.created_at %}
                     <p><strong>Добавлен:</strong> {{ device.created_at|date:"Y-m-d H:i:s" }}</p>
-                    <p><strong>Район:</strong> {{ device.region.name|default:"—" }}</p>
-                    <p><strong>Подстанция:</strong>
-                        {% if device.substation %}
-                        {{ device.substation.name }}
-                        {% elif device.tp and device.tp.feeder and device.tp.feeder.substation %}
-                        {{ device.tp.feeder.substation.name }}
-                        {% else %}
-                        —
-                        {% endif %}
-                    </p>
-                    <p><strong>Фидер:</strong>
-                        {% if device.feeder %}
-                        {{ device.feeder.name }}
-                        {% elif device.tp and device.tp.feeder %}
-                        {{ device.tp.feeder.name }}
-                        {% else %}
-                        —
-                        {% endif %}
-                    </p>
-                    <p><strong>ТП:</strong> {{ device.tp.name|default:"—" }}</p>
+                    <p><strong>Район:</strong> {{ display_region|default:"—" }}</p>
+                    <p><strong>Подстанция:</strong> {{ display_substation|default:"—" }}</p>
+                    <p><strong>Фидер:</strong> {{ display_feeder|default:"—" }}</p>
+                    <p><strong>ТП:</strong> {{ display_tp|default:"—" }}</p>
                     {% endif %}
                 </div>
+
                 {% elif serial %}
                 <div class="alert alert-warning">Прибор не найден</div>
                 {% else %}
@@ -123,6 +108,7 @@
                             <tr>
                                 <th>Дата и время</th>
                                 <th>Значение</th>
+                                <th>Вид</th>
                                 <th>Примечание</th>
                             </tr>
                         </thead>
@@ -131,11 +117,20 @@
                             <tr>
                                 <td>{{ r.timestamp|date:"Y-m-d H:i:s" }}</td>
                                 <td>{{ r.reading_value|floatformat:3 }}</td>
+                                <td>
+                                    {% if r.direction == 'aplus' %}
+                                    A+
+                                    {% elif r.direction == 'aminus' %}
+                                    A-
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
                                 <td>{{ r.notes|default:"" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted">Нет показаний</td>
+                                <td colspan="4" class="text-center text-muted">Нет показаний</td>
                             </tr>
                             {% endfor %}
                         </tbody>

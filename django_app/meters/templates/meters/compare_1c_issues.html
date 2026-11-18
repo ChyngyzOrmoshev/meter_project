@@ -2,10 +2,15 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="page-title"><i class="fas fa-tasks"></i> Заявки на исправление (1С)</h1>
-    <div>{% if user.is_staff %}
+    <div class="d-flex gap-2">
+        <button id="verify-all-btn" class="btn btn-pastel-success">
+            <i class="fas fa-check-double"></i> Проверить по 1С
+        </button>
+        {% if user.is_staff %}
         <button id="check-offline-btn" class="btn btn-pastel-primary">
             <i class="fas fa-sync-alt"></i> Автозакрытие заявок
-        </button>{% endif %}
+        </button>
+        {% endif %}
     </div>
 </div>
 <!-- Фильтры -->
@@ -118,6 +123,13 @@
                 </div>
 
                 <p><strong>Район:</strong> {{ issue.region.name|default:"—" }}</p> <!-- ДОБАВЛЕНО -->
+                {% if issue.subscriber_1c %}
+                <p><strong>Абонент:</strong> <span class="text-truncate d-inline-block" style="max-width: 250px;"
+                        title="{{ issue.subscriber_1c }}">{{ issue.subscriber_1c }}</span></p>
+                {% endif %}
+                {% if issue.account_1c %}
+                <p><strong>Лицевой счет:</strong> {{ issue.account_1c }}</p>
+                {% endif %}
                 <p><strong>Заводской номер (1С):</strong> {{ issue.serial_1c }}</p>
                 <p><strong>Тип ПУ (1С):</strong> {{ issue.model_1c|default:"—" }}</p>
 
@@ -225,6 +237,22 @@
     (всего заявок: {{ page_obj.paginator.count }})
 </div>
 {% endif %}
+<!-- ОТЧЕТ О ПОСЛЕДНЕЙ ПРОВЕРКЕ -->
+{% if verify_report %}
+<div class="alert alert-success shadow-sm border-0 mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="alert-heading mb-1"><i class="fas fa-check-circle"></i> Последняя автопроверка по 1С</h5>
+            <small class="text-muted">Дата: <strong>{{ verify_report.timestamp }}</strong> (Данные из папки: {{
+                verify_report.folder_date }})</small>
+        </div>
+        <div class="text-end">
+            <span class="text-muted small">Всего проверено заявок: {{ verify_report.total }}</span><br>
+            <span class="fs-4 fw-bold text-success">Подтверждено: {{ verify_report.verified }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <p class="text-muted small mt-3">Всего заявок: {{ total_count }}</p>
 <script>
@@ -302,6 +330,83 @@
                     });
             });
         });
+    });
+</script>
+<script>
+    document.getElementById('verify-all-btn').addEventListener('click', function () {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверяем ...';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('{% url "verify_1c_issues_ajax" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                setTimeout(() => location.reload(), 3000); // Перезагружаем через 3 сек, чтобы увидеть результат
+            })
+            .catch(err => {
+                alert('Ошибка: ' + err);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-double"></i> Проверить по 1С';
+            });
+    });
+</script>
+
+
+<script>
+    document.getElementById('verify-all-btn').addEventListener('click', function () {
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверяем...';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('meta[name="csrf-token"]')?.content;
+
+        fetch('{% url "start_verify_1c_issues" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Ошибка сети");
+                pollStatus();
+            })
+            .catch(err => {
+                alert("Ошибка при запуске: " + err);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
+
+        function pollStatus() {
+            fetch('{% url "check_verify_1c_status" %}?t=' + Date.now())
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Вместо модального окна просто перезагружаем страницу
+                        // Django сам прочитает JSON и покажет зеленую плашку
+                        btn.innerHTML = '<i class="fas fa-check"></i> Готово! Обновляем...';
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
+                    else if (data.status === 'error') {
+                        alert('Ошибка робота: ' + data.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                    else {
+                        setTimeout(pollStatus, 2000);
+                    }
+                })
+                .catch(err => {
+                    setTimeout(pollStatus, 3000);
+                });
+        }
     });
 </script>
 {% endblock %}

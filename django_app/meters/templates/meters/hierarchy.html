@@ -135,5 +135,60 @@
             }
         });
     });
+    // Добавление дочернего элемента (из панели деталей)
+    document.addEventListener('click', function (e) {
+        const addBtn = e.target.closest('.add-child-from-details');
+        if (addBtn) {
+            e.preventDefault();
+            const parentId = addBtn.dataset.id;
+            const parentType = addBtn.dataset.type;
+
+            let childType = '';
+            if (parentType === 'region') childType = 'substation';
+            else if (parentType === 'substation') childType = 'feeder';
+            else if (parentType === 'feeder') childType = 'tp';
+            else {
+                alert('Для этого объекта нельзя добавить дочерний элемент.');
+                return;
+            }
+
+            const name = prompt(`Введите название для нового объекта:`);
+            if (!name) return;
+
+            let feederType = '';
+            if (childType === 'feeder') {
+                feederType = prompt('Введите тип фидера:\n"input" - Вводной\n"output" - Отходящий', 'output');
+                if (feederType !== 'input' && feederType !== 'output') {
+                    alert('Неверный тип фидера. Отмена.');
+                    return;
+                }
+            }
+
+            // Отправляем запрос на сервер
+            fetch('/hierarchy/add/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'level': childType,
+                    'name': name,
+                    'parent_id': parentId,
+                    'feeder_type': feederType
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Объект успешно добавлен!');
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                })
+                .catch(error => alert('Ошибка сети: ' + error));
+        }
+    });
 </script>
 {% endblock %}

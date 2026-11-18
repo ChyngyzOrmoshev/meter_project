@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, date
 import csv
 import io
 import re
+import json
 import openpyxl
 from io import BytesIO
 import pandas as pd
@@ -26,9 +27,30 @@ from .models import Device, Reading, SyncStatus, MeterModel, Region, Substation,
 from django.core.paginator import Paginator
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 logger = logging.getLogger(__name__)
+
+# ==========================================
+# ГЛОБАЛЬНЫЙ МАППИНГ РАЙОНОВ
+# ==========================================
+REGION_MAPPING = {
+    'Манас РЭС': '01 Манас',
+    'Кок-Арт': '02 Кок-Арт',
+    'Сузак ЭС': '03 Сузак',
+    'Базар-Коргон РЭС': '04 Базар-Коргон',
+    'Ноокен': '05 Ноокен',
+    'Майлуу-Суу': '06 Майлуу-Суу',
+    'Таш-Комур': '07 Таш-Комур',
+    'Аксы РЭС': '08 Аксы',
+    'Ала-Бука РЭС': '09 Ала-Бука',
+    'Чаткал': '10 Чаткал',
+    'Кара-Кол РЭС': '11 Кара-Куль',
+    'Токтогул': '12 Токтогул',
+    'ЖПЭС': 'ЖПЭС'
+}
+REVERSE_REGION_MAPPING = {v: k for k, v in REGION_MAPPING.items()}
 
 # ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 def is_allowed_user(user):
@@ -50,6 +72,7 @@ def get_producer_display(code, type_id):
         "UK": "Hexing KUK",
         "ST": "Star",
         "HX": "Hexing",
+        "IM": "InheMeter",
         "8": "Others",
     }
     return mapping.get(code, code or "Неизвестно")
@@ -155,20 +178,26 @@ def dashboard(request):
 
         total_devices = Device.objects.filter(status='active').count()
 
-        active_device_ids = Reading.objects.filter(
+        active_device_ids = list(Reading.objects.filter(
             device__status='active',
             timestamp__gte=start_dt,
             timestamp__lte=end_dt
-        ).values_list('device_id', flat=True).distinct()
-        active_today = active_device_ids.count()
+        ).values_list('device_id', flat=True).distinct())
+        active_today = len(active_device_ids)
         active_percent = round((active_today / total_devices * 100), 1) if total_devices else 0
 
         auto_notes = [
-            "Авто-сбор: База cEnergo",
-            "Авто-сбор: Sanxing_old",
-            "Авто-сбор: SunRise",
-            "Hexing KUK",
-            "RiseSun"
+            "Авто-сбор: База cEnergo",       # sync_mssql
+            "Авто-сбор: Sanxing_old",        # sync_sanxing
+            "Авто-сбор: SunRise",            # sync_sanrise
+            "Авто-сбор: RiseSun API",        # sync_risesun_api
+            "Авто-сбор: Inhemeter",          # sync_inhemeter
+            "Hexing KUK",                    # sync_hexing
+            "Hexing Raw sync",               # sync_hxn
+            "RiseSun",                       # sync_risesun (старый)
+            "Star sync",                     # sync_star (API)
+            "Website sync",                  # sync_website (Sanxing 100A)
+            "Website sync Period1 S34U18",   # sync_website_period1 (Sanxing 5A)
         ]
         manual_today = Reading.objects.filter(
             device__status='active',
@@ -176,24 +205,21 @@ def dashboard(request):
             timestamp__lte=end_dt
         ).exclude(notes__in=auto_notes).count()
 
-        devices = Device.objects.filter(status='active').select_related('model').only(
-            'id', 'model__device_type_str', 'model__device_type_id'
+        grouped = Device.objects.filter(status='active').values(
+            'model__device_type_str', 'model__device_type_id'
+        ).annotate(
+            total=Count('id'),
+            active=Count('id', filter=Q(id__in=active_device_ids)),
         )
-        active_set = set(active_device_ids)
+
         producer_stats_dict = {}
-        for device in devices:
-            model = device.model
-            if model:
-                code = model.device_type_str or ""
-                type_id = model.device_type_id or ""
-                display_name = get_producer_display(code, type_id)
-            else:
-                display_name = "Неизвестно"
-            if display_name not in producer_stats_dict:
-                producer_stats_dict[display_name] = {'total': 0, 'active': 0}
-            producer_stats_dict[display_name]['total'] += 1
-            if device.id in active_set:
-                producer_stats_dict[display_name]['active'] += 1
+        for row in grouped:
+            code = row['model__device_type_str'] or ""
+            type_id = row['model__device_type_id'] or ""
+            display_name = get_producer_display(code, type_id)
+            entry = producer_stats_dict.setdefault(display_name, {'total': 0, 'active': 0})
+            entry['total'] += row['total']
+            entry['active'] += row['active']
 
         producer_stats = []
         for name, stats in producer_stats_dict.items():
@@ -585,7 +611,7 @@ def add_device(request):
                         askue_id=askue_id,
                         api_id=api_id,
                     )
-                    messages.success(request, f'Прибор {serial} добавлен.')
+                    messages.success(request, f'✅ Отчет: Прибор {serial} успешно добавлен в реестр.')
                     return redirect('devices')
                 except Exception as e:
                     messages.error(request, f'Ошибка: {e}')
@@ -627,9 +653,18 @@ def add_device(request):
                         added += 1
                 except Exception as e:
                     skipped.append(f"Ошибка: {e}")
-                messages.success(request, f'Добавлено: {added}. Пропущено: {len(skipped)}.')
+                                # Формируем красивый отчет
+                if added > 0:
+                    messages.success(request, f'✅ Отчет по импорту: Успешно добавлено {added} приборов.')
                 if skipped:
-                    messages.warning(request, f'Пропущенные: {", ".join(skipped[:5])}')
+                    # Если пропущенных много, показываем первых 5
+                    skipped_str = ", ".join(skipped[:5])
+                    if len(skipped) > 5:
+                        skipped_str += f" и еще {len(skipped) - 5}..."
+                    messages.warning(request, f'⚠️ Пропущено {len(skipped)} дубликатов: {skipped_str}')
+                if not added and not skipped:
+                    messages.info(request, 'Ни один прибор не был добавлен. Проверьте данные.')
+                
                 return redirect('devices')
     context = {
         'models': MeterModel.objects.all().order_by('model_name'),
@@ -701,7 +736,7 @@ def download_template(request):
 
 # ===== ПОКАЗАНИЯ =====
 def readings(request):
-    serial = request.GET.get('serial', '')
+    serial = request.GET.get('serial', '').strip() # Добавляем .strip() на случай лишних пробелов
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
     
@@ -717,7 +752,23 @@ def readings(request):
     end_today = today.strftime('%Y-%m-%d')
 
     if serial:
+        # 1. Точное совпадение
         device = Device.objects.filter(serial_number=serial).first()
+        
+        # 2. Если не нашли — ищем по окончанию (спасет, если ввели без ведущего нуля)
+        if not device:
+            candidates = Device.objects.filter(serial_number__endswith=serial).order_by('-id')
+            if candidates.exists():
+                device = candidates.first()
+                
+        # 3. Если всё еще нет — пробуем обрезать ведущие нули с введенного номера
+        if not device:
+            clean_serial = serial.lstrip('0')
+            if clean_serial and clean_serial != serial:
+                candidates = Device.objects.filter(serial_number__endswith=clean_serial).order_by('-id')
+                if candidates.exists():
+                    device = candidates.first()
+
         if device:
             qs = Reading.objects.filter(device=device)
             if start_date_str:
@@ -744,6 +795,27 @@ def readings(request):
                 days_since_last = (timezone.now() - last_reading.timestamp).days
                 is_online = days_since_last < 7
 
+            # ---- ВЫЧИСЛЕНИЕ ОТОБРАЖАЕМЫХ ЗНАЧЕНИЙ ИЕРАРХИИ ----
+            display_region = device.region.name if device.region else "—"
+            
+            if device.substation:
+                display_substation = device.substation.name
+            else:
+                conn_sub = MeterConnection.objects.filter(device=device, connected_object_type='substation').first()
+                display_substation = conn_sub.connected_object.name if conn_sub else "—"
+            
+            if device.feeder:
+                display_feeder = device.feeder.name
+            else:
+                conn_feeder = MeterConnection.objects.filter(device=device, connected_object_type='feeder').first()
+                display_feeder = conn_feeder.connected_object.name if conn_feeder else "—"
+            
+            if device.tp:
+                display_tp = device.tp.name
+            else:
+                conn_tp = MeterConnection.objects.filter(device=device, connected_object_type='tp').first()
+                display_tp = conn_tp.connected_object.name if conn_tp else "—"
+
     context = {
         'device': device,
         'readings': readings_list,
@@ -757,6 +829,10 @@ def readings(request):
         'start_7d': start_7d,
         'start_30d': start_30d,
         'end_today': end_today,
+        'display_region': display_region if device else "—",
+        'display_substation': display_substation if device else "—",
+        'display_feeder': display_feeder if device else "—",
+        'display_tp': display_tp if device else "—",
     }
     return render(request, 'meters/readings.html', context)
 
@@ -1078,34 +1154,31 @@ def producer_stats_table(request):
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(today, datetime.max.time())
 
-        devices = Device.objects.filter(status='active').select_related('model')
+        devices = Device.objects.filter(status='active')
         if region_id:
             devices = devices.filter(region_id=region_id)
-        # devices = Device.objects.filter(status='active').select_related('model').only(
-        #     'id', 'model__device_type_str', 'model__device_type_id'
-        # )
-        active_device_ids = set(
-            Reading.objects.filter(
-                device__status='active',
-                timestamp__gte=start_dt,
-                timestamp__lte=end_dt
-            ).values_list('device_id', flat=True).distinct()
+
+        active_device_ids = list(Reading.objects.filter(
+            device__status='active',
+            timestamp__gte=start_dt,
+            timestamp__lte=end_dt
+        ).values_list('device_id', flat=True).distinct())
+
+        grouped = devices.values(
+            'model__device_type_str', 'model__device_type_id'
+        ).annotate(
+            total=Count('id'),
+            active=Count('id', filter=Q(id__in=active_device_ids)),
         )
 
         producer_stats_dict = {}
-        for device in devices:
-            model = device.model
-            if model:
-                code = model.device_type_str or ""
-                type_id = model.device_type_id or ""
-                display_name = get_producer_display(code, type_id)
-            else:
-                display_name = "Неизвестно"
-            if display_name not in producer_stats_dict:
-                producer_stats_dict[display_name] = {'total': 0, 'active': 0}
-            producer_stats_dict[display_name]['total'] += 1
-            if device.id in active_device_ids:
-                producer_stats_dict[display_name]['active'] += 1
+        for row in grouped:
+            code = row['model__device_type_str'] or ""
+            type_id = row['model__device_type_id'] or ""
+            display_name = get_producer_display(code, type_id)
+            entry = producer_stats_dict.setdefault(display_name, {'total': 0, 'active': 0})
+            entry['total'] += row['total']
+            entry['active'] += row['active']
 
         producer_stats = []
         for name, stats in producer_stats_dict.items():
@@ -1153,7 +1226,8 @@ def missing_readings_report(request):
         reading_exists = Exists(
             Reading.objects.filter(
                 device=OuterRef('pk'),
-                timestamp__date=target_date
+                timestamp__gte=target_date,
+                timestamp__lt=target_date + timedelta(days=1)
             )
         )
         devices_qs = devices_qs.annotate(
@@ -1209,16 +1283,14 @@ def missing_readings_report(request):
             )
         )
 
-        # Подсчёт количества показаний за период
-        readings_subquery = Reading.objects.filter(
-            device_id=OuterRef('id'),
-            timestamp__date__gte=start_date,
-            timestamp__date__lte=today
-        ).values('device_id').annotate(cnt=Count('id')).values('cnt')
+        # Подсчёт количества показаний за период (материализуем id отдельным быстрым запросом,
+        # чтобы MySQL не выбирал плохой план для вложенного подзапроса)
+        qualifying_device_ids = list(Reading.objects.filter(
+            timestamp__gte=start_date,
+            timestamp__lt=today + timedelta(days=1)
+        ).values_list('device_id', flat=True).distinct())
 
-        devices_qs = devices_qs.annotate(
-            readings_count=Coalesce(readings_subquery, Value(0))
-        ).filter(readings_count=0)
+        devices_qs = devices_qs.exclude(id__in=qualifying_device_ids)
 
     # --- Применяем остальные фильтры (статус, Тип ПУ, производитель, регион, группа) ---
     if status_filter:
@@ -1384,6 +1456,256 @@ def missing_readings_report(request):
     context['current_params'] = current_params
 
     return render(request, 'meters/missing_readings.html', context)
+
+
+# @login_required
+# @user_passes_test(is_allowed_user)
+def device_types_report(request):
+    period = request.GET.get('period', '7d')
+    specific_date = request.GET.get('date', '')
+    producer_filter = request.GET.get('producer', '')
+    model_filter = request.GET.get('model', '')
+    status_filter = request.GET.get('status', '')
+    region_filter = request.GET.get('region', '')
+    category_filter = request.GET.get('category', '')
+    online_filter = request.GET.get('online', '')
+    export = request.GET.get('export', '')
+
+    today = timezone.now().date()
+
+    # --- Определяем окно «онлайн» ---
+    if specific_date:
+        try:
+            target_date = datetime.strptime(specific_date, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = today
+        start_dt = datetime.combine(target_date, datetime.min.time())
+        end_dt = start_dt + timedelta(days=1)
+    else:
+        if period == 'today':
+            start_date = today
+        elif period == '3d':
+            start_date = today - timedelta(days=3)
+        elif period == '7d':
+            start_date = today - timedelta(days=7)
+        elif period == '30d':
+            start_date = today - timedelta(days=30)
+        else:
+            start_date = today - timedelta(days=7)
+        start_dt = datetime.combine(start_date, datetime.min.time())
+        end_dt = datetime.combine(today + timedelta(days=1), datetime.min.time())
+
+    # --- Базовый queryset с фильтрами ---
+    devices_qs = Device.objects.select_related('model')
+    if status_filter:
+        devices_qs = devices_qs.filter(status=status_filter)
+    if region_filter:
+        devices_qs = devices_qs.filter(region_id=region_filter)
+    if category_filter == '__none__':
+        devices_qs = devices_qs.filter(category__isnull=True)
+    elif category_filter:
+        devices_qs = devices_qs.filter(category=category_filter)
+    if producer_filter:
+        devices_qs = devices_qs.filter(model__device_type_str=producer_filter)
+    if model_filter:
+        devices_qs = devices_qs.filter(model_id=model_filter)
+
+    # --- Множество id «онлайн» (есть показание за окно) ---
+    online_ids = set(Reading.objects.filter(
+        timestamp__gte=start_dt,
+        timestamp__lt=end_dt
+    ).values_list('device_id', flat=True).distinct())
+
+    # --- Группировка по модели ---
+    agg = {}
+    for dev in devices_qs.values(
+        'id', 'model_id',
+        'model__model_name', 'model__manufacturer',
+        'model__device_type_str', 'model__device_type_id',
+        'model__nominal_current', 'model__phases',
+    ):
+        mid = dev['model_id']
+        if mid not in agg:
+            agg[mid] = {
+                'model_name': dev['model__model_name'] or 'Без модели',
+                'manufacturer': dev['model__manufacturer'] or '',
+                'device_type_str': dev['model__device_type_str'] or '',
+                'device_type_id': dev['model__device_type_id'] or '',
+                'nominal_current': dev['model__nominal_current'] or '',
+                'phases': dev['model__phases'],
+                'total': 0,
+                'online': 0,
+            }
+        agg[mid]['total'] += 1
+        if dev['id'] in online_ids:
+            agg[mid]['online'] += 1
+
+    models_list = []
+    for mid, d in agg.items():
+        offline = d['total'] - d['online']
+        percent = round((d['online'] / d['total']) * 100, 1) if d['total'] else 0
+        models_list.append({
+            'id': mid,
+            'producer_display': get_producer_display(d['device_type_str'], d['device_type_id']),
+            'model_name': d['model_name'],
+            'manufacturer': d['manufacturer'],
+            'nominal_current': d['nominal_current'],
+            'phases': d['phases'],
+            'total': d['total'],
+            'online': d['online'],
+            'offline': offline,
+            'percent': percent,
+        })
+
+    # Фильтр «Только онлайн / оффлайн» на уровне модели
+    if online_filter == 'yes':
+        models_list = [m for m in models_list if m['online'] > 0]
+    elif online_filter == 'no':
+        models_list = [m for m in models_list if m['offline'] > 0]
+
+    models_list.sort(key=lambda x: (x['producer_display'] or '', x['model_name'] or ''))
+
+    # # --- Сводка по производителям ---
+    # prod_agg = {}
+    # for m in models_list:
+    #     p = m['producer_display']
+    #     if p not in prod_agg:
+    #         prod_agg[p] = {'total': 0, 'online': 0}
+    #     prod_agg[p]['total'] += m['total']
+    #     prod_agg[p]['online'] += m['online']
+
+    # producers_list = []
+    # for p, d in prod_agg.items():
+    #     offline = d['total'] - d['online']
+    #     percent = round((d['online'] / d['total']) * 100, 1) if d['total'] else 0
+    #     producers_list.append({
+    #         'producer': p, 'total': d['total'], 'online': d['online'],
+    #         'offline': offline, 'percent': percent,
+    #     })
+    # producers_list.sort(key=lambda x: x['producer'])
+
+    total_devices = sum(m['total'] for m in models_list)
+    total_online = sum(m['online'] for m in models_list)
+    total_offline = total_devices - total_online
+    total_percent = round((total_online / total_devices) * 100, 1) if total_devices else 0
+
+    # --- Экспорт CSV ---
+    if export == 'csv':
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        response['Content-Disposition'] = f'attachment; filename="device_types_{today}.csv"'
+        writer = csv.writer(response, delimiter=';')
+        writer.writerow(['Производитель', 'Тип ПУ', 'Ток', 'Фазность',
+                         'Всего', 'Онлайн', 'Оффлайн', '% чтения'])
+        for m in models_list:
+            writer.writerow([
+                m['producer_display'], m['model_name'],
+                m['nominal_current'], m['phases'] or '',
+                m['total'], m['online'], m['offline'], f"{m['percent']}%",
+            ])
+        writer.writerow([])
+        writer.writerow(['ИТОГО', '', '', '', total_devices, total_online, total_offline, f"{total_percent}%"])
+        return response
+
+    # --- Экспорт XLSX ---
+    if export == 'xlsx':
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Типы ПУ"
+        headers = ['Производитель', 'Тип ПУ', 'Ток', 'Фазность',
+                   'Всего', 'Онлайн', 'Оффлайн', '% чтения']
+        for col, h in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=h)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center')
+        for ridx, m in enumerate(models_list, 2):
+            ws.cell(row=ridx, column=1, value=m['producer_display'])
+            ws.cell(row=ridx, column=2, value=m['model_name'])
+            ws.cell(row=ridx, column=3, value=m['nominal_current'])
+            ws.cell(row=ridx, column=4, value=m['phases'])
+            ws.cell(row=ridx, column=5, value=m['total'])
+            ws.cell(row=ridx, column=6, value=m['online'])
+            ws.cell(row=ridx, column=7, value=m['offline'])
+            ws.cell(row=ridx, column=8, value=f"{m['percent']}%")
+        last = len(models_list) + 2
+        ws.cell(row=last, column=1, value='ИТОГО').font = Font(bold=True)
+        ws.cell(row=last, column=5, value=total_devices)
+        ws.cell(row=last, column=6, value=total_online)
+        ws.cell(row=last, column=7, value=total_offline)
+        ws.cell(row=last, column=8, value=f"{total_percent}%")
+        for col in ws.columns:
+            w = max((len(str(c.value)) for c in col if c.value), default=10)
+            ws.column_dimensions[col[0].column_letter].width = min(w + 2, 40)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="device_types_{today}.xlsx"'
+        wb.save(response)
+        return response
+
+    # --- Списки для фильтров ---
+    codes = MeterModel.objects.values_list('device_type_str', flat=True).distinct().order_by('device_type_str')
+    producers_with_selected = []
+    for code in codes:
+        display = get_producer_display(code, '')
+        if display == 'Неизвестно' and code:
+            display = code
+        producers_with_selected.append((display, code, code == producer_filter))
+
+    models_with_selected = [
+        (m, str(m.id) == model_filter)
+        for m in MeterModel.objects.all().order_by('model_name')
+    ]
+
+    statuses_with_selected = [
+        (v, l, v == status_filter)
+        for v, l in [('active', 'Активен'), ('repair', 'Ремонт'),
+                     ('inactive', 'Отключен'), ('temporary_off', 'Временно отключен')]
+    ]
+
+    regions_with_selected = [
+        (r, str(r.id) == region_filter)
+        for r in Region.objects.all().order_by('name')
+    ]
+
+    categories_with_selected = [(c[0], c[1], c[0] == category_filter) for c in Device.CATEGORY_CHOICES]
+    categories_with_selected.insert(0, ('', 'Все', category_filter == ''))
+    categories_with_selected.append(('__none__', 'Не указано', category_filter == '__none__'))
+
+    online_choices = [
+        ('', 'Все', online_filter == ''),
+        ('yes', 'Только онлайн', online_filter == 'yes'),
+        ('no', 'Только оффлайн', online_filter == 'no'),
+    ]
+
+    periods = [
+        ('today', 'Сегодня', period == 'today' and not specific_date),
+        ('3d', '3 дня', period == '3d' and not specific_date),
+        ('7d', '7 дней', period == '7d' and not specific_date),
+        ('30d', '30 дней', period == '30d' and not specific_date),
+    ]
+
+    context = {
+        'period': period,
+        'specific_date': specific_date,
+        'periods': periods,
+        # 'producers_list': producers_list,
+        'models_list': models_list,
+        'total_devices': total_devices,
+        'total_online': total_online,
+        'total_offline': total_offline,
+        'total_percent': total_percent,
+        'producer_filter': producer_filter,
+        'model_filter': model_filter,
+        'status_filter': status_filter,
+        'region_filter': region_filter,
+        'category_filter': category_filter,
+        'online_filter': online_filter,
+        'producers_with_selected': producers_with_selected,
+        'models_with_selected': models_with_selected,
+        'statuses_with_selected': statuses_with_selected,
+        'regions_with_selected': regions_with_selected,
+        'categories_with_selected': categories_with_selected,
+        'online_choices': online_choices,
+    }
+    return render(request, 'meters/device_types_report.html', context)
 
 # исправление статуса active, inactive
 @login_required
@@ -1771,10 +2093,9 @@ def restart_robot(request, robot_name):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
-    # Маппинг: имя робота -> команда Django (контейнер больше не нужен)
     robot_config = {
-        'RiseSun': 'sync_risesun',
-        'SunRise': 'sync_sunrise',
+        'RiseSun': 'sync_risesun_api',
+        'SunRise': 'sync_sanrise',
         'cEnergo': 'sync_mssql',
         'Hexing_KUK': 'sync_hexing',
         'Hexing_POP': 'sync_hxn',
@@ -1782,6 +2103,8 @@ def restart_robot(request, robot_name):
         'Sanxing_new_100A': 'sync_website',
         'Sanxing_new_5A': 'sync_website_period1',
         'Star': 'sync_star',
+        'Inhemeter': 'sync_inhemeter',
+        'RelayWorker': 'process_relay_tasks',
     }
 
     command = robot_config.get(robot_name)
@@ -1790,14 +2113,14 @@ def restart_robot(request, robot_name):
 
     def run_command():
         try:
-            # Запускаем команду напрямую в текущем контейнере
             subprocess.Popen(
-                ['python', 'manage.py', command, '--verbose'],
+                ['python', 'manage.py', command, '--once', '--verbose'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                cwd='/app'  # рабочая директория проекта
+                cwd='/app',
+                start_new_session=True,   # ← отвязываем от Django, чтобы не было зомби
             )
-            logger.info(f"Manual restart of {robot_name} initiated (direct call)")
+            logger.info(f"Manual restart of {robot_name} initiated")
         except Exception as e:
             logger.error(f"Manual restart of {robot_name} failed: {e}")
 
@@ -1846,7 +2169,8 @@ def readings_with_report(request):
         # Аннотируем значение показания на эту дату (берём первое за день, можно последнее)
         reading_subquery = Reading.objects.filter(
             device=OuterRef('pk'),
-            timestamp__date=target_date
+            timestamp__gte=target_date,
+            timestamp__lt=target_date + timedelta(days=1)
         ).order_by('-timestamp').values('reading_value')[:1]
         devices_qs = devices_qs.annotate(
             reading_on_date=Subquery(reading_subquery)
@@ -1868,7 +2192,8 @@ def readings_with_report(request):
         # Последнее показание – тоже на эту дату (или можно оставить last_reading_date)
         last_reading_subquery = Reading.objects.filter(
             device=OuterRef('pk'),
-            timestamp__date=target_date
+            timestamp__gte=target_date,
+            timestamp__lt=target_date + timedelta(days=1)
         ).order_by('-timestamp').values('timestamp')[:1]
         devices_qs = devices_qs.annotate(
             last_reading_date=Subquery(last_reading_subquery)
@@ -1890,15 +2215,13 @@ def readings_with_report(request):
                 )
             )
         )
-        # Подсчёт количества показаний за период
-        readings_subquery = Reading.objects.filter(
-            device_id=OuterRef('id'),
-            timestamp__date__gte=start_date,
-            timestamp__date__lte=today
-        ).values('device_id').annotate(cnt=Count('id')).values('cnt')
-        devices_qs = devices_qs.annotate(
-            readings_count=Coalesce(readings_subquery, Value(0))
-        ).filter(readings_count__gt=0)
+        # Подсчёт количества показаний за период (материализуем id отдельным быстрым запросом,
+        # чтобы MySQL не выбирал плохой план для вложенного подзапроса)
+        qualifying_device_ids = list(Reading.objects.filter(
+            timestamp__gte=start_date,
+            timestamp__lt=today + timedelta(days=1)
+        ).values_list('device_id', flat=True).distinct())
+        devices_qs = devices_qs.filter(id__in=qualifying_device_ids)
         # Поле значения на дату не нужно
         show_reading_value = False
 
@@ -2008,7 +2331,11 @@ def readings_with_report(request):
     total_pages = (total + per_page - 1) // per_page if total > 0 else 1
     if page > total_pages:
         page = total_pages
-    devices_list = devices_qs.order_by('serial_number')[(page-1)*per_page:page*per_page]
+    page_ids = list(
+        devices_qs.order_by('serial_number').values_list('id', flat=True)[(page-1)*per_page:page*per_page]
+    )
+    order_map = {pk: i for i, pk in enumerate(page_ids)}
+    devices_list = sorted(devices_qs.filter(pk__in=page_ids), key=lambda d: order_map.get(d.id, 0))
     page_range = range(1, total_pages + 1)
 
     for device in devices_list:
@@ -2359,31 +2686,35 @@ def region_stats_table(request):
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(today, datetime.max.time())
 
-        # Получаем все активные устройства с районом
-        devices = Device.objects.filter(status='active').select_related('region')
+        # Получаем все активные устройства
+        devices = Device.objects.filter(status='active')
 
-        # Аннотируем: есть ли показание за период
-        from django.db.models import Exists, OuterRef, Count, Case, When, IntegerField, Value, Q
-        readings_subquery = Reading.objects.filter(
-            device=OuterRef('pk'),
+        # Всего устройств по районам
+        totals_qs = devices.values('region__id', 'region__name').annotate(
+            total=Count('id')
+        ).order_by('region__name')
+
+        # Устройства с показанием за период — быстрый запрос БЕЗ JOIN к devices,
+        # используя только индекс по timestamp (JOIN с devices заставлял MySQL
+        # перебирать по циклу каждое активное устройство отдельно, что было медленно)
+        device_ids_with_readings = set(Reading.objects.filter(
             timestamp__gte=start_dt,
             timestamp__lte=end_dt
-        ).values('device_id').annotate(cnt=Count('id')).values('cnt')
-        devices = devices.annotate(
-            has_reading=Exists(readings_subquery)
-        )
+        ).values_list('device_id', flat=True).distinct())
 
-        # Группируем по районам
-        region_stats = devices.values('region__id', 'region__name').annotate(
-            total=Count('id'),
-            active=Count(Case(When(has_reading=True, then=1), output_field=IntegerField()))
-        ).order_by('region__name')
+        # Активных устройств по районам считаем в Python (быстрая проверка через set),
+        # чтобы не передавать в SQL гигантский список IN(...) при широких диапазонах дат,
+        # где почти все устройства попадают в выборку
+        active_by_region = {}
+        for device_id, region_id in devices.values_list('id', 'region__id'):
+            if device_id in device_ids_with_readings:
+                active_by_region[region_id] = active_by_region.get(region_id, 0) + 1
 
         # Преобразуем для шаблона
         stats = []
-        for stat in region_stats:
+        for stat in totals_qs:
             total = stat['total']
-            active = stat['active']
+            active = active_by_region.get(stat['region__id'], 0)
             offline = total - active
             percent = round((active / total * 100), 1) if total else 0
             stats.append({
@@ -2444,8 +2775,10 @@ def compare_1c(request):
         
         messages.info(request, f'Загрузка для района: "{default_region.name}"')
 
+        # --- ЧТЕНИЕ ФАЙЛА (через calamine) ---
         try:
-            df_raw = pd.read_excel(file, engine='openpyxl', header=None, dtype=str)
+            file.seek(0)
+            df_raw = pd.read_excel(file, engine='calamine', header=None, dtype=str)
         except Exception as e:
             messages.error(request, f'Ошибка чтения файла: {e}')
             return redirect('compare_1c')
@@ -2455,17 +2788,33 @@ def compare_1c(request):
             return redirect('compare_1c')
 
         header_row = find_header_row(df_raw)
-        df = pd.read_excel(file, engine='openpyxl', header=header_row, dtype=str)
+        
+        try:
+            file.seek(0) # Обязательно сбрасываем указатель перед вторым чтением!
+            df = pd.read_excel(file, engine='calamine', header=header_row, dtype=str)
+        except Exception as e:
+            messages.error(request, f'Ошибка чтения данных файла: {e}')
+            return redirect('compare_1c')
 
         # Определяем колонки
         serial_col = None
         model_col = None
+        account_col = None
+        subscriber_col = None
         for col in df.columns:
             col_lower = str(col).lower()
+            # Ищем заводской номер
             if 'заводской' in col_lower or 'зав' in col_lower or '№' in col_lower:
                 serial_col = col
-            if 'счетчик' in col_lower or 'Тип ПУ' in col_lower or 'тип' in col_lower:
+            # Ищем тип ПУ
+            if 'счетчик' in col_lower or 'тип пу' in col_lower or 'тип' in col_lower:
                 model_col = col
+            # Ищем лицевой счет
+            if 'лицевой' in col_lower or 'лиц' in col_lower:
+                account_col = col
+            # Ищем абонента
+            if 'наименование' in col_lower or 'абонент' in col_lower:
+                subscriber_col = col
 
         if serial_col is None:
             messages.error(request, 'Не найдена колонка с заводскими номерами.')
@@ -2474,7 +2823,6 @@ def compare_1c(request):
         # --- Индексы устройств ---
         devices = Device.objects.filter(status__in=['active', 'temporary_off']).select_related('model', 'region')
         devices_by_norm = {}
-        # devices_by_suffix = {}
 
         def norm_serial(s):
             if not s:
@@ -2485,10 +2833,6 @@ def compare_1c(request):
         for d in devices:
             norm = norm_serial(d.serial_number)
             devices_by_norm[norm] = d
-            # for i in range(8, min(len(norm), 16)):
-            #     suffix = norm[-i:]
-            #     if suffix not in devices_by_suffix:
-            #         devices_by_suffix[suffix] = d
 
         today = timezone.now().date()
         created_count = 0
@@ -2507,16 +2851,13 @@ def compare_1c(request):
             serial_1c = serial_1c_raw
 
             model_1c = str(row[model_col]).strip() if model_col and not pd.isna(row[model_col]) else ''
+            account_1c = str(row[account_col]).strip() if account_col and not pd.isna(row[account_col]) else ''
+            subscriber_1c = str(row[subscriber_col]).strip() if subscriber_col and not pd.isna(row[subscriber_col]) else ''
 
             # Поиск устройства
             device = None
             norm = norm_serial(serial_1c)
             device = devices_by_norm.get(norm)
-            # if not device and len(norm) >= 8:
-            #     suffix = norm[-8:]
-            #     device = devices_by_suffix.get(suffix)
-            # if not device:
-            #     device = devices_by_suffix.get(norm)
 
             # --- Определяем тип заявки ---
             found = device is not None
@@ -2543,9 +2884,6 @@ def compare_1c(request):
                 if device.status == 'temporary_off':
                     action_type = 'temporary_off'
                     action_text = 'Счётчик временно отключен...'
-                    # Сохраняем заявку и переходим к следующей строке
-                    # (код сохранения будет ниже, но мы устанавливаем нужные переменные)
-                    # Остальные проверки пропускаем
                 else:
                     # --- Остальная логика для активных устройств ---
                     if model_match_type == 'exact' and is_online:
@@ -2569,7 +2907,6 @@ def compare_1c(request):
                 action_text = f'Не найден в базе. Проверить фактический ПУ'
 
             # --- Сохраняем только проблемные заявки с выбранным районом ---
-            # Ищем существующую заявку по serial_1c (без учёта check_date)
             existing_issue = CompareResult.objects.filter(serial_1c=serial_1c).order_by('-check_date').first()
 
             if existing_issue:
@@ -2578,6 +2915,8 @@ def compare_1c(request):
                     CompareResult.objects.create(
                         serial_1c=serial_1c,
                         model_1c=model_1c,
+                        account_1c=account_1c,
+                        subscriber_1c=subscriber_1c,
                         device=device,
                         model_db=model_db,
                         model_match_type=model_match_type,
@@ -2594,6 +2933,8 @@ def compare_1c(request):
                 else:
                     # Заявка активна – обновляем её
                     existing_issue.model_1c = model_1c
+                    existing_issue.account_1c = account_1c
+                    existing_issue.subscriber_1c = subscriber_1c
                     existing_issue.device = device
                     existing_issue.model_db = model_db
                     existing_issue.model_match_type = model_match_type
@@ -2603,7 +2944,7 @@ def compare_1c(request):
                     existing_issue.region = default_region
                     existing_issue.action_type = action_type
                     existing_issue.action_text = action_text
-                    existing_issue.check_date = today  # обновляем дату проверки
+                    existing_issue.check_date = today
                     existing_issue.save()
                     updated_count += 1
             else:
@@ -2611,6 +2952,8 @@ def compare_1c(request):
                 CompareResult.objects.create(
                     serial_1c=serial_1c,
                     model_1c=model_1c,
+                    account_1c=account_1c,
+                    subscriber_1c=subscriber_1c,
                     device=device,
                     model_db=model_db,
                     model_match_type=model_match_type,
@@ -2856,6 +3199,15 @@ def compare_1c_issues(request):
     region_choices = [(r.id, r.name, str(r.id) == region_filter) for r in regions]
     region_choices.insert(0, ('', 'Все', region_filter == ''))
 
+    verify_report = None
+    report_path = '/app/exports/verify_1c_result.json'
+    if os.path.exists(report_path):
+        try:
+            with open(report_path, 'r', encoding='utf-8') as f:
+                verify_report = json.load(f)
+        except Exception:
+            pass
+    
     context = {
         'page_obj': page_obj,
         'total_count': qs.count(),
@@ -2868,6 +3220,7 @@ def compare_1c_issues(request):
         'verified_choices': verified_choices,
         'selected_verified': verified_filter,
         'can_verify': can_verify,
+        'verify_report': verify_report,
     }
     return render(request, 'meters/compare_1c_issues.html', context)
 
@@ -3788,6 +4141,295 @@ def search_devices(request):
     data = [{'id': d.id, 'text': d.serial_number} for d in devices]
     return JsonResponse(data, safe=False)
 
+
+def can_manage_relay(user):
+    return user.is_staff or user.groups.filter(name__in=['operator', 'Инженер АСКУЭ']).exists()
+
+from .models import Subscriber, RelayTask
+from django.utils.dateparse import parse_datetime
+
+@login_required
+@user_passes_test(can_manage_relay)
+def relay_mass_get_subscribers(request):
+    """Поиск абонентов для массового отключения (через 1С)"""
+    region = request.GET.get('region', '')
+    min_debt = request.GET.get('min_debt', '0')
+    
+    # Проверка прав: инженер может искать только свой район
+    user_region = get_user_region(request.user)
+    if user_region and region != user_region:
+        return JsonResponse({'error': f'У вас нет прав на просмотр района {region}'}, status=403)
+
+    try:
+        from meters.onec_service import OneCService
+        service = OneCService()
+        debtors = service.get_debtors(region, float(min_debt))
+        
+        found_items = []
+        not_found_items = []
+        
+        for d in debtors:
+            serial_1c = str(d.get('device__serial_number') or d.get('serial_number')).strip()
+            norm_serial = re.sub(r'\D', '', serial_1c).lstrip('0')
+            
+            # Умный поиск в нашей базе (сначала точный, потом без ведущих нулей)
+            device = Device.objects.filter(serial_number=serial_1c).first()
+            if not device and norm_serial:
+                device = Device.objects.filter(serial_number__endswith=norm_serial).first()
+
+            if device:
+                found_items.append({
+                    'id': device.id,
+                    'serial': device.serial_number,
+                    'account': d.get('account_number'),
+                    'name': d.get('full_name'),
+                    'debt': float(d.get('debt')),
+                    'region': region
+                })
+            else:
+                # Сохраняем сирот для передачи их обратно при создании задач
+                not_found_items.append({
+                    'serial': serial_1c,
+                    'account': d.get('account_number'),
+                    'name': d.get('full_name'),
+                    'debt': float(d.get('debt'))
+                })
+        
+        return JsonResponse({
+            'found': found_items, 
+            'not_found': not_found_items, 
+            'total_found': len(found_items),
+            'total_not_found': len(not_found_items)
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+
+@login_required
+@user_passes_test(can_manage_relay)
+def relay_mass_create_tasks(request):
+    """Создание пачки задач на отключение/включение и заявок для сирот"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    device_ids = request.POST.getlist('device_ids[]')
+    action = request.POST.get('action', 'off')
+    scheduled_str = request.POST.get('scheduled_at')
+    orphan_devices_json = request.POST.get('orphan_devices', '[]')
+    region_name = request.POST.get('region_name', '')
+    
+    try:
+        scheduled_at = parse_datetime(scheduled_str) if scheduled_str else timezone.now()
+        if not scheduled_at:
+            scheduled_at = timezone.now()
+        if getattr(scheduled_at, 'tzinfo', None) is not None:
+            scheduled_at = scheduled_at.replace(tzinfo=None)
+    except Exception:
+        scheduled_at = timezone.now()
+
+    created_tasks = 0
+    # 1. Создаем обычные задачи
+    for dev_id in device_ids:
+        try:
+            device = Device.objects.get(id=dev_id)
+            
+            # Отменяем старые противоположные задачи
+            opposite_action = 'on' if action == 'off' else 'off'
+            RelayTask.objects.filter(
+                device=device, action=opposite_action, status__in=['pending', 'processing']
+            ).update(status='cancelled', error_message='Отменено из-за создания новой задачи')
+            
+            sub = getattr(device, 'subscriber', None)
+            current_debt = sub.debt if sub else 0
+            
+            RelayTask.objects.create(
+                device=device, action=action, scheduled_at=scheduled_at,
+                created_by=request.user, status='pending', debt_snapshot=current_debt
+            )
+            created_tasks += 1
+        except Device.DoesNotExist:
+            continue
+
+    # 2. Создаем заявки (CompareResult) для ненайденных
+    created_issues = 0
+    try:
+        orphans = json.loads(orphan_devices_json)
+        # Найдем объект Region для привязки
+        region_obj = Region.objects.filter(name__icontains=region_name).first()
+        
+        for o in orphans:
+            serial_1c = str(o.get('serial', '')).strip()
+            if not serial_1c:
+                continue
+                
+            # Проверяем, нет ли уже активной заявки на этот счетчик
+            existing_issue = CompareResult.objects.filter(
+                serial_1c=serial_1c, 
+                action_type='not_found',
+                status__in=['new', 'in_progress']
+            ).exists()
+            
+            if not existing_issue:
+                CompareResult.objects.create(
+                    serial_1c=serial_1c,
+                    account_1c=o.get('account'),
+                    subscriber_1c=o.get('name'),
+                    region=region_obj,
+                    upload_region=region_obj,
+                    action_type='not_found',
+                    action_text=f"Счетчик не найден в АСКУЭ. Долг по 1С: {o.get('debt')}",
+                    status='new',
+                    check_date=timezone.now().date()
+                )
+                created_issues += 1
+    except Exception as e:
+        print(f"Ошибка при создании заявок для сирот: {e}")
+
+    return JsonResponse({
+        'message': f'Успешно создано задач: {created_tasks}. Заявок на проверку: {created_issues}.', 
+        'count_tasks': created_tasks,
+        'count_issues': created_issues
+    })
+
+@login_required
+@user_passes_test(can_manage_relay)
+def relay_task_monitor_data(request):
+    """Выгрузка задач для вкладки Мониторинг с фильтрами и пагинацией"""
+    tasks = RelayTask.objects.select_related('device', 'device__subscriber', 'created_by').order_by('-scheduled_at')
+
+    # --- ФИЛЬТРЫ ---
+    # 1. Фильтр по периоду
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    # Если даты не переданы, по умолчанию ставим СЕГОДНЯ
+    if not date_from and not date_to:
+        today = timezone.now().date()
+        date_from = today.strftime('%Y-%m-%d')
+        date_to = today.strftime('%Y-%m-%d')
+
+    if date_from:
+        try:
+            d_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+            tasks = tasks.filter(scheduled_at__date__gte=d_from)
+        except ValueError:
+            pass
+            
+    if date_to:
+        try:
+            d_to = datetime.strptime(date_to, '%Y-%m-%d').date()
+            tasks = tasks.filter(scheduled_at__date__lte=d_to)
+        except ValueError:
+            pass
+
+    # 2. Фильтр по району
+    region = request.GET.get('region')
+    if region:
+        # Переводим "03 Сузак" в "Сузак ЭС" для поиска
+        sub_region_name = REVERSE_REGION_MAPPING.get(region, region)
+        
+        # Ищем совпадения в карточке прибора (Device) ИЛИ в карточке абонента (Subscriber)
+        tasks = tasks.filter(
+            Q(device__region__name__icontains=region) |
+            Q(device__region__name__icontains=sub_region_name) |
+            Q(device__subscriber__region__icontains=region) |
+            Q(device__subscriber__region__icontains=sub_region_name)
+        )
+
+    action = request.GET.get('action')
+    if action:
+        tasks = tasks.filter(action=action)
+
+    status = request.GET.get('status')
+    if status:
+        tasks = tasks.filter(status=status)
+
+    search = request.GET.get('search')
+    if search:
+        tasks = tasks.filter(
+            Q(device__serial_number__icontains=search) |
+            Q(device__subscriber__account_number__icontains=search)
+        )
+
+    # --- ПАГИНАЦИЯ ---
+    page_num = request.GET.get('page', 1)
+    page_size_str = request.GET.get('page_size', '20')
+    
+    try:
+        page_size = int(page_size_str)
+    except ValueError:
+        page_size = 20
+
+    # Ограничиваем максимальный размер страницы, чтобы не положить сервер
+    if page_size not in [10, 20, 50, 100]:
+        page_size = 20
+
+    paginator = Paginator(tasks, page_size)
+    
+    try:
+        page_obj = paginator.page(page_num)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    data = []
+    for t in page_obj.object_list:
+        sub = getattr(t.device, 'subscriber', None)
+        
+        # Убираем sub.debt и используем t.debt_snapshot
+        data.append({
+            'id': t.id,
+            'serial': t.device.serial_number,
+            'account': sub.account_number if sub else '—',
+            'name': sub.full_name if sub else '—',
+            'debt': float(t.debt_snapshot) if t.debt_snapshot is not None else 0, # <--- БЕРЕМ ИЗ ЗАДАЧИ
+            'action': t.action,
+            'action_display': t.get_action_display(),
+            'status': t.status,
+            'status_display': t.get_status_display(),
+            'scheduled_at': t.scheduled_at.strftime('%Y-%m-%d %H:%M'),
+            'user': t.created_by.username if t.created_by else 'Система',
+            'error': t.error_message or ''
+        })
+
+    return JsonResponse({
+        'items': data,
+        'pagination': {
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'total_items': paginator.count,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+        }
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def relay_task_retry(request):
+    """Переотправка упавшей задачи"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    task_id = request.POST.get('task_id')
+    try:
+        task = RelayTask.objects.get(id=task_id)
+        if task.status in ['error', 'cancelled']:
+            task.status = 'pending'
+            task.scheduled_at = timezone.now()
+            task.error_message = None
+            task.save()
+            return JsonResponse({'message': 'Задача возвращена в очередь'})
+        return JsonResponse({'error': 'Можно переотправить только упавшие задачи'}, status=400)
+    except RelayTask.DoesNotExist:
+        return JsonResponse({'error': 'Задача не найдена'}, status=404)
+
+
+
 # ========== БАЛАНС ==========
 
 from .balance_calculator import (
@@ -4072,6 +4714,409 @@ def device_coefficients(request, device_id):
     }
     return render(request, 'meters/device_coefficients.html', context)
     
+import subprocess
+from django.http import FileResponse
+from django.conf import settings
+import os
+from django.http import FileResponse, HttpResponseForbidden
+
+import json
+from datetime import datetime
+
+@login_required
+@user_passes_test(is_allowed_user)
+def sync_1c_manage(request):
+    """Страница управления синхронизацией с 1С"""
+    exports_dir = '/app/exports'
+    result_path = os.path.join(exports_dir, 'sync_1c_result.json')
+    
+    new_meters_exists = os.path.exists(os.path.join(exports_dir, 'new_meters.csv'))
+    missing_exists = os.path.exists(os.path.join(exports_dir, 'missing_in_1c.csv'))
+    updated_exists = os.path.exists(os.path.join(exports_dir, 'updated_meters.csv'))
+    
+    new_mtime = datetime.fromtimestamp(os.path.getmtime(os.path.join(exports_dir, 'new_meters.csv'))).strftime('%d.%m.%Y %H:%M') if new_meters_exists else None
+    missing_mtime = datetime.fromtimestamp(os.path.getmtime(os.path.join(exports_dir, 'missing_in_1c.csv'))).strftime('%d.%m.%Y %H:%M') if missing_exists else None
+    updated_mtime = datetime.fromtimestamp(os.path.getmtime(os.path.join(exports_dir, 'updated_meters.csv'))).strftime('%d.%m.%Y %H:%M') if updated_exists else None
+
+    # Читаем последние результаты из JSON, если они есть
+    last_result = None
+    last_run_time = None
+    if os.path.exists(result_path):
+        try:
+            with open(result_path, 'r', encoding='utf-8') as f:
+                last_result = json.load(f)
+            # Время последнего запуска берем по дате модификации файла результата
+            last_run_time = datetime.fromtimestamp(os.path.getmtime(result_path)).strftime('%d.%m.%Y %H:%M')
+        except Exception:
+            pass
+
+    context = {
+        'new_meters_exists': new_meters_exists,
+        'new_mtime': new_mtime,
+        'missing_exists': missing_exists,
+        'missing_mtime': missing_mtime,
+        'sync_status': SyncStatus.objects.filter(robot_name='Sync1C').first(),
+        'last_result': last_result,       # <--- Передаем результаты
+        'last_run_time': last_run_time,   # <--- Передаем время
+        'updated_exists': updated_exists,
+        'updated_mtime': updated_mtime,
+    }
+    return render(request, 'meters/sync_1c.html', context)
+
+@login_required
+@user_passes_test(is_allowed_user)
+def run_sync_1c(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    apply_changes = request.POST.get('apply') == 'true'
+    
+    def run_task():
+        cmd = ['python', 'manage.py', 'sync_1c_statuses']
+        if apply_changes:
+            cmd.append('--apply')
+        
+        log_path = '/app/exports/sync_1c.log'
+        result_path = '/app/exports/sync_1c_result.json'
+        
+        # Удаляем старый результат, чтобы сайт не прочитал его раньше времени
+        if os.path.exists(result_path):
+            os.remove(result_path)
+            
+        # ОЧИЩАЕМ ЛОГ ПЕРЕД НОВЫМ ЗАПУСКОМ
+        with open(log_path, 'w', encoding='utf-8') as f:
+            pass
+            
+        try:
+            with open(log_path, 'a', encoding='utf-8') as log_file:
+                log_file.write(f"Запуск: {timezone.now()} | Apply: {apply_changes}\n")
+                log_file.flush()
+                process = subprocess.Popen(cmd, cwd='/app', stdout=log_file, stderr=subprocess.STDOUT)
+                process.wait()
+                log_file.write(f"Завершено с кодом: {process.returncode}\n")
+        except Exception as e:
+            pass
+
+    thread = threading.Thread(target=run_task)
+    thread.daemon = True
+    thread.start()
+
+    return JsonResponse({'message': 'Синхронизация запущена'})
+
+@login_required
+@user_passes_test(is_allowed_user)
+def download_1c_report(request, filename):
+    """Скачивание CSV отчета"""
+    exports_dir = '/app/exports'
+    # Защита от path traversal
+    if '..' in filename or filename.startswith('/'):
+        return HttpResponseForbidden()
+        
+    file_path = os.path.join(exports_dir, filename)
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=filename)
+    else:
+        messages.error(request, 'Файл не найден. Сначала запустите синхронизацию.')
+        return redirect('sync_1c_manage')
+
+@login_required
+@user_passes_test(is_allowed_user)
+def check_sync_1c_status(request):
+    result_path = '/app/exports/sync_1c_result.json'
+    log_path = '/app/exports/sync_1c.log'
+    
+    if os.path.exists(result_path):
+        try:
+            with open(result_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return JsonResponse({'status': 'completed', 'data': data})
+        except json.JSONDecodeError:
+            # Файл еще дописывается, подождем
+            return JsonResponse({'status': 'running'})
+            
+    if os.path.exists(log_path):
+        with open(log_path, 'r', encoding='utf-8') as f:
+            log_content = f.read()
+            # Ищем именно код возврата 1
+            if "Завершено с кодом: 1" in log_content:
+                return JsonResponse({'status': 'error', 'message': 'Робот завершился с ошибкой. Проверьте файл sync_1c.log.'})
+                
+    return JsonResponse({'status': 'running'})
+
+@login_required
+@user_passes_test(is_allowed_user)
+def verify_1c_issues_ajax(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    def run_task():
+        from django.core.management import call_command
+        try:
+            call_command('verify_1c_issues')
+        except Exception as e:
+            print(f"Error: {e}")
+
+    thread = threading.Thread(target=run_task)
+    thread.daemon = True
+    thread.start()
+    return JsonResponse({'message': 'Запущена автоматическая проверка. Обновите страницу через 10-20 секунд.'})
+
+@login_required
+@user_passes_test(is_allowed_user)
+def start_verify_1c_issues(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    result_path = '/app/exports/verify_1c_result.json'
+    if os.path.exists(result_path):
+        os.remove(result_path)
+
+    def run_task():
+        import subprocess
+        try:
+            subprocess.Popen(['python', 'manage.py', 'verify_1c_issues'], cwd='/app')
+        except Exception:
+            pass
+
+    threading.Thread(target=run_task).start()
+    return JsonResponse({'message': 'Запущено'})
+
+
+@login_required
+@user_passes_test(is_allowed_user)
+def check_verify_1c_status(request):
+    result_path = '/app/exports/verify_1c_result.json'
+    
+    if os.path.exists(result_path):
+        try:
+            with open(result_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return JsonResponse(data)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'running'})
+            
+    return JsonResponse({'status': 'running'})
+
+from .sunrise_service import SunRiseService
+from .models import RelayCommandHistory
+from django.views.decorators.http import require_POST
+import json
+
+
+
+# Вспомогательная функция для определения региона инженера
+def get_user_region(user):
+    if user.is_staff or user.is_superuser:
+        return None  # Админы видят всё
+    for group in user.groups.all():
+        if group.name.startswith('ASKUE:'):
+            return group.name.split('ASKUE:')[1].strip()
+    return None
+
+@login_required
+@user_passes_test(can_manage_relay)
+def relay_control_page(request):
+    """Страница управления реле (только для админов и инженеров)"""
+    from meters.models import Region
+    
+    user_region = get_user_region(request.user)
+    
+    if user_region:
+        # Инженер видит только свой район
+        regions = Region.objects.filter(name__icontains=user_region).order_by('name')
+    else:
+        # Админ видит все районы
+        regions = Region.objects.all().order_by('name')
+        
+    return render(request, 'meters/relay_control.html', {
+        'regions': regions,
+        'user_region': user_region
+    })
+
+
+from .sunrise_service import SunRiseService
+from .risesun_service import RiseSunService
+from .cenergo_service import CEnergoService
+from .sanxing_service import SanxingService
+from .hexing_service import HexingService
+
+
+
+@login_required
+@user_passes_test(can_manage_relay)
+def relay_api_status(request):
+    serial = request.GET.get('serial', '').strip()
+    
+    # Умный поиск устройства
+    device = Device.objects.filter(serial_number=serial).first()
+    if not device:
+        candidates = Device.objects.filter(serial_number__endswith=serial).order_by('-id')
+        if candidates.exists():
+            device = candidates.first()
+    if not device:
+        return JsonResponse({'error': 'Счетчик не найден в базе'}, status=404)
+
+    # Сбор информации о приборе (оставляем как было)
+    last_reading = Reading.objects.filter(device=device).order_by('-timestamp').first()
+    last_reading_date = last_reading.timestamp.strftime('%Y-%m-%d %H:%M:%S') if last_reading else None
+    last_reading_val = float(last_reading.reading_value) if last_reading else None
+    is_online = False
+    if last_reading:
+        is_online = (timezone.now() - last_reading.timestamp).days < 7
+
+    # Собираем историю (для отображения в правой колонке)
+    history_qs = RelayCommandHistory.objects.filter(device=device).order_by('-created_at')[:5]
+    history_data = [{
+        'action': h.get_action_display(),
+        'status': h.status,
+        'error': h.error_message,
+        'time': h.created_at.strftime('%d.%m.%Y %H:%M'),
+        'user': h.user.username if h.user else 'Система'
+    } for h in history_qs]
+
+    device_info = {
+        'serial': device.serial_number,
+        'model': device.model.model_name if device.model else '—',
+        'status_display': device.get_status_display(),
+        'status_code': device.status,
+        'is_online': is_online,
+        'current': device.nominal_current or '—',
+        'phases': device.model.phases if device.model else '—',
+        'created_at': device.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        'region': device.region.name if device.region else '—',
+        'substation': device.substation.name if device.substation else '—',
+        'feeder': device.feeder.name if device.feeder else '—',
+        'tp': device.tp.name if device.tp else '—',
+        'last_reading_date': last_reading_date,
+        'last_reading_val': last_reading_val,
+        'history': history_data,
+    }
+
+    # --- ПРОВЕРКА СТАТУСА ---
+    # 1. Сначала смотрим, нет ли задачи в очереди (pending или processing)
+    active_task = RelayTask.objects.filter(device=device, status__in=['pending', 'processing']).order_by('-created_at').first()
+    
+    if active_task:
+        return JsonResponse({
+            'status': 'pending', 
+            'provider': active_task.device.model.device_type_str if active_task.device.model else 'АСКУЭ',
+            'message': f'Команда в очереди (попытка {active_task.retry_count + 1}). Ожидаем выполнения.',
+            'device': device_info
+        })
+
+    # 2. Если активных задач нет, пробуем узнать статус напрямую из API (Hexing/SunRise)
+    try:
+        if device.askue_id == '25' or (device.api_id and device.api_id.upper().startswith('UK')):
+            service = HexingService()
+            status_str = service.get_relay_status_from_db(device.serial_number)
+            if status_str != 'unknown':
+                return JsonResponse({'status': status_str, 'provider': 'Hexing', 'device': device_info})
+        
+        elif device.askue_id == '26' or (device.api_id and device.api_id.upper().startswith('SR')):
+            service = SunRiseService()
+            is_on = service.get_relay_status(device.serial_number)
+            return JsonResponse({'status': 'on' if is_on else 'off', 'provider': 'SunRise', 'device': device_info})
+            
+        elif device.askue_id == '23' or (device.api_id and device.api_id.upper().startswith('EM')):
+            service = CEnergoService()
+            status_str = service.get_status(device.serial_number)
+            if status_str != 'unknown':
+                return JsonResponse({'status': status_str, 'provider': 'Энергомера', 'device': device_info})
+                
+    except Exception as e:
+        # Если API выдало ошибку (счетчик офлайн), молча идем дальше и берем статус из истории
+        pass
+
+    # 3. Если API недоступно, берем последнюю успешную команду из истории
+    last_success = RelayCommandHistory.objects.filter(device=device, status='success').order_by('-created_at').first()
+    if last_success:
+        state = 'off' if last_success.action == 'off' else 'on'
+        return JsonResponse({'status': state, 'provider': 'История', 'device': device_info})
+
+    return JsonResponse({'status': 'unknown', 'provider': 'Нет данных', 'device': device_info})
+
+
+@login_required
+@user_passes_test(can_manage_relay)
+@require_POST
+def relay_api_action(request):
+    serial = request.POST.get('serial', '').strip()
+    action = request.POST.get('action')
+    
+    device = Device.objects.filter(serial_number__endswith=serial).first()
+    if not device:
+         return JsonResponse({'error': 'Счетчик не найден в базе'}, status=404)
+
+    if action not in ['on', 'off']:
+        return JsonResponse({'error': 'Неверное действие'}, status=400)
+
+    # Отменяем все старые висящие задачи для этого счетчика, чтобы не было спама
+    RelayTask.objects.filter(
+        device=device, 
+        status__in=['pending', 'processing']
+    ).update(status='cancelled', error_message='Отменено из-за новой команды из ручного управления')
+
+    # Создаем новую задачу, которая выполнится ПРЯМО СЕЙЧАС (или при ближайшем запуске воркера)
+    task = RelayTask.objects.create(
+        device=device,
+        action=action,
+        scheduled_at=timezone.now(),
+        created_by=request.user,
+        status='pending'
+    )
+
+    return JsonResponse({
+        'message': f'Команда "{action}" успешно поставлена в очередь на выполнение.',
+        'status': 'pending',
+        'task_id': task.id
+    })
+
+
+
+import tempfile
+from django.core.management import call_command
+
+@login_required
+@user_passes_test(can_manage_relay)
+@require_POST
+def relay_bulk_start(request):
+    serials_text = request.POST.get('serials', '')
+    action = request.POST.get('action')
+    
+    if not serials_text or not action:
+        return JsonResponse({'error': 'Нет данных'}, status=400)
+
+    # Сохраняем список во временный файл
+    fd, temp_path = tempfile.mkstemp()
+    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        f.write(serials_text)
+        
+    result_path = '/app/exports/bulk_relay_result.json'
+    if os.path.exists(result_path):
+        os.remove(result_path)
+
+    # Запускаем в фоне
+    def run_task():
+        import subprocess
+        subprocess.Popen(
+            ['python', 'manage.py', 'bulk_relay_control', '--file', temp_path, '--action', action],
+            cwd='/app'
+        )
+
+    import threading
+    threading.Thread(target=run_task).start()
+    
+    return JsonResponse({'message': 'Запущено'})
+
+@login_required
+@user_passes_test(can_manage_relay)
+def relay_bulk_status(request):
+    result_path = '/app/exports/bulk_relay_result.json'
+    if os.path.exists(result_path):
+        with open(result_path, 'r', encoding='utf-8') as f:
+            return JsonResponse(json.load(f))
+    return JsonResponse({'status': 'starting', 'total': 0, 'processed': 0})
+
 # # ===== СПРАВОЧНИКИ (единая страница) =====
 # @login_required
 # @user_passes_test(is_allowed_user)

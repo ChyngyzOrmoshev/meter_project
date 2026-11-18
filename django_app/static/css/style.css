@@ -1,3 +1,16 @@
+/* =================================================================
+   Единый файл стилей
+   -----------------------------------------------------------------
+   Раздел 1 — базовые стили (бывшее содержимое этого файла).
+   Раздел 2 — перенесено из <style> в base.html, в исходном порядке.
+              Служит слоем переопределений; не меняет текущий вид.
+   ================================================================= */
+
+
+/* =================================================================
+   РАЗДЕЛ 1. БАЗОВЫЕ СТИЛИ
+   ================================================================= */
+
 /* ===== ГЛОБАЛЬНЫЕ НАСТРОЙКИ ===== */
 * {
     margin: 0;
@@ -5,31 +18,46 @@
     box-sizing: border-box;
 }
 
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     background: #f5f7fa;
-    font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+    font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
     color: #2d3e50;
     line-height: 1.6;
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
 }
 
-/* ===== КОНТЕЙНЕР ФИКСИРОВАННОЙ ШИРИНЫ 1190px ===== */
-.container-1190 {
-    max-width: 1190px;
-    margin: 0 auto;
-    padding: 0 20px;
+main {
+    flex: 1 0 auto;
 }
 
-/* ===== ВЕРХНЯЯ ПАНЕЛЬ (НАВИГАЦИЯ) ===== */
+/* ===== КОНТЕЙНЕР ===== */
+.container-1190 {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* ===== НАВИГАЦИЯ ===== */
 .navbar-custom {
     background: #ffffff;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
-    padding: 0.75rem 0;
+    padding: 0.8rem 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-    backdrop-filter: blur(0);
 }
 
 .navbar-custom .navbar-brand {
+    flex: 0 0 200px;
+    white-space: nowrap;
     font-weight: 600;
     font-size: 1.4rem;
     color: #3a5b6e;
@@ -43,9 +71,9 @@ body {
 .navbar-custom .nav-link {
     color: #4a6278;
     font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: color 0.2s;
     border-radius: 8px;
+    transition: all 0.2s;
+    padding: 0.6rem 1.2rem;
 }
 
 .navbar-custom .nav-link:hover {
@@ -58,12 +86,19 @@ body {
     background: rgba(122, 169, 194, 0.12);
 }
 
+.navbar-custom .nav-link i {
+    margin-right: 0.4rem;
+}
+
 .navbar-custom .user-info {
     color: #4a6278;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .navbar-custom .btn-outline-light {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.9rem;
     color: #4a6278;
     border-color: #cbd5e0;
 }
@@ -90,32 +125,39 @@ body {
 
 /* ===== КАРТОЧКИ ===== */
 .card-pastel {
-    background: #ffffff;
+    background: transparent !important;
+    border: none !important;
     border-radius: 20px;
-    border: none;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), 0 1px 4px rgba(0, 0, 0, 0.02);
-    transition: box-shadow 0.25s ease, transform 0.2s ease;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.03),
+        0 1px 4px rgba(0, 0, 0, 0.02),
+        inset 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.25s ease;
 }
 
 .card-pastel:hover {
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
-    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
 }
 
 .card-pastel .card-header {
     background: transparent;
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-    padding: 1.2rem 1.5rem;
-    font-weight: 600;
-    color: #2d3e50;
+    padding: 1.2rem 1.8rem;
+    font-weight: 500;
     font-size: 1.1rem;
+    color: #2d3e50;
+}
+
+.card-pastel .card-header i {
+    color: #7fa3b8;
+    margin-right: 0.5rem;
 }
 
 .card-pastel .card-body {
     padding: 1.5rem;
 }
 
-/* ===== МЕТРИКИ (статистика) ===== */
+/* ===== МЕТРИКИ ===== */
 .metric-pastel {
     background: #ffffff;
     border-radius: 20px;
@@ -154,34 +196,36 @@ body {
 
 /* ===== ТАБЛИЦЫ ===== */
 .table-pastel {
-    background: #ffffff;
+    background: transparent !important;
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
 }
 
 .table-pastel thead th {
-    background: #f8fafc;
-    color: #4a6278;
-    font-weight: 500;
-    font-size: 0.85rem;
+    background: #2d3e50 !important;
+    color: #f0f4f8 !important;
+    font-weight: 600;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
-    border-bottom: 1px solid #eef2f6;
-    padding: 0.8rem 1rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #1e2f3e !important;
+    padding: 0.9rem 1rem;
+    white-space: nowrap;
 }
 
 .table-pastel tbody td {
     padding: 0.8rem 1rem;
-    border-bottom: 1px solid #f0f3f7;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     color: #2d3e50;
+    background: transparent !important;
 }
 
 .table-pastel tbody tr:hover {
-    background: #fafcfe;
+    background: #f7f9fc;
 }
 
-/* ===== БЭЙДЖИ (статусы) ===== */
+/* ===== БЭЙДЖИ ===== */
 .badge-pastel {
     font-weight: 500;
     padding: 0.35rem 0.9rem;
@@ -226,12 +270,28 @@ body {
     transform: translateY(-1px);
 }
 
+.btn-pastel-success {
+    background: #d4edda;
+    border: none;
+    color: #155724;
+    border-radius: 30px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-pastel-success:hover {
+    background: #b8e0c8;
+    transform: translateY(-1px);
+}
+
 .btn-pastel-outline {
     background: transparent;
     border: 1px solid #d7e2eb;
     color: #4a6278;
     border-radius: 30px;
     padding: 0.5rem 1.5rem;
+    font-weight: 500;
     transition: all 0.2s;
 }
 
@@ -242,17 +302,20 @@ body {
 
 /* ===== ПРОГРЕСС-БАРЫ ===== */
 .progress-pastel {
-    height: 6px;
+    height: 8px;
     background: #eef2f6;
     border-radius: 10px;
+    overflow: hidden;
+    min-width: 80px;
+    width: 100%;
 }
 
 .progress-pastel .progress-bar {
+    height: 100%;
     border-radius: 10px;
-    background: linear-gradient(90deg, #a5c6d9, #7fa3b8);
+    transition: width 1.5s ease-in-out !important;
 }
 
-/* Пастельные цвета для прогресс-баров */
 .bg-success-pastel {
     background: linear-gradient(90deg, #a8d5ba, #7fc9a8) !important;
 }
@@ -281,26 +344,8 @@ body {
 }
 
 /* ===== ФУТЕР ===== */
-/* === STICKY FOOTER === */
-html,
-body {
-    height: 100%;
-    margin: 0;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-}
-
-main {
-    flex: 1 0 auto;
-    /* растягивается на всю доступную высоту */
-}
-
 .footer-pastel {
     flex-shrink: 0;
-    /* не сжимается */
     margin-top: 1.5rem;
     padding: 0.5rem 0;
     border-top: 1px solid #eef2f6;
@@ -309,16 +354,7 @@ main {
     text-align: center;
 }
 
-/* .footer-pastel {
-    margin-top: 3rem;
-    padding: 2rem 0 1.5rem;
-    border-top: 1px solid #eef2f6;
-    color: #8aa0b2;
-    font-size: 0.9rem;
-    text-align: center;
-} */
-
-/* ===== АДАПТИВНОСТЬ ===== */
+/* ===== АДАПТИВНОСТЬ (базовая) ===== */
 @media (max-width: 1199px) {
     .container-1190 {
         max-width: 100%;
@@ -336,34 +372,481 @@ main {
     }
 }
 
+/* ===== ЦВЕТНЫЕ УТИЛИТЫ ===== */
 .bg-light-warning {
-    background-color: #fff3cd;
+    background-color: #fff3cd50 !important;
 }
 
 .bg-light-primary {
-    background-color: #cfe2ff;
+    background-color: #cfe2ff50 !important;
 }
 
 .bg-light-success {
-    background-color: #d1e7dd;
+    background-color: #d1e7dd50 !important;
 }
 
 .bg-light-secondary {
-    background-color: #e9ecef;
+    background-color: #e9ecef !important;
 }
 
 .border-warning {
-    border: 2px solid #ffc107;
+    border-color: #ffc107 !important;
 }
 
 .border-primary {
-    border: 2px solid #0d6efd;
+    border-color: #0d6efd !important;
 }
 
 .border-success {
-    border: 2px solid #198754;
+    border-color: #198754 !important;
 }
 
 .border-secondary {
-    border: 2px solid #6c757d;
+    border-color: #6c757d !important;
+}
+
+
+/* =================================================================
+   РАЗДЕЛ 2. ПЕРЕНОСЕНО ИЗ <style> В base.html
+   -----------------------------------------------------------------
+   Порядок сохранён. Селекторы ниже переопределяют базовые выше —
+   точно так же, как раньше переопределял инлайн-блок в base.html.
+   ================================================================= */
+
+/* === ГЛОБАЛЬНЫЕ СТИЛИ === */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+/* === НАВИГАЦИЯ (уточнения) === */
+.navbar-custom {
+    background: #ffffff;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.navbar-custom .navbar-brand {
+    flex: 0 0 200px;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #3a5b6e;
+    letter-spacing: -0.5px;
+}
+
+.navbar-custom .navbar-brand span {
+    color: #7fa3b8;
+}
+
+.navbar-custom .nav-link {
+    color: #4a6278;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+    padding: 0.6rem 1.2rem;
+}
+
+.navbar-custom .nav-link:hover {
+    color: #3a5b6e;
+    background: rgba(122, 169, 194, 0.08);
+}
+
+.navbar-custom .nav-link.active {
+    color: #3a5b6e;
+    background: rgba(122, 169, 194, 0.12);
+}
+
+.navbar-custom .nav-link i {
+    margin-right: 0.4rem;
+}
+
+.navbar-custom .user-info {
+    color: #4a6278;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.navbar-custom .btn-outline-light {
+    padding: 0.3rem 0.9rem;
+    font-size: 0.9rem;
+    color: #4a6278;
+    border-color: #cbd5e0;
+}
+
+.navbar-custom .btn-outline-light:hover {
+    background: #7fa3b8;
+    border-color: #7fa3b8;
+    color: #fff;
+}
+
+/* === КАРТОЧКИ (уточнения) === */
+.card-pastel {
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.3s ease;
+}
+
+.card-pastel:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+}
+
+.card-pastel .card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    padding: 1.2rem 1.8rem;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: #2d3e50;
+}
+
+.card-pastel .card-header i {
+    color: #7fa3b8;
+    margin-right: 0.5rem;
+}
+
+/* === МЕТРИКИ (уточнения) === */
+.metric-pastel {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.2s;
+}
+
+.metric-pastel:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.metric-pastel .metric-icon {
+    font-size: 2.2rem;
+    color: #7fa3b8;
+    margin-bottom: 0.3rem;
+}
+
+.metric-pastel h5 {
+    font-weight: 400;
+    color: #6f8a9e;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+}
+
+.metric-pastel h2 {
+    font-weight: 300;
+    font-size: 2.4rem;
+    color: #2d3e50;
+    margin: 0;
+}
+
+/* === ТАБЛИЦЫ (уточнения) === */
+.table-pastel {
+    background: transparent !important;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+.table-pastel thead th {
+    background: #2d3e50 !important;
+    color: #f0f4f8 !important;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #1e2f3e !important;
+    padding: 0.9rem 1rem;
+    white-space: nowrap;
+}
+
+.table-pastel tbody td {
+    background: transparent !important;
+    padding: 0.8rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-pastel tbody tr:hover {
+    background: #f7f9fc;
+}
+
+/* Тёмные заголовки отдельной таблицы */
+.table-header-dark {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table-header-dark thead th {
+    background: #2d3e50 !important;
+    color: #f0f4f8 !important;
+    border-bottom: 2px solid #1e2f3e !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+    padding: 0.9rem 1rem;
+    white-space: nowrap;
+}
+
+.table-header-dark tbody tr:hover {
+    background: #f7f9fc;
+}
+
+/* === КАРТОЧКИ (финальный слой из base.html) === */
+.card-pastel {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 20px;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.03),
+        0 1px 4px rgba(0, 0, 0, 0.02),
+        inset 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.25s ease;
+}
+
+/* === ССЫЛКИ В ТАБЛИЦАХ === */
+.region-link {
+    text-decoration: none !important;
+    color: #2d3e50 !important;
+}
+
+.region-link:hover {
+    color: #7fa3b8 !important;
+    text-decoration: underline !important;
+}
+
+/* === СОВРЕМЕННЫЕ МЕТРИКИ-КАРТОЧКИ (metric-modern) === */
+.metric-modern {
+    background: #ffffff00;
+    border-radius: 16px;
+    padding: 1.2rem 0.8rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e171552f;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    min-height: 130px;
+}
+
+.metric-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+    border-color: #d0d9e4;
+}
+
+.metric-modern .metric-icon {
+    font-size: 2rem;
+    color: #7fa3b8;
+    margin-bottom: 0.2rem;
+    display: block;
+}
+
+.metric-modern h5 {
+    font-weight: 500;
+    color: #6f8a9e;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.1rem;
+    line-height: 1.3;
+}
+
+.metric-modern h2 {
+    font-weight: 300;
+    font-size: 1.8rem;
+    color: #2d3e50;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.metric-modern:nth-child(1) .metric-icon {
+    color: #e17055;
+}
+
+.metric-modern:nth-child(2) .metric-icon {
+    color: #00b894;
+}
+
+.metric-modern:nth-child(3) .metric-icon {
+    color: #f39c12;
+}
+
+.metric-modern:nth-child(4) .metric-icon {
+    color: #0984e3;
+}
+
+/* === МЕТРИКИ-КАРТОЧКИ (metric-card) === */
+.metric-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.2rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 120px;
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.metric-card .metric-icon {
+    font-size: 2.2rem;
+    width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.metric-card .metric-content {
+    flex: 1;
+}
+
+.metric-card .metric-content h5 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6f8a9e;
+    margin-bottom: 0.1rem;
+}
+
+.metric-card .metric-content h2 {
+    font-weight: 300;
+    font-size: 1.8rem;
+    color: #2d3e50;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.metric-card .metric-content small {
+    font-size: 0.75rem;
+    color: #8aa0b2;
+}
+
+.metric-card .progress-pastel {
+    height: 6px;
+    background: #eef2f6;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.metric-card .progress-pastel .progress-bar {
+    border-radius: 10px;
+    transition: width 1.2s ease;
+}
+
+.metric-total .metric-icon {
+    color: #6c757d;
+}
+
+.metric-new .metric-icon {
+    color: #ffc107;
+}
+
+.metric-progress .metric-icon {
+    color: #0d6efd;
+}
+
+.metric-fixed .metric-icon {
+    color: #198754;
+}
+
+.metric-auto .metric-icon {
+    color: #17a2b8;
+}
+
+.metric-ignored .metric-icon {
+    color: #6c757d;
+}
+
+.metric-offline .metric-icon {
+    color: #dc3545;
+}
+
+.metric-progress-bar .metric-icon {
+    color: #6f42c1;
+}
+
+/* === КНОПКИ-ПИЛЮЛИ === */
+.btn-group-pill .btn {
+    border-radius: 30px !important;
+    padding: 0.25rem 1rem;
+    font-size: 0.85rem;
+    margin-right: 4px;
+    border: 1px solid transparent;
+}
+
+.btn-group-pill .btn-pastel-primary {
+    background: #7fa3b8;
+    color: #fff;
+}
+
+.btn-group-pill .btn-pastel-primary:hover {
+    background: #6a8fa6;
+}
+
+.btn-group-pill .btn-pastel-outline {
+    background: transparent;
+    border-color: #d0d9e4;
+    color: #4a6278;
+}
+
+.btn-group-pill .btn-pastel-outline:hover {
+    background: #f0f4f9;
+    border-color: #b0c0d0;
+}
+
+/* === ПРОГРЕСС-БАРЫ (уточнения) === */
+.progress-bar {
+    transition: width 1.5s ease-in-out !important;
+}
+
+.progress-pastel {
+    height: 8px;
+    background: #eef2f6;
+    border-radius: 10px;
+    overflow: hidden;
+    min-width: 80px;
+}
+
+.progress-pastel .progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+
+/* === АНИМАЦИЯ ЦИФР === */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animated-number {
+    display: inline-block;
+    animation: countUp 0.6s ease-out;
+}
+
+/* === АДАПТИВНОСТЬ (переопределения из base.html) === */
+@media (max-width: 1280px) {
+    .container-1190 {
+        max-width: 100%;
+        padding: 0 20px;
+    }
 }

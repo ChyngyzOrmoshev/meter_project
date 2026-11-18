@@ -1,178 +1,156 @@
 import os
 import time
-import re
+import requests
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 from dotenv import load_dotenv
 
 class Command(BaseCommand):
-    help = 'Test Hexing Raw Data Report: login, wait for data, download XML via response capture'
+    help = 'Тест с параметрами браузера (xmlType=00)'
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
+        
         username = os.getenv('HEXING_RAW_USERNAME')
         password = os.getenv('HEXING_RAW_PASSWORD')
-        base_url = os.getenv('HEXING_RAW_URL', 'http://192.168.20.247:8080/Mini-MDM/common/view/init')
-        download_dir = '/app/downloads'
-        os.makedirs(download_dir, exist_ok=True)
-
-        if not username or not password:
-            self.stdout.write(self.style.ERROR("HEXING_RAW_USERNAME and HEXING_RAW_PASSWORD must be set in cEnergo.env"))
-            return
-
+        raw_url = os.getenv('HEXING_RAW_URL', 'http://192.168.20.247:8080/Mini-MDM/common/view/init')
+        root_url = raw_url.split('/Mini-MDM')[0] + '/Mini-MDM' if '/Mini-MDM' in raw_url else raw_url.rstrip('/')
+        
+        self.stdout.write("1️⃣ Авторизация через Playwright...")
+        cookies = {}
+        user_agent = None
+        
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context(accept_downloads=True)
+            context = browser.new_context()
             page = context.new_page()
-            page.on('dialog', lambda dialog: dialog.accept())
-
+            page.on("dialog", lambda dialog: dialog.accept())
+            
             try:
-                # -------- 1. ЛОГИН --------
-                self.stdout.write("🌐 Navigating to login page...")
-                page.goto(base_url)
-                page.wait_for_selector('input#czyId', timeout=30000)
-                page.screenshot(path=os.path.join(download_dir, 'test_hxn_01_login.png'))
-
-                self.stdout.write("🔐 Filling login form...")
-                username_input = page.locator('input#czyId')
-                username_input.click()
-                username_input.fill(username)
-
-                password_input = page.locator('input#pwd')
-                password_input.click()
-                password_input.fill(password)
-
+                # Логин
+                page.goto(f"{root_url}/common/login/init", timeout=30000)
+                page.wait_for_selector('input#czyId', timeout=15000)
+                page.fill('input#czyId', username)
+                page.fill('input#pwd', password)
                 page.click('.ui-button-login')
+                page.wait_for_timeout(3000)
+                
                 try:
-                    page.wait_for_selector('text="Your password will expire.Please modify it!"', timeout=10000)
-                    self.stdout.write("⚠️ Password expiry dialog, clicking OK...")
-                    page.click('button:has-text("OK")')
+                    ok_btn = page.locator('button:has-text("OK")').first
+                    if ok_btn.is_visible(timeout=3000):
+                        ok_btn.click()
+                        page.wait_for_timeout(3000)
                 except PlaywrightTimeout:
                     pass
-
-                page.wait_for_selector('text="Data-Analysis"', timeout=30000)
-                self.stdout.write(self.style.SUCCESS("✅ Logged in."))
-                page.screenshot(path=os.path.join(download_dir, 'test_hxn_02_after_login.png'))
-
-                # -------- 2. НАВИГАЦИЯ К RAW DATA REPORT --------
-                self.stdout.write("📂 Navigating to Data-Analysis -> Raw Data Report...")
-                page.click('text="Data-Analysis"')
-                time.sleep(1)
-                page.click('text="Raw Data Report"')
-                time.sleep(3)
-
-                # -------- 3. РАБОТА С IFRAME --------
-                self.stdout.write("⏳ Finding iframe...")
-                iframe_element = page.query_selector('iframe#mainFrame2')
-                if not iframe_element:
-                    iframe_element = page.query_selector('iframe[src*="rawDataReport"]')
-                if not iframe_element:
-                    raise Exception("Raw Data Report iframe not found")
-                target_frame = iframe_element.content_frame()
-                if not target_frame:
-                    raise Exception("Could not get iframe content")
-                self.stdout.write(self.style.SUCCESS(f"✅ Found frame: {target_frame.url}"))
-
-                # -------- 4. ОЖИДАНИЕ ЗАГРУЗКИ ДАННЫХ (30 секунд) --------
-                self.stdout.write("⏳ Waiting 30 seconds for data to load...")
-                time.sleep(30)
-                page.screenshot(path=os.path.join(download_dir, 'test_hxn_03_data_loaded.png'))
-
-                # -------- 5. НАЖАТИЕ DOWNLOAD (открывает модальное окно с iframe) --------
-                self.stdout.write("📥 Clicking Download...")
-                download_btn = target_frame.locator('button:has-text("Download")')
-                if download_btn.count() == 0:
-                    download_btn = target_frame.locator('a:has-text("Download")')
-                if download_btn.count() == 0:
-                    raise Exception("Download button not found")
-                download_btn.click()
-
-                # Ждём модальное окно внутри iframe
-                self.stdout.write("⏳ Waiting for modal window inside iframe...")
-                target_frame.wait_for_selector('div#rawDataReportDownload.x-window', timeout=30000)
-                modal = target_frame.locator('div#rawDataReportDownload.x-window')
-                self.stdout.write(self.style.SUCCESS("✅ Modal window found."))
-
-                # Находим iframe внутри модального окна
-                self.stdout.write("🔍 Looking for iframe inside modal...")
-                iframe_el = target_frame.query_selector('iframe#openwin')
-                if not iframe_el:
-                    # Попробуем найти любой iframe внутри модалки
-                    iframe_el = target_frame.query_selector('iframe')
-                if not iframe_el:
-                    raise Exception("iframe inside modal not found")
-                popup_frame = iframe_el.content_frame()
-                if not popup_frame:
-                    raise Exception("Could not get frame from iframe inside modal")
-                self.stdout.write(self.style.SUCCESS("✅ Iframe inside modal found."))
-
-                # -------- 6. ВЫБОР DATA RANGE = ALL --------
-                self.stdout.write("🔧 Selecting Data Range = All (value=01)...")
-                data_range_select = popup_frame.locator('select#dataRange')
-                data_range_select.wait_for(state='visible', timeout=10000)
-                data_range_select.select_option('01')
-                self.stdout.write("✅ Data Range set to All.")
-
-                # -------- 7. НАЖАТИЕ DOWNLOAD + ОБРАБОТКА ДИАЛОГА ПОДТВЕРЖДЕНИЯ --------
-                self.stdout.write("📥 Clicking Download inside modal...")
-                download_in_modal = popup_frame.locator('button:has-text("Download")')
-                if download_in_modal.count() == 0:
-                    download_in_modal = popup_frame.locator('a:has-text("Download")')
-                if download_in_modal.count() > 0:
-                    download_in_modal.click()
-                    time.sleep(2)
-
-                    # Ищем диалог подтверждения и нажимаем OK
-                    self.stdout.write("⏳ Looking for confirmation dialog...")
-                    confirm_dialog = popup_frame.locator('.x-window:has-text("Confirm")')
-                    if confirm_dialog.count() == 0:
-                        confirm_dialog = page.locator('.x-window:has-text("Confirm")')
-                    if confirm_dialog.count() == 0:
-                        confirm_dialog = popup_frame.locator('div:has-text("Are you sure to download?")')
-                    if confirm_dialog.count() == 0:
-                        confirm_dialog = popup_frame.locator('div:has-text("Confirm")')
-
-                    if confirm_dialog.count() > 0:
-                        ok_btn = confirm_dialog.locator('button:has-text("OK")')
-                        if ok_btn.count() == 0:
-                            ok_btn = confirm_dialog.locator('button:has-text("Ok")')
-                        if ok_btn.count() > 0:
-                            # Перехватываем скачивание ДО клика по OK
-                            with page.expect_download(timeout=120000) as download_info:
-                                ok_btn.click()
-                            download = download_info.value
-                            file_path = os.path.join(download_dir, download.suggested_filename)
-                            download.save_as(file_path)
-                            self.stdout.write(self.style.SUCCESS(f"📁 Downloaded: {file_path}"))
-                        else:
-                            raise Exception("OK button not found in confirmation dialog.")
-                    else:
-                        raise Exception("Confirmation dialog not found.")
-                else:
-                    raise Exception("Download button in modal not found")
-
-                # -------- 8. ПАРСИНГ XML --------
-                self.stdout.write("📄 Parsing XML...")
-                tree = ET.parse(file_path)
-                root = tree.getroot()
-                readings = root.findall('mreadings')
-                self.stdout.write(f"✅ Found {len(readings)} readings in XML")
-                for i, mreading in enumerate(readings[:5]):
-                    meter_no = mreading.find('meterNo').text if mreading.find('meterNo') is not None else 'N/A'
-                    value = mreading.find('value').text if mreading.find('value') is not None else 'N/A'
-                    timestamp = mreading.find('timestamp').text if mreading.find('timestamp') is not None else 'N/A'
-                    self.stdout.write(f"  {i+1}. Meter: {meter_no}, Value: {value}, Time: {timestamp}")
-
-                os.remove(file_path)
-                self.stdout.write("🗑️ Deleted test file.")
-                self.stdout.write(self.style.SUCCESS("✅ Test completed successfully."))
-
+                
+                # Страница отчета
+                page.goto(
+                    f"{root_url}/PS/amiPSPakistan/controller/rawDataReport/init"
+                    f"?menuid=AmiPS_RawDataReport&menupath=Raw Data Report&curTabId=AmiPS_RawDataReport",
+                    timeout=30000
+                )
+                page.wait_for_load_state('networkidle', timeout=30000)
+                page.wait_for_timeout(2000)
+                
+                # Принудительный DWR вызов
+                page.evaluate("""
+                    () => new Promise(res => {
+                        if (!window.dwr) return res(false);
+                        dwr.engine._execute(dwr.engine._pathToDwrServlet, '__System', 'generateId',
+                            [{callback: () => res(true), errorHandler: () => res(false)}]);
+                    })
+                """)
+                page.wait_for_timeout(2000)
+                
+                for c in context.cookies():
+                    cookies[c['name']] = c['value']
+                user_agent = page.evaluate("() => navigator.userAgent")
+                
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"❌ Error: {e}"))
-                page.screenshot(path=os.path.join(download_dir, 'test_hxn_error.png'))
-                with open(os.path.join(download_dir, 'test_hxn_error.html'), 'w', encoding='utf-8') as f:
-                    f.write(page.content())
-            finally:
+                self.stderr.write(self.style.ERROR(f"❌ Ошибка Playwright: {e}"))
                 browser.close()
+                return
+            
+            browser.close()
+
+        # ============================================================
+        # СКАЧИВАНИЕ С ПАРАМЕТРАМИ ИЗ БРАУЗЕРА (xmlType=00)
+        # ============================================================
+        self.stdout.write("\n2️⃣ Скачивание через requests (xmlType=00)...")
+        
+        session = requests.Session()
+        session.cookies.update(cookies)
+        session.headers.update({
+            'User-Agent': user_agent,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Encoding': 'identity',
+        })
+
+        start_date = '2026-11-14'
+        end_date = '2026-11-16'
+        
+        # initDownload
+        init_dl_url = f"{root_url}/PS/amiPSPakistan/controller/rawDataReport/initDownload"
+        session.get(init_dl_url, params={
+            'dateType': '01', 'tariffType': '00', 'startDate': start_date, 'endDate': end_date,
+            'nodeType': 'dw', 'nodeId': '105008002', 'meterNo': '', 'CTPT': '', 'last': 'last', 'start': '0', 'limit': '30'
+        }, timeout=15)
+        
+        # downloadFile (с xmlType=00)
+        download_url = f"{root_url}/PS/amiPSPakistan/controller/rawDataReport/downloadFile"
+        resp = session.post(download_url, data={
+            'dateType': '01', 
+            'tariffType': '00', 
+            'startDate': start_date, 
+            'endDate': end_date,
+            'nodeType': 'dw', 
+            'nodeId': '105008002', 
+            'meterNo': '', 
+            'CTPT': '',
+            'last': 'last', 
+            'start': '0', 
+            'limit': '30', 
+            'xmlType': '00',  # <--- ИЗМЕНЕНО НА 00
+            'dataRange': '01'
+        }, timeout=120)
+        
+        self.stdout.write(f"   Статус: {resp.status_code}")
+        self.stdout.write(f"   Content-Type: {resp.headers.get('Content-Type')}")
+        self.stdout.write(f"   Размер: {len(resp.content)} байт")
+        
+        if len(resp.content) == 0 or resp.content.startswith(b'<html'):
+            self.stderr.write(self.style.ERROR("❌ Сервер вернул HTML или пустоту."))
+            return
+
+        self.stdout.write(self.style.SUCCESS("   ✅ Файл успешно скачан!"))
+        
+        os.makedirs('/app/exports', exist_ok=True)
+        filepath = '/app/exports/test_hxn_raw_00.xml'
+        with open(filepath, 'wb') as f:
+            f.write(resp.content)
+            
+        self.stdout.write(f"\n3️⃣ Парсинг XML (сохранен в {filepath})...")
+        
+        try:
+            root = ET.fromstring(resp.content)
+            items = root.findall('.//mreadings')
+            if not items:
+                items = root.findall('.//mval2')
+                
+            self.stdout.write(f"   Найдено записей: {len(items)}")
+            
+            if items:
+                # Выводим первый элемент, чтобы увидеть структуру
+                first_item = ET.tostring(items[0], encoding='unicode').strip()
+                self.stdout.write("\n--- ПРИМЕР ПЕРВОЙ ЗАПИСИ ---")
+                self.stdout.write(first_item)
+                self.stdout.write("----------------------------\n")
+                
+                # Ищем paramId
+                param_id = items[0].findtext('paramId')
+                if param_id:
+                    self.stdout.write(f"   paramId первой записи: {param_id}")
+                    
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f"❌ Ошибка парсинга XML: {e}"))

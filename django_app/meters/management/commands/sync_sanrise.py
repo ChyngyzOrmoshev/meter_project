@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db import connection, transaction
 from meters.models import Device, Reading, SyncStatus
-from meters.utils import find_device, get_robot_devices
+from meters.utils import get_robot_devices
 import pyodbc
 import os
 import time
@@ -10,6 +11,7 @@ from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = 'Sync data from SunRise MS SQL to MySQL'
@@ -21,6 +23,11 @@ class Command(BaseCommand):
             default=30,
             help='Количество дней истории при первом запуске (по умолчанию 30)',
         )
+        parser.add_argument(
+            '--once',
+            action='store_true',
+            help='Один прогон без бесконечного цикла',
+        )
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
@@ -29,7 +36,10 @@ class Command(BaseCommand):
         password = os.getenv("SANRISE_MSSQL_PASSWORD")
         db = os.getenv("SANRISE_MSSQL_DB")
 
-        conn_str = f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        conn_str = (
+            f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};"
+            f"UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        )
         self.days = options.get('days', 30)
 
         while True:
@@ -45,6 +55,8 @@ class Command(BaseCommand):
                         'error': str(e)
                     }
                 )
+            if options.get('once'):
+                break
             time.sleep(600)
 
     def sync(self, conn_str):
@@ -54,10 +66,9 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to SunRise MS SQL")
 
-            # Получаем устройства SunRise через централизованную функцию
-            devices = get_robot_devices('SunRise')
-            device_sns = set(devices.values_list('serial_number', flat=True))
-            if not device_sns:
+            # ---- Загружаем устройства SunRise один раз ----
+            devices = list(get_robot_devices('SunRise'))
+            if not devices:
                 self.stdout.write("No SunRise devices found in MySQL.")
                 SyncStatus.objects.update_or_create(
                     robot_name='SunRise',
@@ -70,14 +81,31 @@ class Command(BaseCommand):
                 )
                 return
 
-            # Определяем дату начала загрузки
-            last_reading = Reading.objects.filter(notes="Авто-сбор: SunRise").order_by('-timestamp').first()
+            # Lookup: точное совпадение + последние 8 символов
+            lookup_exact = {}
+            lookup_last8 = {}
+            for d in devices:
+                sn = d.serial_number
+                lookup_exact[sn] = d
+                if len(sn) >= 8:
+                    lookup_last8.setdefault(sn[-8:], d)
+
+            self.stdout.write(
+                f"Built lookup: exact={len(lookup_exact)}, last8={len(lookup_last8)}"
+            )
+
+            # ---- Определяем период ----
+            last_reading = Reading.objects.filter(
+                notes="Авто-сбор: SunRise"
+            ).order_by('-timestamp').first()
             if last_reading:
                 start_time = last_reading.timestamp - timedelta(hours=2)
                 self.stdout.write(f"🔄 Incremental sync from {start_time}")
             else:
                 start_time = datetime.now() - timedelta(days=self.days)
-                self.stdout.write(f"🔄 First run: fetching last {self.days} days (from {start_time})")
+                self.stdout.write(
+                    f"🔄 First run: fetching last {self.days} days (from {start_time})"
+                )
 
             query = """
                 SET NOCOUNT ON;
@@ -89,18 +117,33 @@ class Command(BaseCommand):
             """
             cursor.execute(query, (start_time,))
 
+            # ---- Пакетная вставка через executemany + ON DUPLICATE KEY ----
             count = 0
+            skipped_not_found = 0
+            batch = []
+            BATCH_SIZE = 1000
+
+            sql = """
+                INSERT INTO readings (device_id, timestamp, direction, reading_value, notes)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    reading_value = VALUES(reading_value),
+                    notes = VALUES(notes)
+            """
+
             for row in cursor:
                 db_sn = str(row.SerialNumber).strip()
                 if not db_sn:
                     continue
 
-                device = find_device(db_sn)
+                # Быстрый lookup вместо find_device
+                device = lookup_exact.get(db_sn)
+                if device is None and len(db_sn) >= 8:
+                    device = lookup_last8.get(db_sn[-8:])
+                if device is None and len(db_sn) < 8:
+                    device = lookup_last8.get(db_sn.zfill(8))
                 if device is None:
-                    continue
-
-                # *** ВАЖНО: проверяем, что устройство относится к SunRise ***
-                if device.serial_number not in device_sns:
+                    skipped_not_found += 1
                     continue
 
                 dt = row.DATA_TIME
@@ -108,20 +151,24 @@ class Command(BaseCommand):
                     dt = datetime.strptime(dt.split('.')[0], "%Y-%m-%d %H:%M:%S")
                 val = row.KWH_IMPORT_ABS
 
-                Reading.objects.update_or_create(
-                    device=device,
-                    timestamp=dt,
-                    defaults={
-                        'reading_value': val,
-                        'notes': 'Авто-сбор: SunRise',
-                        'direction': 'aplus'
-                    }
-                )
+                batch.append((device.id, dt, 'aplus', val, 'Авто-сбор: SunRise'))
                 count += 1
-                if count % 1000 == 0:
-                    self.stdout.write(f"Processed {count} readings")
 
-            self.stdout.write(f"✅ SunRise sync done. Total: {count}")
+                if len(batch) >= BATCH_SIZE:
+                    with transaction.atomic(), connection.cursor() as cur:
+                        cur.executemany(sql, batch)
+                    self.stdout.write(f"Bulk-upserted {count}")
+                    batch = []
+
+            # Хвост
+            if batch:
+                with transaction.atomic(), connection.cursor() as cur:
+                    cur.executemany(sql, batch)
+
+            self.stdout.write(
+                f"✅ SunRise sync done. Total: {count}, "
+                f"not_found: {skipped_not_found}"
+            )
             SyncStatus.objects.update_or_create(
                 robot_name='SunRise',
                 defaults={

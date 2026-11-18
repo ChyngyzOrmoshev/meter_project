@@ -1,0 +1,967 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-toggle-on"></i> Управление реле</h1>
+
+<!-- Навигация по вкладкам -->
+<!-- Навигация по вкладкам -->
+<ul class="nav nav-pills mb-4" id="relayTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active btn-pastel-primary" id="manual-tab" data-bs-toggle="pill"
+            data-bs-target="#manual" type="button" role="tab">
+            <i class="fas fa-toggle-on"></i> Реле
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link btn-pastel-outline ms-2" id="mass-tab" data-bs-toggle="pill" data-bs-target="#mass"
+            type="button" role="tab">
+            <i class="fas fa-layer-group"></i> Задачи
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link btn-pastel-outline ms-2" id="monitor-tab" data-bs-toggle="pill"
+            data-bs-target="#monitor" type="button" role="tab">
+            <i class="fas fa-chart-line"></i> Мониторинг
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="relayTabsContent">
+
+    <!-- ВКЛАДКА 1: РУЧНОЕ УПРАВЛЕНИЕ -->
+    <div class="tab-pane fade show active" id="manual" role="tabpanel">
+        <div class="row">
+            <!-- Левая колонка: Информация о приборе (как в Показаниях) -->
+            <div class="col-md-5">
+                <div class="card-pastel mb-4">
+                    <div class="card-header"><i class="fas fa-search"></i> Поиск прибора</div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <input type="text" id="search-serial" class="form-control form-control-pastel"
+                                placeholder="Введите номер">
+                            <button class="btn btn-pastel-primary" id="search-btn">Найти</button>
+                        </div>
+                        <div id="search-error" class="text-danger small"></div>
+
+                        <!-- Блок с данными прибора (скрыт до поиска) -->
+                        <div id="device-info-block" class="mt-3 d-none">
+                            <p><strong>Заводской номер:</strong> <span id="info-serial"></span></p>
+                            <p><strong>Тип ПУ:</strong> <span id="info-model"></span></p>
+                            <p><strong>Статус ПУ:</strong>
+                                <span class="badge-pastel" id="info-status"></span>
+                            </p>
+                            <p><strong>Статус связи:</strong> <span id="info-online"></span></p>
+                            <p><strong>Ток:</strong> <span id="info-current"></span></p>
+                            <p><strong>Фазность:</strong> <span id="info-phases"></span></p>
+                            <p><strong>Добавлен:</strong> <span id="info-created"></span></p>
+                            <p><strong>Район:</strong> <span id="info-region"></span></p>
+                            <p><strong>Подстанция:</strong> <span id="info-substation"></span></p>
+                            <p><strong>Фидер:</strong> <span id="info-feeder"></span></p>
+                            <p><strong>ТП:</strong> <span id="info-tp"></span></p>
+
+                            <div class="alert alert-info py-2 mt-3 d-none" id="info-last-reading-block">
+                                <i class="fas fa-chart-line"></i> <strong>Последнее показание:</strong>
+                                <span id="info-last-reading-val"></span>
+                                <small class="text-muted d-block" id="info-last-reading-date"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка: Управление реле -->
+            <div class="col-md-7">
+                <div class="card-pastel d-none h-100" id="control-card">
+                    <div class="card-body text-center py-4 d-flex flex-column">
+                        <h4 class="mb-4">Управление реле</h4>
+
+                        <div id="status-loading" class="d-none my-auto">
+                            <div class="spinner-border text-secondary" role="status"></div>
+                            <p class="mt-2">Получаем статус реле...</p>
+                        </div>
+
+                        <div id="status-result" class="d-none w-100">
+                            <!-- Бейдж статуса -->
+                            <h2 class="mb-4" id="relay-status-badge"></h2>
+
+                            <!-- Кнопки управления (в один ряд) -->
+                            <div class="d-flex justify-content-center gap-2 flex-nowrap mb-4" id="action-buttons">
+                                <button id="btn-on" class="btn btn-pastel-outline px-3"
+                                    onclick="openConfirmModal('on')">
+                                    <i class="fas fa-lightbulb text-warning me-1"></i> Включить
+                                </button>
+                                <button id="btn-off" class="btn btn-pastel-outline px-3"
+                                    onclick="openConfirmModal('off')">
+                                    <i class="far fa-lightbulb me-1"></i> Отключить
+                                </button>
+                                <button id="btn-refresh" class="btn btn-pastel-primary px-3"
+                                    onclick="document.getElementById('search-btn').click()">
+                                    <i class="fas fa-sync-alt"></i> Обновить
+                                </button>
+                            </div>
+
+                            <!-- Индикатор отправки команды (скрыт по умолчанию) -->
+                            <div id="action-loading" class="d-none mb-4 text-info">
+                                <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+                                <span class="ms-2 fw-bold">Команда отправлена. Ожидаем ответа от счетчика...</span>
+                            </div>
+
+                            <!-- Блок истории действий -->
+                            <div class="text-start mt-4 border-top pt-3" id="history-block">
+                                <h6 class="mb-3"><i class="fas fa-history"></i> Последние действия</h6>
+                                <ul class="list-unstyled small text-muted" id="history-list"
+                                    style="max-height: 150px; overflow-y: auto;">
+                                    <!-- Заполняется через JS -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 2: МАССОВЫЕ ЗАДАЧИ -->
+    <div class="tab-pane fade" id="mass" role="tabpanel">
+        <div class="card-pastel mb-4">
+            <div class="card-header"><i class="fas fa-calendar-alt"></i> Параметры задачи</div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Дата и время отключения</label>
+                        <input type="datetime-local" id="task-date" class="form-control form-control-pastel" value="">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Район</label>
+                        <select id="mass-filter-region" class="form-select form-control-pastel" {{
+                            user_region|yesno:"disabled," }}>
+                            {% if not user_region %}
+                            <option value="">Все районы</option>
+                            {% endif %}
+                            {% for r in regions %}
+                            <option value="{{ r.name }}" {{ user_region|yesno:"selected," }}>{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Мин. долг</label>
+                        <input type="number" id="mass-filter-debt" class="form-control form-control-pastel" value="0">
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button class="btn btn-pastel-primary flex-grow-1" onclick="loadSubscribers()">
+                            <i class="fas fa-filter"></i> Применить
+                        </button>
+                        <button class="btn btn-pastel-outline" onclick="resetMassFilters()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-pastel">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-users"></i> Найдено абонентов: <span id="mass-count">0</span></span>
+                <div>
+                    <button type="button" id="btn-mass-on" class="btn btn-pastel-success btn-sm me-2"
+                        onclick="createTasks('on')" disabled>
+                        <i class="fas fa-power-off"></i> Поставить на ВКЛЮЧЕНИЕ
+                    </button>
+                    <button type="button" id="btn-mass-off" class="btn btn-pastel-outline btn-sm text-danger"
+                        onclick="createTasks('off')" disabled>
+                        <i class="fas fa-plug"></i> Поставить на ОТКЛЮЧЕНИЕ
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-pastel mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="select-all-mass"
+                                        onchange="toggleAll(this)"></th>
+                                <th>Лицевой счет</th>
+                                <th>ФИО</th>
+                                <th>Счетчик</th>
+                                <th>Долг</th>
+                                <th>Район</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mass-tbody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Нажмите «Применить» для поиска</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+                <!-- Блок для ненайденных счетчиков -->
+                <div id="orphan-block" class="card-pastel border-danger mb-4 d-none">
+                    <div class="card-header bg-danger bg-opacity-10 text-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Найдено в 1С, но отсутствует в базе АСКУЭ: <span
+                            id="orphan-count">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-pastel mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Счетчик (из 1С)</th>
+                                        <th>ЛС</th>
+                                        <th>ФИО</th>
+                                        <th>Долг</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orphan-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-2 text-muted small">При нажатии «Поставить на ОТКЛЮЧЕНИЕ» для этих абонентов будут
+                            созданы Заявки на проверку.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ВКЛАДКА 3: МОНИТОРИНГ -->
+    <div class="tab-pane fade" id="monitor" role="tabpanel">
+        <!-- Блок фильтров -->
+        <div class="card-pastel mb-4">
+            <div class="card-body p-3">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small mb-1">Дата</label>
+                        <input type="date" id="filter-date-from" class="form-control form-control-pastel">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small mb-1">Дата</label>
+                        <input type="date" id="filter-date-to" class="form-control form-control-pastel">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small mb-1">Район</label>
+                        <select id="filter-region" class="form-select form-control-pastel" {{
+                            user_region|yesno:"disabled," }}>
+                            {% if not user_region %}
+                            <option value="">Все районы</option>
+                            {% endif %}
+                            {% for r in regions %}
+                            <option value="{{ r.name }}" {{ user_region|yesno:"selected," }}>{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label text-muted small mb-1">Действие</label>
+                        <select id="filter-action" class="form-select form-control-pastel">
+                            <option value="">Все</option>
+                            <option value="on">Вкл</option>
+                            <option value="off">Выкл</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label text-muted small mb-1">Статус</label>
+                        <select id="filter-status" class="form-select form-control-pastel">
+                            <option value="">Все</option>
+                            <option value="pending">Ожидание</option>
+                            <option value="processing">В процессе</option>
+                            <option value="success">Успешно</option>
+                            <option value="error">Ошибка</option>
+                            <option value="cancelled">Отменено</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small mb-1">Поиск (ЛС или Счетчик)</label>
+                        <input type="text" id="filter-search" class="form-control form-control-pastel"
+                            placeholder="Номер...">
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="col-md-2">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-pastel-primary flex-grow-1" onclick="loadTasks(1)">
+                                <i class="fas fa-filter"></i> Найти
+                            </button>
+                            <button type="button" class="btn btn-pastel-outline" onclick="resetFilters()"
+                                title="Сбросить">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Таблица -->
+        <div class="card-pastel">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-tasks"></i> Очередь задач</span>
+                <button type="button" class="btn btn-pastel-outline btn-sm" onclick="loadTasks(currentMonitorPage)">
+                    <i class="fas fa-sync-alt"></i> Обновить
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <!-- Панель пагинации (сверху) -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Показывать по:</span>
+                        <select id="monitor-page-size" class="form-select form-select-sm" style="width: 80px;"
+                            onchange="loadTasks(1)">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="text-muted small ms-3" id="monitor-total-info">Всего: 0</span>
+                    </div>
+                    <div id="monitor-pagination-top">
+                        <!-- Сюда рендерится пагинация -->
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                    <table class="table table-pastel mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Запланировано</th>
+                                <th>ЛС</th>
+                                <th>ФИО</th>
+                                <th>Долг</th>
+                                <th>Счетчик</th>
+                                <th>Действие реле</th>
+                                <th>Статус</th>
+                                <th>Пользователь</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monitor-tbody">
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно ручного управления (скрытое) -->
+    <div class="modal fade" id="confirmMassModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirm-mass-text"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-pastel-outline" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-pastel-primary" id="confirm-mass-btn">Да, создать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения -->
+    <div class="modal fade" id="confirmRelayModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Подтверждение</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirm-relay-text">
+                    <!-- Текст подставляется через JS -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-pastel-outline" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-pastel-primary" id="confirm-relay-btn">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userRegion = "{{ user_region|default:'' }}";
+        // CSRF Token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+        // --- ЛОГИКА РУЧНОГО УПРАВЛЕНИЯ ---
+        let currentSerial = '';
+        document.getElementById('search-btn').addEventListener('click', function () {
+            const serial = document.getElementById('search-serial').value.trim();
+            if (!serial) return;
+
+            // Очистка и показ загрузки
+            document.getElementById('search-error').textContent = '';
+            document.getElementById('device-info-block').classList.add('d-none');
+            document.getElementById('control-card').classList.remove('d-none');
+            document.getElementById('status-result').classList.add('d-none');
+            document.getElementById('status-loading').classList.remove('d-none');
+
+            currentSerial = serial;
+
+            fetch(`/relay-control/api/status/?serial=${serial}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('status-loading').classList.add('d-none');
+
+                    if (data.error) {
+                        document.getElementById('search-error').textContent = data.error;
+                        document.getElementById('control-card').classList.add('d-none');
+                        return;
+                    }
+
+                    // --- 1. ЗАПОЛНЯЕМ КАРТОЧКУ ПРИБОРА ---
+                    if (data.device) {
+                        const d = data.device;
+                        document.getElementById('device-info-block').classList.remove('d-none');
+                        document.getElementById('info-serial').textContent = d.serial;
+                        document.getElementById('info-model').textContent = d.model;
+
+                        // Бейдж статуса
+                        const statusBadge = document.getElementById('info-status');
+                        statusBadge.textContent = d.status_display;
+                        statusBadge.className = 'badge-pastel ' + (d.status_code === 'active' ? 'success' : 'idle');
+
+                        // Онлайн статус
+                        document.getElementById('info-online').innerHTML = d.is_online
+                            ? '<span class="badge-pastel success">🟢 Онлайн</span>'
+                            : '<span class="badge-pastel error">🔴 Оффлайн</span>';
+
+                        document.getElementById('info-current').textContent = d.current;
+                        document.getElementById('info-phases').textContent = d.phases;
+                        document.getElementById('info-created').textContent = d.created_at;
+                        document.getElementById('info-region').textContent = d.region;
+                        document.getElementById('info-substation').textContent = d.substation;
+                        document.getElementById('info-feeder').textContent = d.feeder;
+                        document.getElementById('info-tp').textContent = d.tp;
+
+
+                        // Последнее показание
+                        const lastReadBlock = document.getElementById('info-last-reading-block');
+                        if (d.last_reading_date) {
+                            lastReadBlock.classList.remove('d-none');
+                            document.getElementById('info-last-reading-val').textContent = d.last_reading_val + ' кВт·ч';
+                            document.getElementById('info-last-reading-date').textContent = 'на ' + d.last_reading_date;
+                        } else {
+                            lastReadBlock.classList.add('d-none');
+                        }
+                    }
+
+
+
+                    // --- 2. ПОКАЗЫВАЕМ СТАТУС РЕЛЕ ---
+                    showStatus(data.status, data.provider, data.message);
+
+                    // --- 3. ОТРИСОВКА ИСТОРИИ ---
+                    if (data.device && data.device.history) {
+                        renderHistory(data.device.history);
+                    }
+                    // Сброс спиннера загрузки действий, если он висел
+                    document.getElementById('action-loading').classList.add('d-none');
+                    document.getElementById('action-buttons').classList.remove('d-none');
+                })
+                .catch(err => {
+                    document.getElementById('status-loading').classList.add('d-none');
+                    document.getElementById('search-error').textContent = 'Ошибка сети или сервера';
+                    console.error(err);
+                });
+        });
+
+        function showStatus(status, provider, message) {
+            document.getElementById('status-result').classList.remove('d-none');
+            const badge = document.getElementById('relay-status-badge');
+            const btnOn = document.getElementById('btn-on');
+            const btnOff = document.getElementById('btn-off');
+
+            // Сбрасываем кнопки
+            btnOn.classList.add('d-none');
+            btnOff.classList.add('d-none');
+
+            if (status === 'on') {
+                badge.innerHTML = '<span class="badge-pastel success p-3 fs-5"><i class="fas fa-toggle-on me-2 fs-4"></i> РЕЛЕ ПОДКЛЮЧЕНО</span>';
+                btnOff.classList.remove('d-none'); // Показываем кнопку ОТКЛЮЧИТЬ
+            } else if (status === 'off') {
+                badge.innerHTML = '<span class="badge-pastel error p-3 fs-5"><i class="fas fa-toggle-off me-2 fs-4"></i> РЕЛЕ ОТКЛЮЧЕНО</span>';
+                btnOn.classList.remove('d-none'); // Показываем кнопку ВКЛЮЧИТЬ
+            } else if (status === 'pending') {
+                badge.innerHTML = `<span class="badge-pastel warning p-3 fs-5"><i class="fas fa-clock me-2"></i> В ОЧЕРЕДИ</span>`;
+                document.getElementById('action-loading').classList.remove('d-none');
+                document.getElementById('action-loading').innerHTML = '<div class="spinner-border spinner-border-sm text-warning" role="status"></div> <span class="ms-2 fw-bold text-warning">Ожидаем выполнения команды...</span>';
+            } else {
+                badge.innerHTML = `<span class="badge-pastel idle p-3 fs-5"><i class="fas fa-question-circle me-2"></i> СТАТУС НЕИЗВЕСТЕН</span>`;
+            }
+        }
+
+        // Функция для отрисовки истории
+        function renderHistory(history) {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            if (!history || history.length === 0) {
+                list.innerHTML = '<li>Нет недавних действий</li>';
+                return;
+            }
+            history.forEach(h => {
+                let statusClass = h.status === 'success' ? 'text-success' : (h.status === 'error' ? 'text-danger' : 'text-warning');
+                let statusText = h.status === 'success' ? 'Успешно' : (h.status === 'error' ? 'Ошибка' : 'В ожидании');
+
+                list.innerHTML += `
+                <li class="mb-2 pb-2 border-bottom">
+                    <span class="text-dark fw-bold">${h.time}</span> — ${h.action} 
+                    <span class="${statusClass}">(${statusText})</span>
+                    <br><small>Пользователь: ${h.user}</small>
+                    ${h.error ? `<br><small class="text-danger">${h.error}</small>` : ''}
+                </li>
+            `;
+            });
+        }
+
+        // Функция открытия модалки
+        let pendingAction = null;
+        function openConfirmModal(action) {
+            pendingAction = action;
+            const actionName = action === 'on' ? '<span class="text-success">ВКЛЮЧИТЬ</span>' : '<span class="text-danger">ОТКЛЮЧИТЬ</span>';
+            document.getElementById('confirm-relay-text').innerHTML = `Вы уверены, что хотите <b>${actionName}</b> реле для счетчика <b>${currentSerial}</b>?`;
+
+            const modal = new bootstrap.Modal(document.getElementById('confirmRelayModal'));
+            modal.show();
+        }
+
+        // Обработчик кнопки "Подтвердить" в модалке
+        document.getElementById('confirm-relay-btn').addEventListener('click', function () {
+            bootstrap.Modal.getInstance(document.getElementById('confirmRelayModal')).hide();
+            executeRelayCommand(pendingAction);
+        });
+
+        // Выполнение команды
+        function executeRelayCommand(action) {
+            // Скрываем кнопки, показываем спиннер
+            document.getElementById('action-buttons').classList.add('d-none');
+            document.getElementById('action-loading').classList.remove('d-none');
+            document.getElementById('action-loading').innerHTML = '<div class="spinner-border spinner-border-sm text-info" role="status"></div> <span class="ms-2 fw-bold">Отправка команды на сервер...</span>';
+
+            fetch('/relay-control/api/action/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'serial': currentSerial, 'action': action })
+            }).then(res => res.json()).then(data => {
+                if (data.error) {
+                    alert('Ошибка: ' + data.error);
+                    document.getElementById('action-buttons').classList.remove('d-none');
+                    document.getElementById('action-loading').classList.add('d-none');
+                } else {
+                    // Если Hexing или SunRise вернули pending, покажем это
+                    if (data.status === 'pending') {
+                        document.getElementById('action-loading').innerHTML = '<div class="spinner-border spinner-border-sm text-warning" role="status"></div> <span class="ms-2 fw-bold text-warning">Команда в очереди. Ждем выполнения...</span>';
+                        // Через 15 секунд обновим страницу, чтобы подтянуть новый статус
+                        setTimeout(() => { document.getElementById('search-btn').click(); }, 15000);
+                    } else {
+                        // Если успех, сразу обновляем
+                        setTimeout(() => { document.getElementById('search-btn').click(); }, 1000);
+                    }
+                }
+            }).catch(err => {
+                alert('Ошибка сети');
+                document.getElementById('action-buttons').classList.remove('d-none');
+                document.getElementById('action-loading').classList.add('d-none');
+            });
+        }
+
+        // --- ЛОГИКА МАССОВЫХ ЗАДАЧ ---
+
+        // Функция активации/деактивации кнопок
+        function updateMassButtons() {
+            const checkedBoxes = document.querySelectorAll('.mass-checkbox:checked');
+            const btnOn = document.getElementById('btn-mass-on');
+            const btnOff = document.getElementById('btn-mass-off');
+
+            if (checkedBoxes.length === 0) {
+                btnOn.disabled = true;
+                btnOff.disabled = true;
+                return;
+            }
+
+            let allHaveDebt = true;  // У всех долг > 0
+            let allNoDebt = true;    // У всех долг <= 0
+
+            checkedBoxes.forEach(cb => {
+                const debt = parseFloat(cb.getAttribute('data-debt') || 0);
+                if (debt > 0) {
+                    allNoDebt = false;
+                } else {
+                    allHaveDebt = false;
+                }
+            });
+
+            // Логика активации:
+            if (allHaveDebt) {
+                // Все с долгом -> можно только отключить
+                btnOff.disabled = false;
+                btnOn.disabled = true;
+            } else if (allNoDebt) {
+                // У всех долг 0 или меньше -> можно только включить
+                btnOn.disabled = false;
+                btnOff.disabled = true;
+            } else {
+                // Смешанный выбор (есть и должники, и оплатившие) -> блокируем обе, во избежание ошибок
+                btnOn.disabled = true;
+                btnOff.disabled = true;
+                alert('Внимание: Выбраны абоненты как с долгом, так и без. Для продолжения выберите только должников или только оплативших.');
+            }
+        }
+
+        function loadSubscribers() {
+            const region = document.getElementById('mass-filter-region').value;
+            const debt = document.getElementById('mass-filter-debt').value;
+            const tbody = document.getElementById('mass-tbody');
+
+            document.getElementById('btn-mass-on').disabled = true;
+            document.getElementById('btn-mass-off').disabled = true;
+            document.getElementById('select-all-mass').checked = false;
+            document.getElementById('orphan-block').classList.add('d-none');
+
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Поиск...</td></tr>';
+
+            fetch(`/relay-control/api/mass-subscribers/?region=${encodeURIComponent(region)}&min_debt=${debt}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${data.error}</td></tr>`;
+                        return;
+                    }
+
+                    // 1. Отрисовка найденных
+                    document.getElementById('mass-count').textContent = data.total_found;
+                    if (data.total_found === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Найденных абонентов нет</td></tr>';
+                    } else {
+                        let html = '';
+                        data.found.forEach(item => {
+                            html += `<tr>
+                            <td><input type="checkbox" class="mass-checkbox" value="${item.id}" data-debt="${item.debt}" onchange="updateMassButtons()"></td>
+                            <td>${item.account}</td>
+                            <td>${item.name || '—'}</td>
+                            <td>${item.serial}</td>
+                            <td><span class="text-danger fw-bold">${item.debt.toFixed(2)}</span></td>
+                            <td>${item.region || '—'}</td>
+                        </tr>`;
+                        });
+                        tbody.innerHTML = html;
+                    }
+
+                    // 2. Отрисовка сирот
+                    currentOrphans = data.not_found || [];
+                    if (currentOrphans.length > 0) {
+                        document.getElementById('orphan-block').classList.remove('d-none');
+                        document.getElementById('orphan-count').textContent = currentOrphans.length;
+                        let orphanHtml = '';
+                        currentOrphans.forEach(o => {
+                            orphanHtml += `<tr>
+                            <td>${o.serial}</td>
+                            <td>${o.account || '—'}</td>
+                            <td>${o.name || '—'}</td>
+                            <td class="text-danger">${o.debt.toFixed(2)}</td>
+                        </tr>`;
+                        });
+                        document.getElementById('orphan-tbody').innerHTML = orphanHtml;
+                    }
+                });
+        }
+
+        function resetMassFilters() {
+            if (!userRegion) {
+                document.getElementById('mass-filter-region').value = '';
+            }
+            document.getElementById('mass-filter-debt').value = '0';
+            loadSubscribers();
+        }
+
+        function toggleAll(source) {
+            document.querySelectorAll('.mass-checkbox').forEach(cb => cb.checked = source.checked);
+            updateMassButtons(); // Вызываем обновление кнопок при выделении всех
+        }
+
+        // Глобальные переменные для модалки
+        let selectedMassIds = [];
+        let selectedMassAction = null;
+        let currentOrphans = [];
+
+        function createTasks(action) {
+            const selected = Array.from(document.querySelectorAll('.mass-checkbox:checked')).map(cb => cb.value);
+            if (selected.length === 0) return alert('Выберите хотя бы одного абонента');
+
+            const dateVal = document.getElementById('task-date').value;
+            if (!dateVal) return alert('Укажите дату и время выполнения');
+
+            // ПРОВЕРКА НА МИНИМАЛЬНОЕ ВРЕМЯ (+1 ЧАС)
+            const selectedDate = new Date(dateVal);
+            const now = new Date();
+            const minDate = new Date(now.getTime() + 60 * 60 * 1000); // Текущее время + 1 час
+
+            if (selectedDate < minDate) {
+                return alert('Ошибка: Время выполнения должно быть минимум через 1 час от текущего момента!');
+            }
+            // -----------------------------
+
+            selectedMassIds = selected;
+            selectedMassAction = action;
+
+            const actionName = action === 'on' ? 'ВКЛЮЧЕНИЕ' : 'ОТКЛЮЧЕНИЕ';
+
+            // Показываем модалку
+            let modalText = `Вы собираетесь поставить <b>${selected.length}</b> задач на <b>${actionName}</b>.<br>Время: <b>${dateVal}</b>`;
+
+            if (currentOrphans && currentOrphans.length > 0) {
+                modalText += `<br><br><span class="text-danger"><b>Внимание!</b> Для ${currentOrphans.length} абонентов из 1С нет счетчиков в базе. Для них будут созданы Заявки на проверку.</span>`;
+            }
+
+            document.getElementById('confirm-mass-text').innerHTML = modalText;
+
+            const modalEl = document.getElementById('confirmMassModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        // Обработчик кнопки "Да, создать" (вешаем один раз при загрузке страницы)
+        document.getElementById('confirm-mass-btn').addEventListener('click', function () {
+            if (selectedMassIds.length === 0) return;
+
+            const btn = this;
+            const modalEl = document.getElementById('confirmMassModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            // Меняем текст кнопки, чтобы показать процесс
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+            btn.disabled = true;
+
+            const formData = new URLSearchParams();
+            selectedMassIds.forEach(id => formData.append('device_ids[]', id));
+            formData.append('action', selectedMassAction);
+
+            // Передаем дату
+            const dateVal = document.getElementById('task-date').value;
+            formData.append('scheduled_at', dateVal);
+
+            // Передаем сирот и район
+            formData.append('orphan_devices', JSON.stringify(currentOrphans));
+            formData.append('region_name', document.getElementById('mass-filter-region').value);
+
+            fetch('/relay-control/api/mass-create-tasks/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            })
+                .then(res => {
+                    // Проверяем статус ответа, если не 200 - кидаем ошибку
+                    if (!res.ok) {
+                        return res.text().then(text => { throw new Error(`Ошибка сервера (${res.status}): ${text.substring(0, 100)}`); });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert('Ошибка: ' + data.error);
+                    } else {
+                        modal.hide();
+                        alert(data.message);
+                        document.getElementById('monitor-tab').click(); // Переключаем на вкладку мониторинга
+                        loadTasks();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Не удалось создать задачи:\n' + err.message);
+                })
+                .finally(() => {
+                    // Возвращаем кнопку в исходное состояние
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        });
+
+        // --- ЛОГИКА МОНИТОРИНГА ---
+        let currentMonitorPage = 1;
+
+        function loadTasks(page = 1, silent = false) {
+            const tbody = document.getElementById('monitor-tbody');
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+            const region = document.getElementById('filter-region').value;
+            const action = document.getElementById('filter-action').value;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('filter-search').value;
+            const pageSize = document.getElementById('monitor-page-size').value;
+
+            // Если не выбран период (хотя бы одна из дат), ставим сегодняшнюю дату
+            if (!dateFrom || !dateTo) {
+                const today = new Date();
+                today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+                const todayStr = today.toISOString().split('T')[0];
+                document.getElementById('filter-date-from').value = todayStr;
+                document.getElementById('filter-date-to').value = todayStr;
+                return loadTasks(1, silent);
+            }
+
+            currentMonitorPage = page;
+
+            if (!silent) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Загрузка...</td></tr>';
+            }
+
+            const url = `/relay-control/api/tasks-monitor/?date_from=${dateFrom}&date_to=${dateTo}&region=${region}&action=${action}&status=${status}&search=${search}&page=${page}&page_size=${pageSize}`;
+
+            // ... (дальнейший код fetch и рендера таблицы остается без изменений) ...
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.items.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Задач по вашему фильтру не найдено</td></tr>';
+                        document.getElementById('monitor-total-info').textContent = 'Всего: 0';
+                        document.getElementById('monitor-pagination-top').innerHTML = '';
+                        return;
+                    }
+
+                    // Рендер строк таблицы
+                    let html = '';
+                    data.items.forEach(task => {
+                        let badgeClass = 'idle';
+                        if (task.status === 'success') badgeClass = 'success';
+                        if (task.status === 'error') badgeClass = 'error';
+                        if (task.status === 'processing') badgeClass = 'warning';
+                        if (task.status === 'cancelled') badgeClass = 'idle';
+
+                        const debtDisplay = task.debt > 0
+                            ? `<span class="text-danger fw-bold">${task.debt.toFixed(2)}</span>`
+                            : `<span class="text-success">0.00</span>`;
+
+                        const btnRetry = (task.status === 'error') ?
+                            `<button type="button" class="btn btn-sm btn-pastel-outline text-danger" onclick="retryTask(${task.id})"><i class="fas fa-redo"></i> Повтор</button>` : '—';
+
+                        html += `<tr>
+                        <td>#${task.id}</td>
+                        <td>${task.scheduled_at}</td>
+                        <td>${task.account}</td>
+                        <td>${task.name}</td>
+                        <td>${debtDisplay}</td>
+                        <td>${task.serial}</td>
+                        <td>${task.action_display}</td>
+                        <td><span class="badge-pastel ${badgeClass}">${task.status_display}</span></td>
+                        <td>${task.user}</td>
+                        <td>${btnRetry}</td>
+                    </tr>`;
+                    });
+                    tbody.innerHTML = html;
+
+                    // Рендер пагинации
+                    renderPagination(data.pagination);
+                })
+                .catch(err => {
+                    if (!silent) {
+                        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Ошибка загрузки данных</td></tr>';
+                    }
+                });
+        }
+
+        function renderPagination(p) {
+            document.getElementById('monitor-total-info').textContent = `Всего: ${p.total_items}`;
+
+            if (p.total_pages <= 1) {
+                document.getElementById('monitor-pagination-top').innerHTML = '';
+                return;
+            }
+
+            let html = `<ul class="pagination pagination-sm mb-0">`;
+
+            // Кнопка "Назад"
+            html += `<li class="page-item ${p.has_previous ? '' : 'disabled'}">
+            <a class="page-link" href="#" onclick="event.preventDefault(); if(${p.has_previous}) loadTasks(${p.current_page - 1});">«</a>
+        </li>`;
+
+            // Номера страниц (показываем диапазон вокруг текущей)
+            let startPage = Math.max(1, p.current_page - 2);
+            let endPage = Math.min(p.total_pages, p.current_page + 2);
+
+            if (startPage > 1) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadTasks(1);">1</a></li>`;
+                if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<li class="page-item ${i === p.current_page ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="event.preventDefault(); loadTasks(${i});">${i}</a>
+            </li>`;
+            }
+
+            if (endPage < p.total_pages) {
+                if (endPage < p.total_pages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadTasks(${p.total_pages});">${p.total_pages}</a></li>`;
+            }
+
+            // Кнопка "Вперед"
+            html += `<li class="page-item ${p.has_next ? '' : 'disabled'}">
+            <a class="page-link" href="#" onclick="event.preventDefault(); if(${p.has_next}) loadTasks(${p.current_page + 1});">»</a>
+        </li>`;
+
+            html += `</ul>`;
+            document.getElementById('monitor-pagination-top').innerHTML = html;
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
+            if (!userRegion) {
+                document.getElementById('filter-region').value = '';
+            }
+            document.getElementById('filter-action').value = '';
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-search').value = '';
+            loadTasks(1);
+        }
+
+        function retryTask(id) {
+            if (!confirm('Переотправить задачу?')) return;
+            fetch('/relay-control/api/task-retry/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'task_id': id })
+            }).then(res => res.json()).then(data => {
+                if (data.error) alert(data.error);
+                else loadTasks();
+            });
+        }
+
+        // Автообновление мониторинга (каждые 10 секунд)
+        setInterval(() => {
+            // Проверяем, открыта ли вкладка "Мониторинг"
+            if (document.getElementById('monitor').classList.contains('active')) {
+                // Передаем ТЕКУЩУЮ страницу (currentMonitorPage) и silent=true (без мигания)
+                loadTasks(currentMonitorPage, true);
+            }
+        }, 10000);
+
+        // Инициализация при загрузке (если нужно)
+        document.addEventListener("DOMContentLoaded", function () {
+            // Ставим дату по умолчанию: сейчас + 1 час
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('task-date').value = now.toISOString().slice(0, 16);
+        });
+
+
+
+    </script>
+    {% endblock %}

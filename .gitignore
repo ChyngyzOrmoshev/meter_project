@@ -34,3 +34,11 @@ env/
 /app/logs/
 /backups/
 /app/backup/
+
+# === ДАННЫЕ И СГЕНЕРИРОВАННЫЕ ФАЙЛЫ ===
+/1c_reports/
+/django_app/exports/
+/django_app/staticfiles/
+/downloads/
+project_src.zip
+tree.txt

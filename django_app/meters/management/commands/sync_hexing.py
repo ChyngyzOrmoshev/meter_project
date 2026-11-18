@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db import connection, transaction
 from meters.models import Device, Reading, SyncStatus
+from meters.utils import get_robot_devices
 import mysql.connector
 import os
 import time
@@ -10,8 +12,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = 'Sync data from Hexing KUK MySQL to MySQL'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--once', action='store_true',
+                            help='Один прогон без бесконечного цикла')
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
@@ -34,6 +41,8 @@ class Command(BaseCommand):
                         'error': str(e)
                     }
                 )
+            if options.get('once'):
+                break
             time.sleep(600)
 
     def sync(self, host, port, user, password, db):
@@ -46,11 +55,9 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to Hexing KUK MySQL")
 
-            # device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
-            from meters.utils import get_robot_devices
-            devices = get_robot_devices('Hexing_KUK')
-            device_sns = set(devices.values_list('serial_number', flat=True))
-            if not device_sns:
+            # ---- Устройства Hexing_KUK ----
+            devices = list(get_robot_devices('Hexing_KUK'))
+            if not devices:
                 self.stdout.write("No devices in MySQL, sync skipped.")
                 SyncStatus.objects.update_or_create(
                     robot_name='Hexing_KUK',
@@ -63,7 +70,17 @@ class Command(BaseCommand):
                 )
                 return
 
-            last_reading = Reading.objects.filter(notes="Hexing KUK").order_by('-timestamp').first()
+            devices_map = {}
+            devices_map_last8 = {}
+            for d in devices:
+                devices_map[d.serial_number] = d
+                if len(d.serial_number) >= 8:
+                    devices_map_last8.setdefault(d.serial_number[-8:], d)
+
+            # ---- Период ----
+            last_reading = Reading.objects.filter(
+                notes="Hexing KUK"
+            ).order_by('-timestamp').first()
             if last_reading:
                 last_time = last_reading.timestamp - timedelta(hours=1)
                 query = """
@@ -94,30 +111,52 @@ class Command(BaseCommand):
                 """
                 cursor.execute(query)
 
+            # ---- Пакетная вставка ----
             count = 0
+            skipped = 0
+            batch = []
+            BATCH_SIZE = 1000
+
+            sql = """
+                INSERT INTO readings (device_id, timestamp, direction, reading_value, notes)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    reading_value = VALUES(reading_value),
+                    notes = VALUES(notes)
+            """
+
             for row in cursor:
                 sn = row[0].strip()
-                if sn not in device_sns:
+                device = devices_map.get(sn)
+                if not device and len(sn) >= 8:
+                    device = devices_map_last8.get(sn[-8:])
+                if not device and len(sn) < 8:
+                    device = devices_map_last8.get(sn.zfill(8))
+                if not device:
+                    skipped += 1
                     continue
+
                 dt = row[1]
                 if isinstance(dt, str):
                     dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
                 val = row[2]
-                device = Device.objects.get(serial_number=sn)
-                Reading.objects.update_or_create(
-                    device=device,
-                    timestamp=dt,
-                    defaults={
-                        'reading_value': val,
-                        'notes': 'Hexing KUK',
-                        'direction': 'aplus'
-                    }
-                )
-                count += 1
-                if count % 1000 == 0:
-                    self.stdout.write(f"Processed {count} readings")
 
-            self.stdout.write(f"✅ Hexing KUK sync done. Total: {count}")
+                batch.append((device.id, dt, 'aplus', val, 'Hexing KUK'))
+                count += 1
+
+                if len(batch) >= BATCH_SIZE:
+                    with transaction.atomic(), connection.cursor() as cur:
+                        cur.executemany(sql, batch)
+                    self.stdout.write(f"Bulk-upserted {count}")
+                    batch = []
+
+            if batch:
+                with transaction.atomic(), connection.cursor() as cur:
+                    cur.executemany(sql, batch)
+
+            self.stdout.write(
+                f"✅ Hexing KUK sync done. Total: {count}, skipped: {skipped}"
+            )
             SyncStatus.objects.update_or_create(
                 robot_name='Hexing_KUK',
                 defaults={

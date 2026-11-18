@@ -1,0 +1,273 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-microchip"></i>Приборы по типам</h1>
+
+<!-- Метрики -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="metric-modern">
+            <div class="metric-icon"><i class="fas fa-cubes"></i></div>
+            <h5>Всего приборов</h5>
+            <h2>{{ total_devices }}</h2>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="metric-modern">
+            <div class="metric-icon"><i class="fas fa-wifi"></i></div>
+            <h5>Онлайн</h5>
+            <h2 class="text-success">{{ total_online }}</h2>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="metric-modern">
+            <div class="metric-icon"><i class="fas fa-plug"></i></div>
+            <h5>Оффлайн</h5>
+            <h2 class="text-danger">{{ total_offline }}</h2>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="metric-modern">
+            <div class="metric-icon"><i class="fas fa-percent"></i></div>
+            <h5>% чтения</h5>
+            <h2>{{ total_percent }}%</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="card-pastel mb-4">
+    <div class="card-header col-12 d-flex justify-content-between align-items-center">
+        <div><i class="fas fa-sliders-h"></i> Фильтры</div>
+        <div class="btn-group" role="group">
+            <a href="?{{ request.GET.urlencode }}&export=csv" class="btn btn-pastel-outline">
+                <i class="fas fa-file-csv"></i> CSV
+            </a>
+            <a href="?{{ request.GET.urlencode }}&export=xlsx" class="btn btn-pastel-outline">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Период</label>
+                <select name="period" class="form-select form-control-pastel">
+                    {% for value, label, selected in periods %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Конкретная дата</label>
+                <input type="date" name="date" class="form-control form-control-pastel" value="{{ specific_date }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Производитель</label>
+                <select name="producer" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for display, code, selected in producers_with_selected %}
+                    <option value="{{ code }}" {% if selected %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Тип ПУ</label>
+                <select name="model" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for m, selected in models_with_selected %}
+                    <option value="{{ m.id }}" {% if selected %}selected{% endif %}>{{ m.model_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Статус</label>
+                <select name="status" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for value, label, selected in statuses_with_selected %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Район</label>
+                <select name="region" class="form-select form-control-pastel">
+                    <option value="">Все</option>
+                    {% for r, selected in regions_with_selected %}
+                    <option value="{{ r.id }}" {% if selected %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Категория</label>
+                <select name="category" class="form-select form-control-pastel">
+                    {% for val, label, selected in categories_with_selected %}
+                    <option value="{{ val }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Статус связи</label>
+                <select name="online" class="form-select form-control-pastel">
+                    {% for value, label, selected in online_choices %}
+                    <option value="{{ value }}" {% if selected %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pastel-primary w-100">
+                    <i class="fas fa-filter"></i> Применить
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'device_types_report' %}" class="btn btn-pastel-outline w-100">Сброс</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Сводка по производителям -->
+<!-- <div class="card-pastel mb-4">
+    <div class="card-header"><i class="fas fa-industry"></i> Сводка по производителям</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>Производитель</th>
+                        <th class="text-center">Всего</th>
+                        <th class="text-center">Онлайн</th>
+                        <th class="text-center">Оффлайн</th>
+                        <th style="width: 220px;">% чтения</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in producers_list %}
+                    <tr>
+                        <td><strong>{{ p.producer }}</strong></td>
+                        <td class="text-center">{{ p.total }}</td>
+                        <td class="text-center text-success">{{ p.online }}</td>
+                        <td class="text-center text-danger">{{ p.offline }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress-pastel flex-grow-1 me-2">
+                                    <div class="progress-bar" data-percent="{{ p.percent|floatformat:0 }}"></div>
+                                </div>
+                                <span style="min-width: 3.5rem; text-align: right;">{{ p.percent|floatformat:1
+                                    }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> -->
+
+<!-- Детализация по типам ПУ -->
+<div class="card-pastel">
+    <div class="card-header"><i class="fas fa-list"></i> Детализация по типам ПУ</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-pastel mb-0">
+                <thead>
+                    <tr>
+                        <th>Производитель</th>
+                        <th>Тип ПУ</th>
+                        <th>Ток</th>
+                        <th>Фазность</th>
+                        <th class="text-center">Всего</th>
+                        <th class="text-center">Онлайн</th>
+                        <th class="text-center">Оффлайн</th>
+                        <th style="width: 220px;">% чтения</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in models_list %}
+                    <tr>
+                        <td>{{ m.producer_display }}</td>
+                        <td><strong>{{ m.model_name }}</strong></td>
+                        <td>{{ m.nominal_current|default:"—" }}</td>
+                        <td>{{ m.phases|default:"—" }}</td>
+                        <td class="text-center">{{ m.total }}</td>
+                        <td class="text-center">
+                            <!-- Ссылка на приборы ОНЛАЙН -->
+                            <a href="{% url 'readings_with' %}?model={{ m.id }}&online=yes&period={{ period }}{% if specific_date %}&date={{ specific_date }}{% endif %}{% if producer_filter %}&producer={{ producer_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if region_filter %}&region={{ region_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}"
+                                class="text-success text-decoration-none fw-bold"
+                                title="Показать онлайн приборы этой модели">
+                                {{ m.online }}
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <!-- Ссылка на приборы ОФФЛАЙН -->
+                            <a href="{% url 'missing_readings' %}?model={{ m.id }}&online=no&period={{ period }}{% if specific_date %}&date={{ specific_date }}{% endif %}{% if producer_filter %}&producer={{ producer_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if region_filter %}&region={{ region_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}"
+                                class="text-danger text-decoration-none fw-bold"
+                                title="Показать оффлайн приборы этой модели">
+                                {{ m.offline }}
+                            </a>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress-pastel flex-grow-1 me-2">
+                                    <div class="progress-bar" data-percent="{{ m.percent|floatformat:0 }}"></div>
+                                </div>
+                                <span style="min-width: 3.5rem; text-align: right;">
+                                    {{ m.percent|floatformat:1 }}%
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if models_list %}
+                <tfoot style="font-weight: bold; background: #f0f3f7;">
+                    <tr>
+                        <td colspan="4">ИТОГО</td>
+                        <td class="text-center">{{ total_devices }}</td>
+                        <td class="text-center">
+                            <!-- Ссылка на все ОНЛАЙН приборы по текущим фильтрам -->
+                            <a href="{% url 'readings_with' %}?online=yes&period={{ period }}{% if specific_date %}&date={{ specific_date }}{% endif %}{% if producer_filter %}&producer={{ producer_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if region_filter %}&region={{ region_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}"
+                                class="text-success text-decoration-none fw-bold">
+                                {{ total_online }}
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <!-- Ссылка на все ОФФЛАЙН приборы по текущим фильтрам -->
+                            <a href="{% url 'missing_readings' %}?online=no&period={{ period }}{% if specific_date %}&date={{ specific_date }}{% endif %}{% if producer_filter %}&producer={{ producer_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if region_filter %}&region={{ region_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}"
+                                class="text-danger text-decoration-none fw-bold">
+                                {{ total_offline }}
+                            </a>
+                        </td>
+                        <td>{{ total_percent }}%</td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Анимация прогресс-баров
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.progress-bar[data-percent]').forEach(function (bar) {
+            const percent = parseInt(bar.dataset.percent) || 0;
+            bar.classList.remove('bg-success-pastel', 'bg-warning-pastel', 'bg-danger-pastel');
+            let cls = 'bg-success-pastel';
+            if (percent < 50) cls = 'bg-danger-pastel';
+            else if (percent < 80) cls = 'bg-warning-pastel';
+            bar.classList.add(cls);
+            bar.style.width = '0%';
+            setTimeout(() => { bar.style.transition = 'width 1.2s ease-in-out'; bar.style.width = percent + '%'; }, 200);
+        });
+    });
+</script>
+{% endblock %}

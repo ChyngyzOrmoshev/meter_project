@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db import connection, transaction
 from meters.models import Device, Reading, SyncStatus
+from meters.utils import get_robot_devices
 import pyodbc
 import os
 import time
@@ -10,8 +12,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = 'Sync data from cEnergo MS SQL to MySQL'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--once', action='store_true',
+                            help='Один прогон без бесконечного цикла')
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
@@ -20,7 +27,10 @@ class Command(BaseCommand):
         password = os.getenv("DB_MSSQL_PASSWORD")
         db = os.getenv("DB_MSSQL_NAME")
 
-        conn_str = f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        conn_str = (
+            f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};"
+            f"UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        )
 
         while True:
             try:
@@ -35,6 +45,8 @@ class Command(BaseCommand):
                         'error': str(e)
                     }
                 )
+            if options.get('once'):
+                break
             time.sleep(600)
 
     def sync(self, conn_str):
@@ -44,11 +56,9 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to cEnergo MS SQL")
 
-            # device_sns = set(Device.objects.filter(status='active').values_list('serial_number', flat=True))
-            from meters.utils import get_robot_devices
-            devices = get_robot_devices('cEnergo')
-            device_sns = set(devices.values_list('serial_number', flat=True))
-            if not device_sns:
+            # ---- Устройства cEnergo ----
+            devices = list(get_robot_devices('cEnergo'))
+            if not devices:
                 self.stdout.write("No devices in MySQL, sync skipped.")
                 SyncStatus.objects.update_or_create(
                     robot_name='cEnergo',
@@ -61,7 +71,17 @@ class Command(BaseCommand):
                 )
                 return
 
-            last_reading = Reading.objects.filter(notes="Авто-сбор: База cEnergo").order_by('-timestamp').first()
+            devices_map = {}
+            devices_map_last8 = {}
+            for d in devices:
+                devices_map[d.serial_number] = d
+                if len(d.serial_number) >= 8:
+                    devices_map_last8.setdefault(d.serial_number[-8:], d)
+
+            # ---- Период ----
+            last_reading = Reading.objects.filter(
+                notes="Авто-сбор: База cEnergo"
+            ).order_by('-timestamp').first()
             if last_reading:
                 last_time = last_reading.timestamp - timedelta(hours=1)
                 query = """
@@ -85,30 +105,52 @@ class Command(BaseCommand):
                 """
                 cursor.execute(query)
 
+            # ---- Пакетная вставка ----
             count = 0
+            skipped = 0
+            batch = []
+            BATCH_SIZE = 1000
+
+            sql = """
+                INSERT INTO readings (device_id, timestamp, direction, reading_value, notes)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    reading_value = VALUES(reading_value),
+                    notes = VALUES(notes)
+            """
+
             for row in cursor:
                 sn = row.SerialNumber.strip()
-                if sn not in device_sns:
+                device = devices_map.get(sn)
+                if not device and len(sn) >= 8:
+                    device = devices_map_last8.get(sn[-8:])
+                if not device and len(sn) < 8:
+                    device = devices_map_last8.get(sn.zfill(8))
+                if not device:
+                    skipped += 1
                     continue
+
                 dt = row.DT
                 if isinstance(dt, str):
                     dt = datetime.strptime(dt.split('.')[0], "%Y-%m-%d %H:%M:%S")
                 val = row.Val
-                device = Device.objects.get(serial_number=sn)
-                Reading.objects.update_or_create(
-                    device=device,
-                    timestamp=dt,
-                    defaults={
-                        'reading_value': val,
-                        'notes': 'Авто-сбор: База cEnergo',
-                        'direction': 'aplus'
-                    }
-                )
-                count += 1
-                if count % 1000 == 0:
-                    self.stdout.write(f"Processed {count} readings")
 
-            self.stdout.write(f"✅ cEnergo sync done. Total: {count}")
+                batch.append((device.id, dt, 'aplus', val, 'Авто-сбор: База cEnergo'))
+                count += 1
+
+                if len(batch) >= BATCH_SIZE:
+                    with transaction.atomic(), connection.cursor() as cur:
+                        cur.executemany(sql, batch)
+                    self.stdout.write(f"Bulk-upserted {count}")
+                    batch = []
+
+            if batch:
+                with transaction.atomic(), connection.cursor() as cur:
+                    cur.executemany(sql, batch)
+
+            self.stdout.write(
+                f"✅ cEnergo sync done. Total: {count}, skipped: {skipped}"
+            )
             SyncStatus.objects.update_or_create(
                 robot_name='cEnergo',
                 defaults={

@@ -21,8 +21,7 @@
                         <select name="model" class="form-select form-control-pastel" required>
                             <option value="">— Выберите Тип ПУ —</option>
                             {% for m in models %}
-                            <option value="{{ m.id }}">{{ m.model_name }} ({{ m.nominal_current|default:"—" }}, {{
-                                m.phases }}ф)</option>
+                            <option value="{{ m.id }}">{{ m.display_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -69,8 +68,7 @@
                         <select name="bulk_model" class="form-select form-control-pastel" required>
                             <option value="">— Выберите Тип ПУ —</option>
                             {% for m in models %}
-                            <option value="{{ m.id }}">{{ m.model_name }} ({{ m.nominal_current|default:"—" }}, {{
-                                m.phases }}ф)</option>
+                            <option value="{{ m.id }}">{{ m.display_name }}</option>
                             {% endfor %}
                         </select>
                     </div>

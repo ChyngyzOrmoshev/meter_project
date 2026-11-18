@@ -6,6 +6,8 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
+                <p><strong>Абонент (1С):</strong> {{ issue.subscriber_1c|default:"—" }}</p>
+                <p><strong>Лицевой счет (1С):</strong> {{ issue.account_1c|default:"—" }}</p>
                 <p><strong>Заводской номер (1С):</strong> {{ issue.serial_1c }}</p>
                 <p><strong>Модель (1С):</strong> {{ issue.model_1c|default:"—" }}</p>
                 <p><strong>Район:</strong> {{ issue.region.name|default:"—" }}</p>

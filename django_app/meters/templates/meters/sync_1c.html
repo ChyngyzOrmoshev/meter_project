@@ -1,0 +1,258 @@
+{% extends 'meters/base.html' %}
+{% block content %}
+<h1 class="page-title"><i class="fas fa-file-excel"></i> Синхронизация с 1С</h1>
+
+<div class="row g-4">
+    <!-- ЛЕВАЯ КОЛОНКА: ЗАПУСК -->
+    <div class="col-md-6">
+        <div class="card-pastel h-100">
+            <div class="card-header"><i class="fas fa-cogs"></i> Запуск сверки</div>
+            <div class="card-body">
+                <p class="text-muted small">Робот читает выгрузку из 1С и формирует отчеты. Если поставить галочку
+                    "Применить", он отключит счетчики, которых нет в 1С и нет показаний более 30 дней. А также вернет в
+                    активные те, что снова появились в 1С.</p>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="apply-checkbox">
+                    <label class="form-check-label text-danger" for="apply-checkbox">
+                        <strong>Применить изменения к базе</strong>
+                    </label>
+                </div>
+
+                <button id="run-sync-btn" class="btn btn-pastel-primary">
+                    <i class="fas fa-play"></i> Запустить сверку
+                </button>
+
+                {% if last_run_time %}
+                <div class="mt-3 text-muted small">
+                    <i class="fas fa-history"></i> Последний запуск: <strong>{{ last_run_time }}</strong>
+                </div>
+                {% endif %}
+
+                <div id="sync-result" class="mt-3"></div>
+
+                {% if sync_status %}
+                <div class="mt-2 text-muted small">
+                    Записей обработано при последнем применении: {{ sync_status.records_processed }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ПРАВАЯ КОЛОНКА: ОТЧЕТЫ -->
+    <div class="col-md-6">
+        <div class="card-pastel h-100">
+            <div class="card-header"><i class="fas fa-file-download"></i> Отчеты</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6><i class="fas fa-user-plus text-success"></i> Новые счетчики (нет у нас)</h6>
+                    {% if new_meters_exists %}
+                    <p class="small text-muted mb-1">Обновлен: {{ new_mtime }}</p>
+                    <a href="{% url 'download_1c_report' 'new_meters.csv' %}" class="btn btn-pastel-success btn-sm"><i
+                            class="fas fa-download"></i> Скачать new_meters.csv</a>
+                    {% else %}
+                    <p class="small text-muted">Файл еще не сгенерирован.</p>
+                    {% endif %}
+                </div>
+
+                <hr>
+
+                <div>
+                    <h6><i class="fas fa-user-minus text-danger"></i> Пропавшие из 1С (кандидаты)</h6>
+                    {% if missing_exists %}
+                    <p class="small text-muted mb-1">Обновлен: {{ missing_mtime }}</p>
+                    <a href="{% url 'download_1c_report' 'missing_in_1c.csv' %}"
+                        class="btn btn-pastel-outline btn-sm"><i class="fas fa-download"></i> Скачать
+                        missing_in_1c.csv</a>
+                    {% else %}
+                    <p class="small text-muted">Файл еще не сгенерирован.</p>
+                    {% endif %}
+                </div>
+                <hr>
+
+                <div>
+                    <h6><i class="fas fa-sync-alt text-warning"></i> Обновленные счетчики (Район/Кат.)</h6>
+                    {% if updated_exists %}
+                    <p class="small text-muted mb-1">Обновлен: {{ updated_mtime }}</p>
+                    <a href="{% url 'download_1c_report' 'updated_meters.csv' %}"
+                        class="btn btn-pastel-primary btn-sm"><i class="fas fa-download"></i> Скачать
+                        updated_meters.csv</a>
+                    {% else %}
+                    <p class="small text-muted">Файл еще не сгенерирован.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- БЛОК РЕЗУЛЬТАТОВ -->
+<div id="result-container" class="mt-4 {% if not last_result %}d-none{% endif %}">
+    <!-- Основная плашка -->
+    <div class="alert alert-success shadow-sm border-0 mb-4">
+        <h5 class="alert-heading"><i class="fas fa-check-circle"></i> Сверка успешно завершена!</h5>
+        <hr>
+        <div class="row text-center mt-3">
+            <div class="col">
+                <h6 class="text-muted small">Всего в 1С</h6>
+                <h4 class="text-dark" id="res-total">{{ last_result.total_1c|default:0 }}</h4>
+            </div>
+            <div class="col">
+                <h6 class="text-muted small">Новых</h6>
+                <h4 class="text-success" id="res-new">{{ last_result.new_count|default:0 }}</h4>
+            </div>
+            <div class="col">
+                <h6 class="text-muted small">Пропало</h6>
+                <h4 class="text-danger" id="res-missing">{{ last_result.missing_count|default:0 }}</h4>
+            </div>
+            <div class="col">
+                <h6 class="text-muted small">Inactive</h6>
+                <h4 class="text-primary" id="res-deactivated">{{ last_result.deactivated_count|default:0 }}</h4>
+            </div>
+            <div class="col">
+                <h6 class="text-muted small">Восстановлено</h6>
+                <h4 class="text-info" id="res-activated">{{ last_result.activated_count|default:0 }}</h4>
+            </div>
+            <div class="col">
+                <h6 class="text-muted small">Обновлено (район/кат.)</h6>
+                <h4 class="text-warning" id="res-updated">{{ last_result.updated_count|default:0 }}</h4>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <!-- Исправлен вывод даты -->
+            <small class="text-muted">Данные из папки: <strong id="res-folder">{{ last_result.folder_date
+                    }}</strong></small>
+        </div>
+    </div>
+
+    <!-- Таблица по районам -->
+    {% if last_result.districts %}
+    <div class="card-pastel">
+        <div class="card-header"><i class="fas fa-map-marker-alt"></i> Детализация по районам</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-pastel mb-0">
+                    <thead>
+                        <tr>
+                            <th>Район</th>
+                            <th class="text-center">В 1С</th>
+                            <th class="text-center">Новых</th>
+                            <th class="text-center">Пропало</th>
+                            <th class="text-center">Inactive</th>
+                            <th class="text-center">Восстановлено</th>
+                            <th class="text-center">Обновлено (район/кат.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for district, stats in last_result.districts.items %}
+                        <tr>
+                            <td><strong>{{ district }}</strong></td>
+                            <td class="text-center">{{ stats.total_1c }}</td>
+                            <td class="text-center text-success">{{ stats.new }}</td>
+                            <td class="text-center text-danger">{{ stats.missing }}</td>
+                            <td class="text-center text-primary">{{ stats.deactivated }}</td>
+                            <td class="text-center text-info">{{ stats.activated }}</td>
+                            <td class="text-center text-warning">{{ stats.updated }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.getElementById('run-sync-btn').addEventListener('click', function () {
+        const apply = document.getElementById('apply-checkbox').checked;
+        const btn = this;
+        const resultDiv = document.getElementById('sync-result');
+        const resContainer = document.getElementById('result-container');
+
+        if (apply && !confirm('ВНИМАНИЕ! Будут отключены/восстановлены счетчики в базе. Продолжить?')) return;
+
+        // Блокируем кнопку и показываем анимацию
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Робот работает...';
+        resultDiv.innerHTML = '<div class="alert alert-info py-2"><i class="fas fa-cog fa-spin"></i> Читаем файлы 1С и сверяем с базой. Это займет 1-2 минуты...</div>';
+
+        // Скрываем старые результаты (добавляем класс d-none)
+        if (resContainer) resContainer.classList.add('d-none');
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('meta[name="csrf-token"]')?.content;
+
+        // Запускаем робота
+        fetch('{% url "run_sync_1c" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ 'apply': apply ? 'true' : 'false' })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка сервера: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                checkStatus();
+            })
+            .catch(err => {
+                resultDiv.innerHTML = `<div class="alert alert-danger py-2">Ошибка запуска: ${err.message}</div>`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play"></i> Запустить сверку';
+            });
+
+        function checkStatus() {
+            // Добавляем ?t= чтобы браузер не кешировал ответ
+            fetch('{% url "check_sync_1c_status" %}?t=' + Date.now())
+                .then(response => response.json())
+                .then(res => {
+                    if (res.status === 'completed') {
+                        resultDiv.innerHTML = '<div class="alert alert-success py-2"><i class="fas fa-check"></i> Успешно! Обновляем страницу...</div>';
+
+                        // Показываем контейнер (на случай если он был скрыт)
+                        if (resContainer) resContainer.classList.remove('d-none');
+
+                        // Обновляем цифры (чтобы пользователь увидел результат до перезагрузки)
+                        if (document.getElementById('res-total')) {
+                            document.getElementById('res-total').textContent = res.data.total_1c;
+                            document.getElementById('res-new').textContent = res.data.new_count;
+                            document.getElementById('res-missing').textContent = res.data.missing_count;
+                            document.getElementById('res-deactivated').textContent = res.data.deactivated_count;
+                            document.getElementById('res-activated').textContent = res.data.activated_count;
+                        }
+
+                        if (document.getElementById('res-updated')) {
+                            document.getElementById('res-updated').textContent = res.data.updated_count;
+                        }
+
+                        // Перезагружаем страницу через 1.5 секунды, чтобы Django отрисовал таблицу районов
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    }
+                    else if (res.status === 'error') {
+                        resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ ${res.message}</div>`;
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-play"></i> Запустить сверку';
+                    }
+                    else {
+                        // Еще работает, проверяем через 2 секунды
+                        setTimeout(checkStatus, 2000);
+                    }
+                })
+                .catch(err => {
+                    console.error("Ошибка проверки статуса:", err);
+                    // Если произошла сетевая ошибка, пробуем еще раз через 3 секунды
+                    setTimeout(checkStatus, 3000);
+                });
+        }
+    });
+</script>
+{% csrf_token %}
+{% csrf_token %}
+{% endblock %}

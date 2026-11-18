@@ -1,369 +1,343 @@
 import os
+import json
 import time
-import zipfile
 import io
+import zipfile
+import requests
 import xml.etree.ElementTree as ET
-from datetime import datetime as dt
+from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone as django_timezone
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+from django.db import connection, transaction
 from dotenv import load_dotenv
-from meters.models import Device, Reading, SyncStatus
-import logging
-from concurrent.futures import ThreadPoolExecutor
-from django.db import close_old_connections
-import re
+from meters.models import SyncStatus
+from meters.utils import get_robot_devices
 
-logger = logging.getLogger(__name__)
+# ==========================================
+# НАСТРОЙКИ ДЛЯ SANXING_NEW_5A (только не-секретные)
+# ==========================================
+ROBOT_NAME = 'Sanxing_new_5A'
+NOTES = 'Website sync Period1 S34U18'
+DIRECTION = 'aplus'
+CHANNEL = '0100070100630101FF02'   # Period 1 (для 100A был ...02FF02)
+METER_TYPE_ID = 'ff80808194711e25019476072deb0004'  # S34U18 CT
+BATCH_SIZE = 1000
+
 
 class Command(BaseCommand):
-    help = 'Sync data from external website for Period 1 with S34U18 CT model'
+    help = 'Sync Sanxing_new_5A (S34U18 CT) via HTTP API'
 
     def add_arguments(self, parser):
+        parser.add_argument('--date', type=str, help='YYYY-MM-DD (по умолчанию вчера)')
+        parser.add_argument('--once', action='store_true', help='Один прогон')
         parser.add_argument('--verbose', action='store_true', help='Подробный вывод')
-        parser.add_argument('--data-type', choices=['all', 'current'], default='all', help='Тип данных')
-        parser.add_argument('--daemon', action='store_true', help='Режим демона с расписанием (04:00 и 16:00)')
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
-        self.username = os.getenv('WEBSITE_USERNAME')
-        self.password = os.getenv('WEBSITE_PASSWORD')
-        self.url = os.getenv('WEBSITE_URL', 'http://192.168.20.252:8088/#/login')
-        self.download_dir = '/app/downloads'
-        os.makedirs(self.download_dir, exist_ok=True)
-        self.verbose = options.get('verbose', False)
-        self.data_type = options.get('data_type', 'all')
-        daemon = options.get('daemon', False)
 
-        if not self.username or not self.password:
-            self.stderr.write(self.style.ERROR("❌ WEBSITE_USERNAME and WEBSITE_PASSWORD must be set in cEnergo.env"))
+        # ==========================================
+        # ВСЁ ИЗ .env — БЕЗ ХАРДКОДА
+        # ==========================================
+        api_url = os.getenv('SANXING_NEW_API_URL')
+        account = os.getenv('SANXING_NEW_ACCOUNT')
+        password = os.getenv('SANXING_NEW_PASSWORD_ENCRYPTED')
+
+        missing = []
+        if not api_url:
+            missing.append('SANXING_NEW_API_URL')
+        if not account:
+            missing.append('SANXING_NEW_ACCOUNT')
+        if not password:
+            missing.append('SANXING_NEW_PASSWORD_ENCRYPTED')
+
+        if missing:
+            self.stderr.write(self.style.ERROR(
+                f"❌ Не заданы в app/cEnergo.env: {', '.join(missing)}"
+            ))
             return
 
-        if daemon:
-            self.stdout.write(self.style.SUCCESS("🤖 Website sync robot (Period 1, S34U18 CT) started in DAEMON mode (04:00 & 16:00)."))
-            self.run_loop()
+        self.api_url = api_url.rstrip('/')
+        self.account = account
+        self.password = password
+        self.verbose = options.get('verbose', False)
+
+        # ==========================================
+        # ДАТА
+        # ==========================================
+        if options.get('date'):
+            try:
+                self.sync_date = datetime.strptime(options['date'], '%Y-%m-%d').date()
+            except ValueError:
+                self.stderr.write(self.style.ERROR("Неверный формат даты. Используйте YYYY-MM-DD"))
+                return
         else:
-            self.stdout.write(self.style.SUCCESS("🤖 Website sync robot (Period 1, S34U18 CT) started (single run)."))
-            try:
-                self.sync()
-                self.stdout.write(self.style.SUCCESS("✅ Sync completed successfully."))
-            except Exception as e:
-                self.stderr.write(self.style.ERROR(f"❌ Sync failed: {e}"))
-                raise
+            self.sync_date = datetime.now().date()
+        
+        self.stdout.write(f"📅 Дата: {self.sync_date}")
+        self.stdout.write(f"🤖 Робот: {ROBOT_NAME} (channel: {CHANNEL})")
 
-    def run_loop(self):
-        last_run = None
-        while True:
-            now = dt.now()
-            if (now.hour in [4, 16] and now.minute < 5) or last_run is None:
-                if last_run and last_run.hour == now.hour and last_run.day == now.day:
-                    time.sleep(60)
-                    continue
-                self.stdout.write(f"🔄 Scheduled sync at {now} (Period 1, S34U18 CT)")
-                try:
-                    self.sync()
-                    self.stdout.write(self.style.SUCCESS("✅ Scheduled sync completed."))
-                except Exception as e:
-                    self.stderr.write(self.style.ERROR(f"❌ Scheduled sync failed: {e}"))
-                last_run = now
-            time.sleep(60)
-
-    def sync(self):
-        self.stdout.write("🔄 Starting website sync (Period 1, S34U18 CT)...")
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(accept_downloads=True)
-            page = context.new_page()
-
-            file_path = None
-            try:
-                # -------- 1. ЛОГИН --------
-                self.stdout.write("🔐 Logging in...")
-                page.goto(self.url, wait_until='networkidle')
-                page.wait_for_selector('input[placeholder="User Name"]', timeout=30000)
-                page.fill('input[placeholder="User Name"]', self.username)
-                page.fill('input[placeholder="Password"]', self.password)
-                page.click('button.login-btn')
-                page.wait_for_selector('.container', timeout=30000)
-                self.stdout.write(self.style.SUCCESS("✅ Logged in."))
-                time.sleep(1)
-
-                # -------- 2. НАВИГАЦИЯ --------
-                self.stdout.write("📂 Navigating to data query page...")
-                page.locator('.el-submenu__title:has-text("Data Collection")').first.click()
-                time.sleep(0.5)
-                page.locator('.el-submenu__title:has-text("Data Query")').first.click()
-                time.sleep(0.5)
-                page.locator('li.el-menu-item:has-text("Proflie Data (Multiple Meter)")').click()
-                page.wait_for_selector('button#query', state='visible', timeout=30000)
-                self.stdout.write(self.style.SUCCESS("✅ Navigated."))
-                time.sleep(1)
-
-                # -------- 3. ВЫБОР ПАРАМЕТРОВ --------
-                self.stdout.write("🔧 Selecting parameters...")
-                profile_select = page.locator('.el-select[name="channelId"]')
-                profile_select.click()
-                page.wait_for_selector('div.el-select-dropdown.el-popper:not([style*="display: none"])', state='visible', timeout=10000)
-                page.locator('li:has-text("Load Profile with Period 1")').click()
-                page.wait_for_selector('div.el-select-dropdown.el-popper', state='hidden', timeout=5000)
-                time.sleep(0.5)
-
-                # Meter Model: S34U18 CT
-                self.stdout.write("🔧 Selecting meter model S34U18 CT...")
-                meter_model_select = page.locator('.el-select[name="meterTypeId"]')
-                meter_model_select.click()
-                page.wait_for_selector('div.el-select-dropdown.el-popper:not([style*="display: none"])', state='visible', timeout=10000)
-                page.get_by_text('S34U18 CT', exact=True).click()
-                page.wait_for_selector('div.el-select-dropdown.el-popper', state='hidden', timeout=5000)
-                time.sleep(0.5)
-
-                side_select = page.locator('.el-select[name="sideType"]')
-                side_select.click()
-                page.wait_for_selector('div.el-select-dropdown.el-popper:not([style*="display: none"])', state='visible', timeout=5000)
-                page.locator('.el-select-dropdown__item:has-text("Secondary Side")').click()
-                page.wait_for_selector('div.el-select-dropdown.el-popper', state='hidden', timeout=3000)
-                time.sleep(0.5)
-                page.locator('label.el-radio:has(input[value="2"])').click()
-                time.sleep(0.5)
-
-                # -------- 4. QUERY + FETCH TOTAL --------
-                self.stdout.write("🔍 Clicking Query...")
-                page.click('button#query')
-                page.wait_for_selector('.el-table__body tr', state='attached', timeout=60000)
-                row_count = page.locator('.el-table__body tr').count()
-                if row_count == 0:
-                    raise Exception("No data rows found after query.")
-                self.stdout.write(self.style.SUCCESS(f"✅ Data loaded, found {row_count} rows."))
-
-                try:
-                    fetch_btn = page.locator('button:has-text("Fetch Total")')
-                    if fetch_btn.count() > 0:
-                        fetch_btn.click()
-                        self.stdout.write("🔍 Clicked Fetch Total.")
-                        time.sleep(2)
-                except Exception as e:
-                    self.stdout.write(f"ℹ️ Fetch Total not found or error: {e}")
-
-                # -------- 5. СКАЧИВАНИЕ --------
-                self.stdout.write("📥 Downloading Type1...")
-                download_btn = page.locator('.el-dropdown-link:has-text("Download Type1")')
-                download_btn.wait_for(state='visible', timeout=10000)
-                download_btn.click(force=True)
-
-                self.stdout.write("⏳ Waiting for file list dialog...")
-                page.wait_for_selector('span:has-text(".xml")', state='visible', timeout=180000)
-
-                # Получаем все спаны с .xml
-                file_spans = page.locator('span:has-text(".xml")').all()
-                if not file_spans:
-                    raise Exception("No XML files found in the dialog.")
-
-                # Выводим список для отладки
-                self.stdout.write("📋 Found XML files:")
-                latest_span = None
-                latest_time = None
-                date_patterns = [
-                    re.compile(r'(\d{4}-\d{2}-\d{2}_\d{2}_\d{2}_\d{2})'),  # YYYY-MM-DD_HH_MM_SS
-                    re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'),  # YYYY-MM-DD HH:MM:SS
-                    re.compile(r'(\d{4}\d{2}\d{2}_\d{2}\d{2}\d{2})'),      # YYYYMMDD_HHMMSS
-                    re.compile(r'(\d{4}-\d{2}-\d{2})'),                    # только дата
-                ]
-
-                for span in file_spans:
-                    text = span.text_content().strip()
-                    self.stdout.write(f"  - {text}")
-                    matched = False
-                    for pattern in date_patterns:
-                        match = pattern.search(text)
-                        if match:
-                            date_str = match.group(1)
-                            try:
-                                if '_' in date_str and len(date_str) == 19:
-                                    file_dt = dt.strptime(date_str, '%Y-%m-%d_%H_%M_%S')
-                                elif ' ' in date_str and len(date_str) == 19:
-                                    file_dt = dt.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-                                elif '_' in date_str and len(date_str) == 15:
-                                    file_dt = dt.strptime(date_str, '%Y%m%d_%H%M%S')
-                                elif len(date_str) == 10:
-                                    file_dt = dt.strptime(date_str, '%Y-%m-%d')
-                                else:
-                                    continue
-                                if latest_time is None or file_dt > latest_time:
-                                    latest_time = file_dt
-                                    latest_span = span
-                                matched = True
-                                break
-                            except ValueError:
-                                continue
-                    if not matched:
-                        self.stdout.write(f"⚠️ Could not parse date from: {text}")
-
-                if latest_span is None:
-                    latest_span = file_spans[0]
-                    self.stdout.write(self.style.WARNING("⚠️ Could not parse any dates, using first XML file."))
-
-                file_name = latest_span.text_content().strip()
-                self.stdout.write(self.style.SUCCESS(f"✅ Selected latest file: {file_name}"))
-
-                # Находим родительский контейнер
-                parent = latest_span.locator('xpath=ancestor::div[contains(@class, "el-dialog") or contains(@class, "el-form-item") or contains(@class, "el-row")]').first
-                download_in_parent = parent.locator('button:has-text("Download")')
-                download_in_parent.wait_for(state='visible', timeout=60000)
-
-                with page.expect_download(timeout=180000) as download_info:
-                    download_in_parent.click(force=True)
-
-                download = download_info.value
-                file_path = os.path.join(self.download_dir, download.suggested_filename)
-                download.save_as(file_path)
-                self.stdout.write(self.style.SUCCESS(f"📁 Downloaded: {file_path}"))
-
-                # -------- 6. ИМПОРТ ДАННЫХ --------
-                self.stdout.write("📦 Importing data into database...")
-                imported = self._import_data_safe(file_path)
-
-                if imported == 0:
-                    self.stdout.write(self.style.WARNING("⚠️ No readings were imported (empty data)."))
-                else:
-                    self.stdout.write(self.style.SUCCESS(f"✅ Imported {imported} readings."))
-
-                # -------- 7. ОБНОВЛЕНИЕ СТАТУСА --------
-                self._update_sync_status_safe('success', imported, None)
-
-                # -------- 8. УДАЛЕНИЕ СКАЧАННОГО ФАЙЛА --------
-                if file_path and os.path.exists(file_path):
-                    os.remove(file_path)
-                    self.stdout.write(f"🗑️ Deleted downloaded file: {file_path}")
-
-                browser.close()
-                self.stdout.write(self.style.SUCCESS("✅ All done."))
-
-            except Exception as e:
-                self.stderr.write(self.style.ERROR(f"❌ Sync error: {e}"))
-                page.screenshot(path=os.path.join(self.download_dir, 'error_screenshot.png'))
-                self.stdout.write(f"📸 Screenshot saved to {self.download_dir}/error_screenshot.png")
-                with open(os.path.join(self.download_dir, 'error_page.html'), 'w', encoding='utf-8') as f:
-                    f.write(page.content())
-                self.stdout.write(f"📄 Page HTML saved to {self.download_dir}/error_page.html")
-                self._update_sync_status_safe('error', 0, str(e))
-                raise
-            finally:
-                browser.close()
-
-    # -------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ --------
-    def _import_data_safe(self, file_path):
-        def import_task():
-            close_old_connections()
-            imported = 0
-            try:
-                with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                    for name in zip_ref.namelist():
-                        if name.endswith('.xml'):
-                            with zip_ref.open(name) as f:
-                                content = f.read()
-                                imported = self.parse_xml_and_import(content)
-                            break
-            except Exception as e:
-                self.stderr.write(f"Import error: {e}")
-                raise
-            return imported
-
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(import_task)
-            return future.result(timeout=600)
-
-    def parse_xml_and_import(self, content):
-        close_old_connections()
-        # all_devices = Device.objects.select_related('model').all()
-        # devices_by_full = {}
-        # devices_by_last8 = {}
-
-        # for d in all_devices:
-        #     devices_by_full[d.serial_number] = d
-        #     is_sanxing = False
-        #     if hasattr(d, 'api_id') and d.api_id and d.api_id.upper().startswith('SX'):
-        #         is_sanxing = True
-        #     if not is_sanxing and hasattr(d, 'model') and d.model:
-        #         if hasattr(d.model, 'manufacturer') and d.model.manufacturer:
-        #             if 'Sanxing' in d.model.manufacturer or 'sanxing' in d.model.manufacturer.lower():
-        #                 is_sanxing = True
-        #         elif hasattr(d.model, 'name') and d.model.name:
-        #             if 'Sanxing' in d.model.name or 'sanxing' in d.model.name.lower():
-        #                 is_sanxing = True
-        #     if is_sanxing and len(d.serial_number) >= 8:
-        #         last8 = d.serial_number[-8:]
-        #         if last8 not in devices_by_last8:
-        #             devices_by_last8[last8] = d
-
-        from meters.utils import get_robot_devices
-        devices = get_robot_devices('Sanxing_new_5A')
-        devices_by_full = {d.serial_number: d for d in devices}
-        devices_by_last8 = {}
-        for d in devices:
-            if len(d.serial_number) >= 8:
-                last8 = d.serial_number[-8:]
-                devices_by_last8[last8] = d
-
-        count = 0
         try:
-            tree = ET.parse(io.BytesIO(content))
-            root = tree.getroot()
-            for elem in root.iter():
-                serialno_elem = elem.find('serialno')
-                time_elem = elem.find('time')
-                value_elem = elem.find('value')
-                if serialno_elem is not None and time_elem is not None:
-                    sn = serialno_elem.text.strip()
-                    if not sn:
-                        continue
-
-                    if value_elem is None or not value_elem.text or not value_elem.text.strip():
-                        if self.verbose:
-                            self.stdout.write(f"ℹ️ Skipping record with empty value for serial {sn}")
-                        continue
-                    try:
-                        val = float(value_elem.text.strip())
-                    except ValueError:
-                        if self.verbose:
-                            self.stdout.write(f"⚠️ Invalid number format for serial {sn}: '{value_elem.text}'")
-                        continue
-
-                    device = devices_by_full.get(sn)
-                    if not device and len(sn) >= 8:
-                        last8 = sn[-8:]
-                        device = devices_by_last8.get(last8)
-                    if not device:
-                        if self.verbose:
-                            self.stdout.write(f"⚠️ Device with serial {sn} not found, skipping.")
-                        continue
-                    try:
-                        dt_time = dt.strptime(time_elem.text, '%Y-%m-%d %H:%M:%S')
-                    except:
-                        continue
-
-                    Reading.objects.update_or_create(
-                        device=device,
-                        timestamp=dt_time,
-                        defaults={'reading_value': val, 'notes': 'Website sync Period1 S34U18', 'direction': 'aplus'}
-                    )
-                    count += 1
-            return count
+            imported = self.sync()
+            self._update_sync_status('success', imported, None)
+            self.stdout.write(self.style.SUCCESS(f"✅ Импортировано: {imported:,}"))
         except Exception as e:
-            self.stderr.write(f"XML parsing error: {e}")
+            self.stderr.write(self.style.ERROR(f"❌ Ошибка: {e}"))
+            self._update_sync_status('error', 0, str(e))
             raise
 
-    def _update_sync_status_safe(self, status, records_processed, error):
-        def sync_update():
-            close_old_connections()
-            SyncStatus.objects.update_or_create(
-                robot_name='Sanxing_new_5A',
-                defaults={
-                    'status': status,
-                    'last_update': django_timezone.now(),
-                    'records_processed': records_processed,
-                    'error': error,
-                }
-            )
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(sync_update)
-            future.result(timeout=10)
+    def sync(self):
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Origin': 'http://192.168.20.252:8088',
+            'Referer': 'http://192.168.20.252:8088/',
+            'Accept': 'application/json, text/plain, */*',
+        })
+
+        # 1. ЛОГИН
+        self.stdout.write("🌐 Логин...")
+        login = session.post(f"{self.api_url}/auth/login", json={
+            "account": self.account,
+            "password": self.password,
+            "loginType": "0",
+            "emailCode": None,
+            "inputFlag": False
+        }, timeout=10)
+
+        if login.status_code != 200:
+            raise Exception(f"Ошибка логина: {login.text[:100]}")
+
+        token = login.json().get('result', {}).get('token')
+        if not token:
+            raise Exception("Токен не найден в ответе")
+
+        session.headers.update({'Authorization': token, 'Account': self.account})
+        self.stdout.write(self.style.SUCCESS("✅ Логин успешен"))
+
+        # 2. СОЗДАНИЕ ЗАДАЧИ НА ЭКСПОРТ
+        self.stdout.write("📤 Создание задачи на экспорт...")
+        date_str = self.sync_date.strftime('%Y-%m-%d')
+
+        param_json = json.dumps([{
+            "queryEndTime": f"{date_str} 23:59:59",
+            "queryStartTime": f"{date_str} 00:00:00",
+            "channel": CHANNEL,
+            "queryType": "01",
+            "orgNo": "1012",
+            "meterTypeId": METER_TYPE_ID,
+            "sideType": "02",
+            "isNoTotal": True,
+            "pageInfo": None,
+            "page": 1,
+            "size": 50
+        }])
+
+        column_data_json = json.dumps([
+            {"paramId": "8", "label": "Active Energy Import (+A)(kWh)", "prop": "020100030100010800FF02"},
+            {"paramId": "1", "label": "Active Energy (|+A|+|-A|)(kWh)", "prop": "0201000301000F0800FF02"}
+        ])
+
+        export = session.put(
+            f"{self.api_url}/ami/ops/V1/exportAll/saveExportAllData",
+            json={
+                "columnData": column_data_json,
+                "description": "var2",
+                "fileNameWeb": f"var2: {datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}",
+                "fileType": "xml",
+                "param": param_json,
+                "url": "ami/collection/V1/profile/mutidataquery"
+            },
+            headers={'Content-Type': 'application/json;charset=UTF-8'},
+            timeout=30
+        )
+
+        file_id = export.json().get('result', {}).get('id')
+        if not file_id:
+            raise Exception(f"Не удалось создать задачу: {export.text[:200]}")
+
+        self.stdout.write(f"✅ Задача создана. ID: {file_id}")
+
+        # 3. ОЖИДАНИЕ ГОТОВНОСТИ
+        self.stdout.write("⏳ Ожидание генерации файла...")
+        list_url = f"{self.api_url}/ami/ops/V1/exportAll/queryExportAllFileList"
+
+        file_ready = False
+        for i in range(180):
+            try:
+                resp = session.get(list_url, params={'fileName': '', 'size': 10, 'page': 1}, timeout=10)
+                files = resp.json().get('result', {}).get('content', [])
+                f = next((x for x in files if x.get('id') == file_id), None)
+
+                if f and f.get('status') == '03':
+                    self.stdout.write(self.style.SUCCESS(f"✅ Файл готов (за {i*2} сек)"))
+                    file_ready = True
+                    break
+
+                if i % 10 == 0 and f:
+                    pct = f.get('percentage', 0) or 0
+                    self.stdout.write(f"   [{i*2}s] Генерация: {pct}%")
+
+                time.sleep(2)
+            except Exception as e:
+                if self.verbose:
+                    self.stderr.write(f"   ⚠️ {e}")
+                time.sleep(2)
+
+        if not file_ready:
+            raise Exception("Таймаут генерации файла")
+
+        time.sleep(5)
+
+        # 4. ПОЛУЧАЕМ РАЗМЕР И СКАЧИВАЕМ
+        self.stdout.write("📥 Скачивание файла...")
+        file_size = 0
+        for _ in range(10):
+            try:
+                sz = session.get(f"{self.api_url}/ami/ops/V1/exportAll/getFileSize/{file_id}", timeout=10)
+                data = sz.json()
+                if data.get('success') and data.get('result', 0) > 0:
+                    file_size = data.get('result')
+                    break
+            except Exception:
+                pass
+            time.sleep(2)
+
+        if file_size == 0:
+            raise Exception("Не удалось получить размер файла")
+
+        self.stdout.write(f"   Размер: {file_size:,} байт")
+
+        dl = session.get(
+            f"{self.api_url}/ami/ops/V1/exportAll/fileDownload/{file_id}",
+            headers={
+                'Accept': '*/*',
+                'Accept-Encoding': 'identity',
+                'Range': f'bytes=0-{file_size-1}'
+            },
+            timeout=180
+        )
+
+        if not dl.content.startswith(b'PK'):
+            raise Exception(f"Получен не ZIP: {dl.content[:100]}")
+
+        self.stdout.write(f"✅ Скачано {len(dl.content):,} байт")
+
+        # 5. ПАРСИНГ И ИМПОРТ
+        self.stdout.write("📦 Парсинг и импорт...")
+        return self._parse_import(dl.content)
+
+    def _parse_import(self, zip_content):
+        devices = get_robot_devices(ROBOT_NAME)
+        if not devices:
+            self.stdout.write(f"⚠️ Нет устройств {ROBOT_NAME} в БД, пропуск")
+            return 0
+
+        by_full = {d.serial_number: d for d in devices}
+        by_last8 = {}
+        for d in devices:
+            if len(d.serial_number) >= 8:
+                by_last8[d.serial_number[-8:]] = d
+
+        self.stdout.write(f"   Загружено устройств: {len(by_full):,}")
+
+        sql = """
+            INSERT INTO readings (device_id, timestamp, direction, reading_value, notes)
+            VALUES (%s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                reading_value = VALUES(reading_value),
+                notes = VALUES(notes)
+        """
+
+        imported = 0
+        stats = {'no_device': 0, 'empty': 0, 'param': 0, 'bad': 0}
+        batch = []
+
+        with zipfile.ZipFile(io.BytesIO(zip_content)) as z:
+            xml_names = [n for n in z.namelist() if n.endswith('.xml')]
+            if not xml_names:
+                raise Exception("В ZIP-архиве не найдено XML-файлов")
+
+            self.stdout.write(f"   XML в архиве: {xml_names[0]}")
+
+            with z.open(xml_names[0]) as f:
+                for event, elem in ET.iterparse(f, events=('end',)):
+                    if elem.tag != 'mreadings':
+                        continue
+
+                    meter = elem.find('meterNo')
+                    param = elem.find('paramId')
+                    value = elem.find('value')
+                    ts = elem.find('timestamp')
+
+                    if meter is None or param is None or value is None or ts is None:
+                        elem.clear()
+                        continue
+
+                    if param.text != '1':
+                        stats['param'] += 1
+                        elem.clear()
+                        continue
+
+                    val_str = (value.text or '').strip()
+                    if not val_str:
+                        stats['empty'] += 1
+                        elem.clear()
+                        continue
+
+                    sn = (meter.text or '').strip()
+                    if not sn:
+                        elem.clear()
+                        continue
+
+                    device = by_full.get(sn)
+                    if not device and len(sn) >= 8:
+                        device = by_last8.get(sn[-8:])
+                    if not device and len(sn) < 8:
+                        device = by_last8.get(sn.zfill(8))
+
+                    if not device:
+                        stats['no_device'] += 1
+                        elem.clear()
+                        continue
+
+                    try:
+                        val = float(val_str)
+                        dt_time = datetime.strptime(ts.text.strip(), '%d.%m.%Y %H:%M:%S')
+                    except (ValueError, TypeError, AttributeError):
+                        stats['bad'] += 1
+                        elem.clear()
+                        continue
+
+                    batch.append((device.id, dt_time, DIRECTION, val, NOTES))
+                    imported += 1
+
+                    if len(batch) >= BATCH_SIZE:
+                        with transaction.atomic(), connection.cursor() as cur:
+                            cur.executemany(sql, batch)
+                        if self.verbose:
+                            self.stdout.write(f"   💾 {imported:,}")
+                        batch = []
+
+                    elem.clear()
+
+        if batch:
+            with transaction.atomic(), connection.cursor() as cur:
+                cur.executemany(sql, batch)
+
+        self.stdout.write(
+            f"   📊 empty={stats['empty']:,}, param!=1={stats['param']:,}, "
+            f"no_device={stats['no_device']:,}, bad={stats['bad']:,}"
+        )
+
+        return imported
+
+    def _update_sync_status(self, status, records, error):
+        SyncStatus.objects.update_or_create(
+            robot_name=ROBOT_NAME,
+            defaults={
+                'status': status,
+                'last_update': django_timezone.now(),
+                'records_processed': records,
+                'error': error,
+            }
+        )

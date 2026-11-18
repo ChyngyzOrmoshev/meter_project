@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db import connection, transaction
 from meters.models import Device, Reading, SyncStatus
+from meters.utils import get_robot_devices
 import pyodbc
 import os
 import time
@@ -10,8 +12,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = 'Sync data from Sanxing MS SQL to MySQL (only Sanxing devices)'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--once', action='store_true',
+                            help='Один прогон без бесконечного цикла')
 
     def handle(self, *args, **options):
         load_dotenv('/app/cEnergo.env')
@@ -20,7 +27,10 @@ class Command(BaseCommand):
         password = os.getenv("SANXING_PASSWORD")
         db = os.getenv("SANXING_DB")
 
-        conn_str = f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        conn_str = (
+            f"DRIVER={{FreeTDS}};SERVER={server};DATABASE={db};"
+            f"UID={user};PWD={password};Port=1433;TDS_Version=7.4;"
+        )
 
         while True:
             try:
@@ -35,6 +45,8 @@ class Command(BaseCommand):
                         'error': str(e)
                     }
                 )
+            if options.get('once'):
+                break
             time.sleep(600)
 
     def sync(self, conn_str):
@@ -44,28 +56,8 @@ class Command(BaseCommand):
             cursor = conn.cursor()
             self.stdout.write("Connected to Sanxing MS SQL")
 
-            # ---- 1. Получаем только активные устройства Sanxing ----
-            # devices = []
-            # for d in Device.objects.filter(status='active').select_related('model'):
-            #     is_sanxing = False
-
-            #     # 1. Проверяем manufacturer в модели (содержит 'Sanxing')
-            #     if d.model and d.model.manufacturer and 'Sanxing_old' in d.model.manufacturer:
-            #         is_sanxing = True
-
-            #     # # 2. Резерв: api_id начинается с 'SX'
-            #     # if not is_sanxing and d.api_id and d.api_id.upper().startswith('SX'):
-            #     #     is_sanxing = True
-
-            #     # # 3. Резерв: askue_id == 18
-            #     # if not is_sanxing and d.askue_id and str(d.askue_id) == "18":
-            #     #     is_sanxing = True
-
-            #     if is_sanxing:
-            #         devices.append(d)
-            from meters.utils import get_robot_devices
+            # ---- Загружаем устройства Sanxing ----
             devices = list(get_robot_devices('Sanxing_old'))
-
             if not devices:
                 self.stdout.write("No active Sanxing devices found in MySQL.")
                 SyncStatus.objects.update_or_create(
@@ -80,13 +72,19 @@ class Command(BaseCommand):
                 return
 
             self.stdout.write(f"Found {len(devices)} active Sanxing devices.")
-            devices_map = {d.serial_number: d for d in devices}
 
-            # ---- 2. Определяем время начала: всегда с 00:00:00 сегодня ----
+            # Lookup: точное + last8
+            devices_map = {}
+            devices_map_last8 = {}
+            for d in devices:
+                devices_map[d.serial_number] = d
+                if len(d.serial_number) >= 8:
+                    devices_map_last8.setdefault(d.serial_number[-8:], d)
+
+            # ---- Период: всегда с 00:00:00 сегодня ----
             start_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
             self.stdout.write(f"Fetching data from {start_time} (today 00:00:00)")
 
-            # ---- 3. Запрос к MS SQL ----
             query = """
                 SET NOCOUNT ON;
                 SELECT RTRIM(LTRIM(M.MSNO)) as SerialNumber, D.DATA_TIME, D.KWH_ABS
@@ -101,22 +99,32 @@ class Command(BaseCommand):
             rows = cursor.fetchall()
             self.stdout.write(f"Total rows fetched from MS SQL: {len(rows)}")
 
-            # ---- 4. Обработка строк ----
+            # ---- Пакетная вставка ----
             count = 0
             skipped = 0
+            batch = []
+            BATCH_SIZE = 1000
+
+            sql = """
+                INSERT INTO readings (device_id, timestamp, direction, reading_value, notes)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    reading_value = VALUES(reading_value),
+                    notes = VALUES(notes)
+            """
+
             for row in rows:
                 sn = row.SerialNumber.strip()
                 device = devices_map.get(sn)
+                if not device and len(sn) >= 8:
+                    device = devices_map_last8.get(sn[-8:])
+                if not device and len(sn) < 8:
+                    device = devices_map_last8.get(sn.zfill(8))
                 if not device:
-                    # Пробуем с ведущими нулями
-                    if len(sn) < 8:
-                        sn_padded = sn.zfill(8)
-                        device = devices_map.get(sn_padded)
-                    if not device:
-                        skipped += 1
-                        if skipped <= 10:
-                            self.stdout.write(f"Skipping serial {sn} (not in Sanxing list)")
-                        continue
+                    skipped += 1
+                    if skipped <= 10:
+                        self.stdout.write(f"Skipping serial {sn} (not in Sanxing list)")
+                    continue
 
                 dt = row.DATA_TIME
                 if isinstance(dt, str):
@@ -129,20 +137,23 @@ class Command(BaseCommand):
                 else:
                     val = raw_val / 1000.0
 
-                Reading.objects.update_or_create(
-                    device=device,
-                    timestamp=dt,
-                    defaults={
-                        'reading_value': val,
-                        'notes': 'Авто-сбор: Sanxing_old',
-                        'direction': 'aplus'
-                    }
-                )
+                batch.append((device.id, dt, 'aplus', val, 'Авто-сбор: Sanxing_old'))
                 count += 1
-                if count % 1000 == 0:
-                    self.stdout.write(f"Imported {count} readings")
 
-            self.stdout.write(f"✅ Sanxing sync done. Imported: {count}, skipped: {skipped}")
+                if len(batch) >= BATCH_SIZE:
+                    with transaction.atomic(), connection.cursor() as cur:
+                        cur.executemany(sql, batch)
+                    self.stdout.write(f"Bulk-upserted {count} readings")
+                    batch = []
+
+            if batch:
+                with transaction.atomic(), connection.cursor() as cur:
+                    cur.executemany(sql, batch)
+                self.stdout.write(f"Bulk-upserted tail {len(batch)} readings")
+
+            self.stdout.write(
+                f"✅ Sanxing sync done. Imported: {count}, skipped: {skipped}"
+            )
             SyncStatus.objects.update_or_create(
                 robot_name='Sanxing_old',
                 defaults={

@@ -1,4 +1,5 @@
 FROM python:3.11-slim
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
@@ -57,5 +58,5 @@ RUN python manage.py collectstatic --noinput
 # Устанавливаем браузер Chromium (без установки системных зависимостей, так как они уже есть)
 RUN playwright install chromium
 
-CMD ["sh", "-c", "python wait_for_mysql.py && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python wait_for_mysql.py && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 4 --worker-class gthread --timeout 120"]
 # CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn --workers 3 --preload --bind 0.0.0.0:8000 config.wsgi:application"]
