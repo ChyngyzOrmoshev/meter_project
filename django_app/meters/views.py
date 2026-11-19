@@ -24,7 +24,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import subprocess
 from .models import Device, Reading, SyncStatus, MeterModel, Region, Substation, Feeder, TransformerSubstation, DeviceGroup
-from .relay_queue import supersede_tasks, BUSY_DELAY_MIN
+from .relay_queue import supersede_tasks, inflight_tasks
 from django.core.paginator import Paginator
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -5130,7 +5130,7 @@ def relay_api_action(request):
         return JsonResponse({'error': 'Счётчик не из вашего района'}, status=403)
 
     # Такая же команда уже выполняется воркером — дубль не нужен
-    if RelayTask.objects.filter(device=device, action=action, status='processing').exists():
+    if inflight_tasks(device, actions=(action,)).exists():
         return JsonResponse({'error': 'Эта команда уже выполняется, дождитесь результата'}, status=409)
 
     # Отменяем ожидающие задачи счётчика; выполняющуюся противоположную не трогаем,
@@ -5148,8 +5148,8 @@ def relay_api_action(request):
     )
 
     return JsonResponse({
-        'message': (f'Команда "{action}" поставлена в очередь: предыдущая команда ещё выполняется, '
-                    f'новая пойдёт через {BUSY_DELAY_MIN} мин.') if busy
+        'message': (f'Команда "{action}" поставлена в очередь на {task_time:%H:%M}: '
+                    f'предыдущая команда ещё выполняется, новая пойдёт после неё.') if busy
                    else f'Команда "{action}" успешно поставлена в очередь на выполнение.',
         'status': 'pending',
         'task_id': task.id
