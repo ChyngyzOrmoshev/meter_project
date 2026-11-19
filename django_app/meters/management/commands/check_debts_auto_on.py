@@ -1,6 +1,13 @@
 from django.core.management.base import BaseCommand
+from datetime import timedelta
+
 from django.utils import timezone
 from meters.models import Subscriber, RelayTask, RelayCommandHistory
+from meters.relay_queue import supersede_tasks
+
+# После упавшей задачи на включение автоматически не пробуем снова это время,
+# иначе каждые 10 минут создавалась бы новая задача (история остаётся 'off')
+RETRY_PAUSE_HOURS = 6
 
 class Command(BaseCommand):
     help = 'Автоматическая постановка задач на включение при погашении долга'
@@ -9,7 +16,7 @@ class Command(BaseCommand):
         self.stdout.write("🔍 Проверка должников, которые оплатили долг...")
         
         # Ищем всех, у кого долг <= 0
-        paid_subs = Subscriber.objects.filter(debt__lte=0)
+        paid_subs = Subscriber.objects.filter(debt__lte=0).select_related('device')
         self.stdout.write(f"Найдено абонентов с долгом <= 0: {paid_subs.count()}")
         
         tasks_created = 0
@@ -29,7 +36,16 @@ class Command(BaseCommand):
                 self.stdout.write("   [Пропуск] Уже есть активная задача на включение в очереди.")
                 continue 
                 
-            # 2. Проверяем историю
+            # 2. Недавно упавшая задача на включение — пауза, чтобы не долбить счётчик каждые 10 минут
+            failed_recently = RelayTask.objects.filter(
+                device=device, action='on', status='error',
+                updated_at__gte=timezone.now() - timedelta(hours=RETRY_PAUSE_HOURS)
+            ).exists()
+            if failed_recently:
+                self.stdout.write(f"   [Пропуск] Задача на включение завершилась ошибкой менее {RETRY_PAUSE_HOURS} ч назад.")
+                continue
+
+            # 3. Проверяем историю
             last_history = RelayCommandHistory.objects.filter(device=device).order_by('-created_at').first()
             
             if not last_history:
@@ -38,23 +54,19 @@ class Command(BaseCommand):
 
             self.stdout.write(f"   [Инфо] Последняя история: {last_history.action} - {last_history.status}")
             
-            # 3. Логика проверки
+            # 4. Логика проверки
             if last_history.action == 'off' and last_history.status in ['success', 'pending']:
                 
-                # НОВОЕ: Отменяем все старые задачи на ОТКЛЮЧЕНИЕ, которые еще висят в очереди
-                RelayTask.objects.filter(
-                    device=device, 
-                    action='off', 
-                    status__in=['pending', 'processing']
-                ).update(
-                    status='cancelled', 
-                    error_message='Отменено: абонент оплатил долг до выполнения'
+                # Отменяем ожидающие задачи на ОТКЛЮЧЕНИЕ; выполняющуюся не трогаем,
+                # включение пойдёт после неё
+                task_time, _busy = supersede_tasks(
+                    device, timezone.now(), 'Отменено: абонент оплатил долг до выполнения', actions=('off',)
                 )
 
                 RelayTask.objects.create(
                     device=device,
                     action='on',
-                    scheduled_at=timezone.now(),
+                    scheduled_at=task_time,
                     status='pending',
                     debt_snapshot=sub.debt
                 )

@@ -501,6 +501,9 @@
                 document.getElementById('action-loading').innerHTML = '<div class="spinner-border spinner-border-sm text-warning" role="status"></div> <span class="ms-2 fw-bold text-warning">Ожидаем выполнения команды...</span>';
             } else {
                 badge.innerHTML = `<span class="badge-pastel idle p-3 fs-5"><i class="fas fa-question-circle me-2"></i> СТАТУС НЕИЗВЕСТЕН</span>`;
+                // Состояние не определить (нет данных в БД/API) — даём выбрать действие вручную
+                btnOn.classList.remove('d-none');
+                btnOff.classList.remove('d-none');
             }
         }
 

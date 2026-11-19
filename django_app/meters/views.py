@@ -24,6 +24,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import subprocess
 from .models import Device, Reading, SyncStatus, MeterModel, Region, Substation, Feeder, TransformerSubstation, DeviceGroup
+from .relay_queue import supersede_tasks, BUSY_DELAY_MIN
 from django.core.paginator import Paginator
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -4310,17 +4311,17 @@ def relay_mass_create_tasks(request):
             skipped_duplicate += 1
             continue
 
-        # Отменяем старые противоположные задачи
+        # Отменяем ожидающие противоположные задачи; выполняющуюся не трогаем (новая пойдёт после неё)
         opposite_action = 'on' if action == 'off' else 'off'
-        RelayTask.objects.filter(
-            device=device, action=opposite_action, status__in=['pending', 'processing']
-        ).update(status='cancelled', error_message='Отменено из-за создания новой задачи')
+        task_time, _busy = supersede_tasks(
+            device, scheduled_at, 'Отменено из-за создания новой задачи', actions=(opposite_action,)
+        )
 
         sub = getattr(device, 'subscriber', None)
         current_debt = sub.debt if sub else 0
 
         RelayTask.objects.create(
-            device=device, action=action, scheduled_at=scheduled_at,
+            device=device, action=action, scheduled_at=task_time,
             created_by=request.user, status='pending', debt_snapshot=current_debt
         )
         created_tasks += 1
@@ -5128,23 +5129,28 @@ def relay_api_action(request):
     if relay_region_denied(request.user, device):
         return JsonResponse({'error': 'Счётчик не из вашего района'}, status=403)
 
-    # Отменяем все старые висящие задачи для этого счетчика, чтобы не было спама
-    RelayTask.objects.filter(
-        device=device, 
-        status__in=['pending', 'processing']
-    ).update(status='cancelled', error_message='Отменено из-за новой команды из ручного управления')
+    # Такая же команда уже выполняется воркером — дубль не нужен
+    if RelayTask.objects.filter(device=device, action=action, status='processing').exists():
+        return JsonResponse({'error': 'Эта команда уже выполняется, дождитесь результата'}, status=409)
 
-    # Создаем новую задачу, которая выполнится ПРЯМО СЕЙЧАС (или при ближайшем запуске воркера)
+    # Отменяем ожидающие задачи счётчика; выполняющуюся противоположную не трогаем,
+    # новая команда пойдёт после неё (через пару минут)
+    task_time, busy = supersede_tasks(
+        device, timezone.now(), 'Отменено из-за новой команды из ручного управления'
+    )
+
     task = RelayTask.objects.create(
         device=device,
         action=action,
-        scheduled_at=timezone.now(),
+        scheduled_at=task_time,
         created_by=request.user,
         status='pending'
     )
 
     return JsonResponse({
-        'message': f'Команда "{action}" успешно поставлена в очередь на выполнение.',
+        'message': (f'Команда "{action}" поставлена в очередь: предыдущая команда ещё выполняется, '
+                    f'новая пойдёт через {BUSY_DELAY_MIN} мин.') if busy
+                   else f'Команда "{action}" успешно поставлена в очередь на выполнение.',
         'status': 'pending',
         'task_id': task.id
     })
@@ -5201,13 +5207,13 @@ def relay_bulk_start(request):
             results['errors'].append(f'{serial}: уже есть активная задача')
             continue
 
-        RelayTask.objects.filter(
-            device=device, action=opposite_action, status__in=['pending', 'processing']
-        ).update(status='cancelled', error_message='Отменено из-за создания новой задачи')
+        task_time, _busy = supersede_tasks(
+            device, scheduled_at, 'Отменено из-за создания новой задачи', actions=(opposite_action,)
+        )
 
         sub = getattr(device, 'subscriber', None)
         RelayTask.objects.create(
-            device=device, action=action, scheduled_at=scheduled_at,
+            device=device, action=action, scheduled_at=task_time,
             created_by=request.user, status='pending',
             debt_snapshot=sub.debt if sub else 0,
         )
