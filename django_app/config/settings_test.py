@@ -10,3 +10,6 @@ DATABASES = {
         'NAME': ':memory:',
     }
 }
+
+# Быстрый хешер: PBKDF2 с миллионом итераций замедляет каждый тест, создающий пользователя
+PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
