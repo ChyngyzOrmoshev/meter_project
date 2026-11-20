@@ -33,6 +33,7 @@ class Command(BaseCommand):
 
         # СТАЛО:
         api_url = os.getenv('SANXING_NEW_API_URL')
+        self.web_origin = os.getenv('SANXING_NEW_WEB_URL', 'http://192.168.20.252:8088').rstrip('/')
         account = os.getenv('SANXING_NEW_ACCOUNT')
         password = os.getenv('SANXING_NEW_PASSWORD_ENCRYPTED')
 
@@ -79,8 +80,8 @@ class Command(BaseCommand):
         session = requests.Session()
         session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Origin': 'http://192.168.20.252:8088',
-            'Referer': 'http://192.168.20.252:8088/',
+            'Origin': self.web_origin,
+            'Referer': self.web_origin + '/',
             'Accept': 'application/json, text/plain, */*',
         })
 

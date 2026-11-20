@@ -1,3 +1,4 @@
+import os
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
@@ -21,7 +22,7 @@ def error_text(msg):
 
 class CEnergoService:
     def __init__(self):
-        self.soap_url = "http://192.168.144.95:9090/soap/v1"
+        self.soap_url = os.getenv('CENERGO_SOAP_URL', 'http://192.168.144.95:9090/soap/v1')
         self.namespace = "http://energomera.ru/#/cEnergo/api/PK-Electrouchet/v1"
 
     def _send_request(self, xml_body, action_name):

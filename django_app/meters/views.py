@@ -2,20 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import OuterRef, Subquery, Exists, Count, Value, IntegerField, Q
-from django.db.models.functions import Coalesce
+from django.db.models import OuterRef, Subquery, Exists, Count, Q
 from django.utils import timezone
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.db import transaction
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import csv
-import io
 import re
 import json
 import openpyxl
-from io import BytesIO
 import pandas as pd
 import logging
 import threading
@@ -104,19 +101,6 @@ def compare_models(model_1c, model_db):
     if base_1c == base_db and len(base_1c) > 3:
         return 'partial'
     return 'none'
-
-def suggest_correct_serial(serial_1c, device_found=False):
-    """
-    Предлагает правильный вариант заводского номера для ввода в 1С.
-    Если устройство не найдено, но номер длиннее 8 цифр, предлагаем последние 8 цифр.
-    """
-    if not serial_1c:
-        return None
-    # Удаляем все нецифровые символы
-    digits = re.sub(r'\D', '', serial_1c)
-    if len(digits) > 8:
-        return digits[-8:]
-    return None
 
 def find_device(serial_number, model=None):
     """
@@ -794,15 +778,6 @@ def run_import_background(session_key):
         col_direction = params.get('col_direction')
         default_direction = params.get('default_direction', 'aplus')
 
-        if col_direction and row.get(col_direction):
-            direction = str(row[col_direction]).strip().lower()
-            if direction in ['a-', 'aminus']:
-                direction = 'aminus'
-            else:
-                direction = 'aplus'
-        else:
-            direction = default_direction
-
         success = 0
         errors = []
         skipped = []
@@ -818,6 +793,13 @@ def run_import_background(session_key):
                 if not device:
                     skipped.append(sn)
                     continue
+
+                # Направление: из колонки файла (A-/aminus => aminus), иначе по умолчанию
+                if col_direction and row.get(col_direction):
+                    direction = str(row[col_direction]).strip().lower()
+                    direction = 'aminus' if direction in ['a-', 'aminus'] else 'aplus'
+                else:
+                    direction = default_direction
 
                 raw_value = row.get(col_value)
                 if pd.isna(raw_value) or raw_value == '':
@@ -1782,6 +1764,7 @@ def import_readings_excel(request):
 
             notes = str(row.get(col_notes, '')).strip() if col_notes else ''
 
+            direction = 'aplus'  # в этой форме колонки направления нет
             obj, created = Reading.objects.update_or_create(
                 device=device,
                 timestamp=dt,
@@ -3609,7 +3592,7 @@ def category_stats_table(request):
             devices = devices.filter(region_id=region_id)
 
         # Аннотируем has_reading
-        from django.db.models import Exists, OuterRef, Count, Case, When, IntegerField, Value
+        from django.db.models import Exists, OuterRef, Count, Case, When, IntegerField
         readings_subquery = Reading.objects.filter(
             device=OuterRef('pk'),
             timestamp__gte=start_dt,
@@ -4109,7 +4092,7 @@ def relay_region_denied(user, device):
         return False
     return not (device.region and device.region.name == user_region)
 
-from .models import Subscriber, RelayTask
+from .models import RelayTask
 from django.utils.dateparse import parse_datetime
 
 @login_required
@@ -4444,7 +4427,7 @@ from .models import (
     Substation, Feeder, TransformerSubstation, DeviceGroup,
     CompareResult, ReadingFetchTask,
     # Новые модели для баланса
-    MeterConnection, CoefficientHistory, CalculationPeriod, BalanceResult
+    MeterConnection, CoefficientHistory, BalanceResult
 )
 from decimal import Decimal
 
@@ -4705,7 +4688,6 @@ def device_coefficients(request, device_id):
     
 import subprocess
 from django.http import FileResponse
-from django.conf import settings
 import os
 from django.http import FileResponse, HttpResponseForbidden
 
@@ -4924,9 +4906,7 @@ def relay_control_page(request):
 
 
 from .sunrise_service import SunRiseService
-from .risesun_service import RiseSunService
 from .cenergo_service import CEnergoService
-from .sanxing_service import SanxingService
 from .hexing_service import HexingService
 
 
@@ -5063,7 +5043,6 @@ def relay_api_action(request):
 
 
 
-import tempfile
 from django.core.management import call_command
 
 @login_required

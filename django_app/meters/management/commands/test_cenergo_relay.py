@@ -16,7 +16,7 @@ class Command(BaseCommand):
         action = options['action']
         
         # ВАЖНО: судя по WSDL, адрес заканчивается на /soap/v1
-        soap_url = "http://192.168.144.95:9090/soap/v1"
+        soap_url = os.getenv('CENERGO_SOAP_URL', 'http://192.168.144.95:9090/soap/v1')
         action_url = "http://energomera.ru/#/cEnergo/api/PK-Electrouchet/v1/Integration/"
         
         if action == 'status':
