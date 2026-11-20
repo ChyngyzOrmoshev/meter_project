@@ -2,12 +2,11 @@ import logging
 from decimal import Decimal
 from datetime import datetime, timedelta
 from django.db.models import Q
-from .models import Device, Reading, Substation, Feeder, CalculationPeriod, BalanceResult, MeterConnection
+from .models import Reading, Substation, CalculationPeriod, BalanceResult, CoefficientHistory
 
 
 logger = logging.getLogger(__name__)
-from decimal import Decimal
-from .models import CoefficientHistory
+
 
 def get_coefficient_for_date(device, date_obj):
     """
@@ -218,30 +217,3 @@ def recalc_all_balances(year=None, month=None):
     substations = Substation.objects.filter(is_active=True)
     for sub in substations:
         calculate_balance_for_substation(sub, year, month, force_recalc=True)
-
-def get_reading_for_date(device, date_obj, direction='aplus'):
-    from .models import Reading
-    try:
-        reading = Reading.objects.filter(
-            device=device,
-            timestamp__date=date_obj,
-            direction=direction
-        ).order_by('-timestamp').first()
-        return reading.reading_value if reading else None
-    except Reading.DoesNotExist:
-        return None
-
-from decimal import Decimal
-from .models import CoefficientHistory
-
-def get_coefficient_for_date(device, date_obj):
-    from .models import CoefficientHistory
-    history = CoefficientHistory.objects.filter(
-        device=device,
-        start_date__lte=date_obj
-    ).order_by('-start_date').first()
-    if history:
-        return history.tt_ratio * history.tn_ratio
-    if device.tt_ratio and device.tn_ratio:
-        return device.tt_ratio * device.tn_ratio
-    return Decimal(1)
