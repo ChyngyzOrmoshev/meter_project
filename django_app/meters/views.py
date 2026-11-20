@@ -1,34 +1,27 @@
-from django.shortcuts import render, redirect, get_object_or_404
+import csv
+import logging
+import re
+import subprocess
+import threading
+from datetime import datetime, timedelta
+
+import openpyxl
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib import messages
-from django.db.models import OuterRef, Subquery, Exists, Count, Q
-from django.utils import timezone
 from django.core.cache import cache
-from django.http import HttpResponse
+from django.db.models import Case, Count, IntegerField, Exists, OuterRef, Q, When
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.db import transaction
-from datetime import datetime, timedelta
-import csv
-import re
-import json
-import openpyxl
-import pandas as pd
-import logging
-import threading
-from decimal import Decimal
-from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-import subprocess
-from .models import Device, Reading, SyncStatus, MeterModel, Region, Substation, Feeder, TransformerSubstation, DeviceGroup
-from .relay_queue import supersede_tasks, inflight_tasks
-from django.core.paginator import Paginator
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from openpyxl.styles import Alignment, Font
 
+from .models import Device, MeterModel, Reading, Region, SyncStatus
 
 logger = logging.getLogger(__name__)
+
 
 # ==========================================
 # ГЛОБАЛЬНЫЙ МАППИНГ РАЙОНОВ
@@ -292,10 +285,11 @@ def delete_model(request, model_id):
     model = get_object_or_404(MeterModel, id=model_id)
     if request.method == 'POST':
         model.delete()
-        messages.success(request, f"Тип ПУ удалена.")
+        messages.success(request, "Тип ПУ удалена.")
         return redirect('models')
     return render(request, 'meters/confirm_delete.html', {'object': model, 'type': 'Тип ПУ'})
 
+# Доступ без входа (гостевая страница)
 def producer_stats_table(request):
     period = request.GET.get('period', 'today')
     region_id = request.GET.get('region_id')
@@ -359,8 +353,7 @@ def producer_stats_table(request):
     return HttpResponse(html)
 
 
-# @login_required
-# @user_passes_test(is_allowed_user)
+# Доступ без входа (гостевая страница)
 def device_types_report(request):
     period = request.GET.get('period', '7d')
     specific_date = request.GET.get('date', '')
@@ -568,7 +561,6 @@ def device_types_report(request):
         'period': period,
         'specific_date': specific_date,
         'periods': periods,
-        # 'producers_list': producers_list,
         'models_list': models_list,
         'total_devices': total_devices,
         'total_online': total_online,
@@ -589,19 +581,6 @@ def device_types_report(request):
     }
     return render(request, 'meters/device_types_report.html', context)
 
-
-# ===== ОТЧЁТ БАЛАНСА =====
-from decimal import Decimal
-
-
-import subprocess
-import threading
-import logging
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.csrf import csrf_exempt
-
-logger = logging.getLogger(__name__)
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
@@ -648,17 +627,7 @@ def restart_robot(request, robot_name):
     return JsonResponse({'message': f'Robot {robot_name} restart initiated'})
 
 
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import JsonResponse
-from .registration import register_devices_for_robot, ROBOT_CONFIGS
-
-
-from django.utils import timezone
-from datetime import datetime
-
-
-# @login_required
-# @user_passes_test(is_allowed_user)
+# Доступ без входа (гостевая страница)
 def region_stats_table(request):
     period = request.GET.get('period', 'today')
     cache_key = f'region_stats_table_{period}'
@@ -724,46 +693,7 @@ def region_stats_table(request):
     return HttpResponse(html)
 
 
-from django.http import StreamingHttpResponse
-import csv
-
-
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.paginator import Paginator
-from django.contrib import messages
-from django.db.models import Q
-from .models import CompareResult, Device, Region, Reading
-import pandas as pd
-import re
-
-
-# @login_required
-# @user_passes_test(is_allowed_user)
-import json
-
-
-from django.http import JsonResponse
-from django.core.management import call_command
-from django.contrib.auth.decorators import login_required
-
-
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
-from django.http import HttpResponse
-
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from .models import Device, ReadingFetchTask
-import threading
-
-
+# Доступ без входа (гостевая страница)
 def category_stats_table(request):
     """Возвращает HTML-таблицу со статистикой по категориям для выбранного района."""
     region_id = request.GET.get('region_id')
@@ -791,7 +721,6 @@ def category_stats_table(request):
             devices = devices.filter(region_id=region_id)
 
         # Аннотируем has_reading
-        from django.db.models import Exists, OuterRef, Count, Case, When, IntegerField
         readings_subquery = Reading.objects.filter(
             device=OuterRef('pk'),
             timestamp__gte=start_dt,
@@ -825,44 +754,3 @@ def category_stats_table(request):
         html = render_to_string('meters/_category_table.html', {'category_stats': stats})
         cache.set(cache_key, html, 600)
     return HttpResponse(html)
-
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET
-
-
-# ========== БАЛАНС ==========
-
-from .balance_calculator import (
-    calculate_balance_for_substation,
-    get_or_create_period,
-    get_reading_for_date,
-    get_coefficient_for_date,
-)
-from .models import (
-    Device, Reading, SyncStatus, MeterModel, Region, 
-    Substation, Feeder, TransformerSubstation, DeviceGroup,
-    CompareResult, ReadingFetchTask,
-    # Новые модели для баланса
-    MeterConnection, CoefficientHistory, BalanceResult
-)
-from decimal import Decimal
-
-
-from decimal import Decimal
-from .models import CoefficientHistory
-
-    
-import subprocess
-from django.http import FileResponse
-import os
-from django.http import FileResponse, HttpResponseForbidden
-
-import json
-from datetime import datetime
-
-
-from .sunrise_service import SunRiseService
-from .models import RelayCommandHistory
-from django.views.decorators.http import require_POST
-import json

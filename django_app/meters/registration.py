@@ -5,7 +5,7 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 from django.db import transaction
-from meters.models import Device, MeterModel
+from meters.models import Device, MeterModel, Region
 
 logger = logging.getLogger(__name__)
 
