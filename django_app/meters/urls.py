@@ -3,7 +3,6 @@ from . import views
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    # path('', views.dashboard, name='dashboard'),
     path('', RedirectView.as_view(url='/readings/', permanent=False), name='home'),
     path('devices/', views.devices, name='devices'),
     path('devices/edit/<str:serial_number>/', views.edit_device, name='edit_device'),
@@ -38,7 +37,6 @@ urlpatterns = [
     path('bulk-update-region/', views.bulk_update_region_page, name='bulk_update_region_page'),
     path('region-stats-table/', views.region_stats_table, name='region_stats_table'),
     path('compare-1c/', views.compare_1c, name='compare_1c'),
-    # path('compare-1c/upload/', views.compare_1c_upload, name='compare_1c_upload'),
     path('compare-1c/export/', views.compare_1c_export, name='compare_1c_export'),
     path('devices/export/csv/', views.export_devices_csv, name='export_devices_csv'),
     path('devices/export/xlsx/', views.export_devices_xlsx, name='export_devices_xlsx'),
@@ -83,8 +81,4 @@ urlpatterns = [
     path('relay-control/api/tasks-monitor/', views.relay_task_monitor_data, name='relay_task_monitor_data'),
     path('relay-control/api/task-retry/', views.relay_task_retry, name='relay_task_retry'),
     path('reports/device-types/', views.device_types_report, name='device_types_report'),
-    # path('balance/export/', views.balance_export_excel, name='balance_export_excel'),
-    # path('balance/', views.balance_report, name='balance_report'),
-    # path('directories/', views.directories, name='directories'),
-    # path('directories-table/', views.directories_table, name='directories_table'),
 ]

@@ -1,6 +1,5 @@
 Django==5.2.18
 mysqlclient==2.3.0
-pymongo==4.19.0
 pyodbc==5.3.0
 pandas==3.1.0
 python-dotenv==1.2.4
