@@ -32,6 +32,9 @@ def can_manage_relay(user):
 RELAY_MIN_SERIAL_SUFFIX = 5
 RELAY_MIN_LEAD_MINUTES = 30
 
+# Результат массовой загрузки по списку номеров (читает relay_bulk_status)
+BULK_RESULT_PATH = '/app/exports/bulk_relay_result.json'
+
 
 def find_relay_device(serial):
     """
@@ -611,8 +614,8 @@ def relay_bulk_start(request):
         results['success'] += 1
 
     results['status'] = 'completed'
-    os.makedirs('/app/exports', exist_ok=True)
-    with open('/app/exports/bulk_relay_result.json', 'w', encoding='utf-8') as f:
+    os.makedirs(os.path.dirname(BULK_RESULT_PATH), exist_ok=True)
+    with open(BULK_RESULT_PATH, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False)
 
     return JsonResponse({
@@ -624,8 +627,7 @@ def relay_bulk_start(request):
 @login_required
 @user_passes_test(can_manage_relay)
 def relay_bulk_status(request):
-    result_path = '/app/exports/bulk_relay_result.json'
-    if os.path.exists(result_path):
-        with open(result_path, 'r', encoding='utf-8') as f:
+    if os.path.exists(BULK_RESULT_PATH):
+        with open(BULK_RESULT_PATH, 'r', encoding='utf-8') as f:
             return JsonResponse(json.load(f))
     return JsonResponse({'status': 'starting', 'total': 0, 'processed': 0})
