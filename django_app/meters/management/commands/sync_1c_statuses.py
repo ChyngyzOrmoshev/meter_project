@@ -7,7 +7,9 @@ import pandas as pd
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.db.models import OuterRef, Subquery
+from django.db import transaction
 from meters.models import Device, Reading, Region
+from meters.hierarchy_sync import RegionHierarchy, aggregate_names, resolve_for_device, clean_name, usable_tp
 
 BASE_1C_PATH = '/app/1c_reports'
 EXPORT_DIR = '/app/exports'
@@ -99,6 +101,7 @@ class Command(BaseCommand):
 
         files = glob.glob(os.path.join(BASE_1C_PATH, latest_folder, '*.xlsx'))
         active_1c_serials = {} 
+        district_entries = {}  # район 1С -> [(ТП, фидер)] по всем строкам
         district_stats = {}
 
         def init_district(name):
@@ -111,6 +114,8 @@ class Command(BaseCommand):
         # 1. Читаем 1С
         for file_path in files:
             filename = os.path.basename(file_path)
+            if filename.startswith('~$'):  # временный файл открытого Excel
+                continue
             district = filename.replace('.xlsx', '').strip()
             dist_key = init_district(district)
             
@@ -119,6 +124,9 @@ class Command(BaseCommand):
                 col_serial = next((col for col in df.columns if 'заводской' in str(col).lower() or 'завод' in str(col).lower()), None)
                 col_model = next((col for col in df.columns if 'счетчик' in str(col).lower() or 'тип пу' in str(col).lower()), None)
                 col_category = next((col for col in df.columns if 'категория' in str(col).lower()), None)
+                col_tp = next((col for col in df.columns if str(col).strip().lower() == 'тп'), None)
+                col_feeder = next((col for col in df.columns if 'фидер' in str(col).lower()), None)
+                col_sub = next((col for col in df.columns if 'подстанц' in str(col).lower() or str(col).strip().lower() == 'пс'), None)
 
                 if not col_serial: continue
 
@@ -130,13 +138,18 @@ class Command(BaseCommand):
                     
                     model_1c = str(row[col_model]).strip() if col_model and not pd.isna(row[col_model]) else ''
                     cat_1c = str(row[col_category]).strip() if col_category and not pd.isna(row[col_category]) else ''
+                    tp_1c = clean_name(row[col_tp]) if col_tp and not pd.isna(row[col_tp]) else ''
+                    feeder_1c = clean_name(row[col_feeder]) if col_feeder and not pd.isna(row[col_feeder]) else ''
+                    sub_1c = clean_name(row[col_sub]) if col_sub and not pd.isna(row[col_sub]) else ''
+                    district_entries.setdefault(district, []).append((tp_1c, feeder_1c, sub_1c))
                     
                     if norm_sn not in active_1c_serials:
                         district_stats[dist_key]['total_1c'] += 1
                     
                     if norm_sn not in active_1c_serials or (not active_1c_serials[norm_sn]['model'] and model_1c):
                         active_1c_serials[norm_sn] = {
-                            'raw': raw_sn, 'district': district, 'model': model_1c, 'category': cat_1c
+                            'raw': raw_sn, 'district': district, 'model': model_1c, 'category': cat_1c,
+                            'tp': tp_1c, 'feeder': feeder_1c, 'sub': sub_1c,
                         }
             except Exception as e:
                 pass
@@ -147,7 +160,7 @@ class Command(BaseCommand):
         last_ts_subquery = Reading.objects.filter(device=OuterRef('pk')).order_by('-timestamp').values('timestamp')[:1]
         last_val_subquery = Reading.objects.filter(device=OuterRef('pk')).order_by('-timestamp').values('reading_value')[:1]
         
-        our_devices = list(Device.objects.filter(status__in=['active', 'inactive']).select_related('model', 'region', 'tp', 'feeder').annotate(
+        our_devices = list(Device.objects.filter(status__in=['active', 'inactive']).select_related('model', 'region', 'tp', 'feeder', 'substation').annotate(
             last_ts=Subquery(last_ts_subquery), last_val=Subquery(last_val_subquery)
         ))
         
@@ -158,6 +171,16 @@ class Command(BaseCommand):
             norm = norm_serial(raw_sn)
             devices_map_norm.setdefault(norm, []).append(d)
             if len(norm) >= 8: devices_map_last8.setdefault(norm[-8:], []).append(d)
+
+        apply_changes = bool(options.get('apply'))
+        agg_by_district = {dist: aggregate_names(entries) for dist, entries in district_entries.items()}
+        hierarchies = {}  # id района -> RegionHierarchy
+        hierarchy_rows = []
+
+        def hierarchy_for(region):
+            if region.id not in hierarchies:
+                hierarchies[region.id] = RegionHierarchy(region, commit=apply_changes)
+            return hierarchies[region.id]
 
         new_meters, missing_in_1c, to_activate, to_deactivate = [], [], [], []
         to_update_info = [] 
@@ -195,6 +218,34 @@ class Command(BaseCommand):
                         d.category = target_category
                         needs_update = True
                     
+                    # Иерархия: 1С главнее, пустое значение в 1С ничего не стирает
+                    region_for_tree = target_region or d.region
+                    old_tree = (d.substation.name if d.substation else '—',
+                                d.feeder.name if d.feeder else '—',
+                                d.tp.name if d.tp else '—')
+                    tree_changed = False
+                    if region_for_tree and (usable_tp(info['tp']) or info['feeder'] or info['sub']):
+                        sub, feeder, tp = resolve_for_device(
+                            hierarchy_for(region_for_tree), agg_by_district[info['district']],
+                            info['tp'], info['feeder'], info['sub'])
+                        if feeder is not None and (d.feeder_id != feeder.pk or d.feeder_id is None):
+                            d.feeder = feeder
+                            tree_changed = True
+                        if sub is not None and (d.substation_id != sub.pk or d.substation_id is None):
+                            d.substation = sub
+                            tree_changed = True
+                        if tp is not None and (d.tp_id != tp.pk or d.tp_id is None):
+                            d.tp = tp
+                            tree_changed = True
+                    if tree_changed:
+                        needs_update = True
+                        hierarchy_rows.append({
+                            'serial': d.serial_number, 'district_1c': info['district'],
+                            'old_substation': old_tree[0], 'new_substation': d.substation.name if d.substation else '—',
+                            'old_feeder': old_tree[1], 'new_feeder': d.feeder.name if d.feeder else '—',
+                            'old_tp': old_tree[2], 'new_tp': d.tp.name if d.tp else '—',
+                        })
+
                     if needs_update:
                         to_update_info.append({
                             'device': d, 'serial': d.serial_number,
@@ -251,13 +302,26 @@ class Command(BaseCommand):
             } for item in to_update_info]
             pd.DataFrame(updated_rows).to_csv(os.path.join(EXPORT_DIR, 'updated_meters.csv'), index=False, sep=';', encoding='utf-8-sig')
 
+        if hierarchy_rows:
+            pd.DataFrame(hierarchy_rows).to_csv(os.path.join(EXPORT_DIR, 'updated_hierarchy.csv'), index=False, sep=';', encoding='utf-8-sig')
+        created_rows = [{'region': h.region.name, 'level': level, 'name': name}
+                        for h in hierarchies.values()
+                        for level, names in (('substation', h.created['substations']), ('feeder', h.created['feeders']), ('tp', h.created['tps']))
+                        for name in names]
+        duplicates_rows = [{'region': h.region.name, 'level': lvl, 'kept': kept, 'duplicate': dup}
+                           for h in hierarchies.values() for lvl, kept, dup in h.duplicates]
+        if created_rows:
+            pd.DataFrame(created_rows).to_csv(os.path.join(EXPORT_DIR, 'hierarchy_created.csv'), index=False, sep=';', encoding='utf-8-sig')
+        if duplicates_rows:
+            pd.DataFrame(duplicates_rows).to_csv(os.path.join(EXPORT_DIR, 'hierarchy_duplicates.csv'), index=False, sep=';', encoding='utf-8-sig')
+
         # 6. Применяем изменения
         deactivated_count, activated_count, updated_count = 0, 0, 0
         
         if options.get('apply'):
             if to_update_info:
                 for item in to_update_info:
-                    item['device'].save(update_fields=['region', 'category'])
+                    item['device'].save(update_fields=['region', 'category', 'substation', 'feeder', 'tp'])
                     updated_count += 1
             if to_deactivate:
                 for d in to_deactivate:
@@ -273,7 +337,12 @@ class Command(BaseCommand):
             'candidates_count': len(to_deactivate), 
             'deactivated_count': deactivated_count,
             'activated_count': activated_count, 'updated_count': updated_count,
-            'folder_date': latest_folder, 'districts': district_stats
+            'folder_date': latest_folder, 'districts': district_stats,
+            'hierarchy_updated': len(hierarchy_rows),
+            'hierarchy_created': {'substations': sum(len(h.created['substations']) for h in hierarchies.values()),
+                                  'feeders': sum(len(h.created['feeders']) for h in hierarchies.values()),
+                                  'tps': sum(len(h.created['tps']) for h in hierarchies.values())},
+            'hierarchy_duplicates': len(duplicates_rows),
         }
         with open(os.path.join(EXPORT_DIR, 'sync_1c_result.json'), 'w', encoding='utf-8') as f:
             json.dump(result_data, f, ensure_ascii=False)
