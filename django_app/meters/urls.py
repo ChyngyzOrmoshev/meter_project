@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_relay
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -71,14 +71,14 @@ urlpatterns = [
     path('compare-1c/issues/verify-all/', views.verify_1c_issues_ajax, name='verify_1c_issues_ajax'),
     path('compare-1c/issues/verify-all/start/', views.start_verify_1c_issues, name='start_verify_1c_issues'),
     path('compare-1c/issues/verify-all/status/', views.check_verify_1c_status, name='check_verify_1c_status'),
-    path('relay-control/', views.relay_control_page, name='relay_control_page'),
-    path('relay-control/api/status/', views.relay_api_status, name='relay_api_status'),
-    path('relay-control/api/action/', views.relay_api_action, name='relay_api_action'),
-    path('relay-control/bulk-start/', views.relay_bulk_start, name='relay_bulk_start'),
-    path('relay-control/bulk-status/', views.relay_bulk_status, name='relay_bulk_status'),
-    path('relay-control/api/mass-subscribers/', views.relay_mass_get_subscribers, name='relay_mass_get_subscribers'),
-    path('relay-control/api/mass-create-tasks/', views.relay_mass_create_tasks, name='relay_mass_create_tasks'),
-    path('relay-control/api/tasks-monitor/', views.relay_task_monitor_data, name='relay_task_monitor_data'),
-    path('relay-control/api/task-retry/', views.relay_task_retry, name='relay_task_retry'),
+    path('relay-control/', views_relay.relay_control_page, name='relay_control_page'),
+    path('relay-control/api/status/', views_relay.relay_api_status, name='relay_api_status'),
+    path('relay-control/api/action/', views_relay.relay_api_action, name='relay_api_action'),
+    path('relay-control/bulk-start/', views_relay.relay_bulk_start, name='relay_bulk_start'),
+    path('relay-control/bulk-status/', views_relay.relay_bulk_status, name='relay_bulk_status'),
+    path('relay-control/api/mass-subscribers/', views_relay.relay_mass_get_subscribers, name='relay_mass_get_subscribers'),
+    path('relay-control/api/mass-create-tasks/', views_relay.relay_mass_create_tasks, name='relay_mass_create_tasks'),
+    path('relay-control/api/tasks-monitor/', views_relay.relay_task_monitor_data, name='relay_task_monitor_data'),
+    path('relay-control/api/task-retry/', views_relay.relay_task_retry, name='relay_task_retry'),
     path('reports/device-types/', views.device_types_report, name='device_types_report'),
 ]
