@@ -31,6 +31,14 @@ Django-приложение для автоматизированного сбо
 
 `docker.sock` в контейнеры не монтируется. Пароли MySQL (`MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`) берутся из `app/cEnergo.env` через `env_file`.
 
+## Автотесты
+
+```bash
+docker exec meters_django python manage.py test meters --settings=config.settings_test
+```
+
+`config/settings_test.py` подменяет БД на SQLite в памяти: боевая MySQL не затрагивается, сетевых запросов нет (HTTP к 1С подменяется). Покрыты `relay_queue` (задачи в полёте, откладывание, отмена только `pending`) и `onec_service` (контракт `readdebt`, Basic в UTF-8, статусы `ok`/`Not`, локальный режим, `check_debts`). Новый код реле и 1С нужно сопровождать тестами; правки проверять на «мутациях» (намеренно сломать код и убедиться, что тест падает).
+
 ## Запуск
 
 ```bash
@@ -193,7 +201,7 @@ django_app/
 
 ### Общее
 - `settings.py`: `DEBUG = True`, `ALLOWED_HOSTS = ['*']`, `USE_TZ = False` (время наивное).
-- `views.py` (около 750 строк) разбит на модули: реле (`views_relay.py`), сверка с 1С (`views_1c.py`), иерархия (`views_hierarchy.py`), показания с импортом (`views_readings.py`), устройства (`views_devices.py`), баланс (`views_balance.py`); маршруты в `urls.py` ведут на них. В `views.py` остались дашборд, вход/выход, модели ПУ, статистика по производителям/районам/категориям, `restart_robot` и общие хелперы (`REVERSE_REGION_MAPPING`, `is_allowed_user`, `compare_models`, `find_device`, `get_producer_display`), которые импортируют модули. `balance_report` без маршрута оставлен намеренно. Страницы баланса считают и сохраняют `BalanceResult` при первом открытии (GET пишет в БД). В `balance_calculator.py` `get_reading_for_date` и `get_coefficient_for_date` определены дважды, действует вторая. Автотестов нет.
+- `views.py` (около 750 строк) разбит на модули: реле (`views_relay.py`), сверка с 1С (`views_1c.py`), иерархия (`views_hierarchy.py`), показания с импортом (`views_readings.py`), устройства (`views_devices.py`), баланс (`views_balance.py`); маршруты в `urls.py` ведут на них. В `views.py` остались дашборд, вход/выход, модели ПУ, статистика по производителям/районам/категориям, `restart_robot` и общие хелперы (`REVERSE_REGION_MAPPING`, `is_allowed_user`, `compare_models`, `find_device`, `get_producer_display`), которые импортируют модули. `balance_report` без маршрута оставлен намеренно. Страницы баланса считают и сохраняют `BalanceResult` при первом открытии (GET пишет в БД). В `balance_calculator.py` `get_reading_for_date` и `get_coefficient_for_date` определены дважды, действует вторая. Автотесты: `meters/tests/` (`relay_queue`, `onec_service`).
 - Дубль индекса в `Reading`: `idx_readings_dev_ts_dir` повторяет `unique_together`.
 - `Subscriber.region` — строка, `MeterConnection` ссылается на объект по числовому ID без внешнего ключа.
 - Sanxing_new: пароль (`SANXING_NEW_PASSWORD_ENCRYPTED`) статичный. Если Sanxing поменяет пароль в UI, его нужно перешифровать.
