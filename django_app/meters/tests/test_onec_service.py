@@ -40,7 +40,7 @@ class OneCServiceTests(TestCase):
         with mock.patch('requests.post', return_value=response(ok)) as post:
             rows = svc.get_debtors('03 Сузак', 500)
         self.assertEqual(rows, ok['data'])
-        self.assertEqual(post.call_args.args[0], 'http://1c.test/spree/hs/ASKUE/readdebt')
+        self.assertEqual(post.call_args.args[0], 'http://1c.test/spree/hs/askue/readdebt')
         body = post.call_args.kwargs['json']
         self.assertEqual(body['min_debt'], 500.0)
         self.assertTrue(all(isinstance(t, str) for t in body['askue_types']))
@@ -76,7 +76,7 @@ class OneCServiceTests(TestCase):
         svc = self.service(ONEC_DB_OVERRIDE='proba83')
         with mock.patch('requests.post', return_value=response({'status': 'Not'})) as post:
             svc.get_debtors('03 Сузак', 1)
-        self.assertEqual(post.call_args.args[0], 'http://1c.test/proba83/hs/ASKUE/readdebt')
+        self.assertEqual(post.call_args.args[0], 'http://1c.test/proba83/hs/askue/readdebt')
 
     # --- локальный режим (район без базы 1С) ---
 
@@ -98,20 +98,35 @@ class OneCServiceTests(TestCase):
             self.assertEqual(svc.get_debtors('03 Сузак', 1), [])
         post.assert_not_called()
 
-    # --- check_debts через readdebt ---
+    # --- check_debts через checkdebt ---
+
+    def test_check_debts_sends_checkdebt_request(self):
+        svc = self.service()
+        ok = {'status': 'ok', 'data': [{'serial_number': '31000374', 'askue_type_id': '22', 'debt': 18911.4}]}
+        meters = [{'serial_number': '31000374', 'askue_type_id': '22', 'askue_type_str': 'SX'}]
+        with mock.patch('requests.post', return_value=response(ok)) as post:
+            res = svc.check_debts('03 Сузак', meters)
+        self.assertEqual(res, {'31000374': 18911.4})
+        self.assertEqual(post.call_args.args[0], 'http://1c.test/spree/hs/askue/checkdebt')
+        self.assertEqual(post.call_args.kwargs['json'], {'meters': meters})
 
     def test_check_debts_matches_serial_ignoring_leading_zeros(self):
         svc = self.service()
         ok = {'status': 'ok', 'data': [{'serial_number': '086365005946', 'debt': 1418.07}]}
-        with mock.patch('requests.post', return_value=response(ok)) as post:
+        with mock.patch('requests.post', return_value=response(ok)):
             res = svc.check_debts('03 Сузак', [{'serial_number': '86365005946'}, {'serial_number': '999'}])
         self.assertEqual(res, {'86365005946': 1418.07, '999': 0.0})
-        self.assertEqual(post.call_args.kwargs['json']['min_debt'], 0.01)
 
     def test_check_debts_status_not_means_zero_debt(self):
         svc = self.service()
         with mock.patch('requests.post', return_value=response({'status': 'Not'})):
             self.assertEqual(svc.check_debts('03 Сузак', [{'serial_number': '1'}]), {'1': 0.0})
+
+    def test_check_debts_unknown_status_raises(self):
+        svc = self.service()
+        with mock.patch('requests.post', return_value=response({'status': 'Error', 'Message': 'сбой'})):
+            with self.assertRaisesRegex(Exception, 'Ошибка проверки долга в 1С'):
+                svc.check_debts('03 Сузак', [{'serial_number': '1'}])
 
     def test_check_debts_1c_down_raises_so_task_is_retried(self):
         svc = self.service()

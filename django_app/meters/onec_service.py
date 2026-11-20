@@ -9,7 +9,7 @@ class OneCService:
     def __init__(self):
         load_dotenv('/app/cEnergo.env')
         self.server_url = os.getenv('ONEC_SERVER_URL', '').rstrip('/')
-        # HTTP-сервис 1С: {сервер}/{база}/hs/ASKUE/readdebt, авторизация Basic
+        # HTTP-сервис 1С: {сервер}/{база}/hs/askue/{readdebt|checkdebt}, авторизация Basic
         self.auth = (os.getenv('ONEC_USER', ''), os.getenv('ONEC_PASSWORD', ''))
         # Пробная база для проверки обмена: если задана, ею заменяются базы всех районов,
         # у которых в 1С есть база (районы без базы, ЖПЭС, остаются на локальных данных)
@@ -44,17 +44,12 @@ class OneCService:
             return None
         return self.db_override or db_name
 
-    def _read_debt(self, db_name, region_name, min_debt):
-        """Метод 1С readdebt: все абоненты с долгом не меньше min_debt по нашим типам АСКУЭ."""
+    def _call(self, db_name, region_name, method, payload):
+        """POST в HTTP-сервис 1С. Возвращает data ([] при статусе Not), иначе исключение."""
         if not all(self.auth):
             raise Exception("Не заданы ONEC_USER / ONEC_PASSWORD в cEnergo.env")
 
-        url = f"{self.server_url}/{db_name}/hs/ASKUE/readdebt"
-        payload = {
-            "min_debt": float(min_debt),
-            "askue_types": [str(t) for t in self._get_managed_askue_types()],
-        }
-
+        url = f"{self.server_url}/{db_name}/hs/askue/{method}"
         try:
             # Basic вручную в UTF-8: requests кодирует auth в latin-1, а логин 1С может быть кириллицей
             token = base64.b64encode(f"{self.auth[0]}:{self.auth[1]}".encode('utf-8')).decode('ascii')
@@ -70,9 +65,17 @@ class OneCService:
         if status == 'ok':
             return data.get('data') or []
         if status == 'Not':
-            # Штатный ответ: должников выше порога нет
+            # Штатный ответ: ничего не найдено (для readdebt - должников выше порога нет)
             return []
         raise Exception(f"1С ({region_name}) вернула статус {status!r}: {data.get('Message', '')}")
+
+    def _read_debt(self, db_name, region_name, min_debt):
+        """Метод 1С readdebt: все абоненты с долгом не меньше min_debt по нашим типам АСКУЭ."""
+        payload = {
+            "min_debt": float(min_debt),
+            "askue_types": [str(t) for t in self._get_managed_askue_types()],
+        }
+        return self._call(db_name, region_name, 'readdebt', payload)
 
     def get_debtors(self, region_name, min_debt):
         """
@@ -91,12 +94,13 @@ class OneCService:
 
     def check_debts(self, region_name, meters_list):
         """
-        Проверка актуального долга для конкретных счетчиков (используется в воркере)
+        Проверка актуального долга для конкретных счетчиков (используется в воркере).
+        meters_list: [{'serial_number', 'askue_type_id', 'askue_type_str'}, ...]
         Возвращает словарь: { 'serial_number': debt, ... }
 
-        У 1С нет метода проверки по списку счётчиков, поэтому берём весь список должников
-        (долг > 0) и ищем в нём серийники. Нет в списке - долг 0. Если 1С недоступна,
-        бросаем исключение: отключать наугад нельзя.
+        Метод 1С checkdebt. Счётчика нет в ответе - долг 0 (отключение отменяется:
+        «не знаем» безопаснее, чем отключить). Если 1С недоступна - исключение,
+        отключать наугад нельзя.
         """
         db_name = self._db_for(region_name)
 
@@ -108,8 +112,14 @@ class OneCService:
                 result[m['serial_number']] = float(sub.debt) if sub else 0.0
             return result
 
+        payload = {"meters": [{
+            "serial_number": str(m['serial_number']),
+            "askue_type_id": str(m.get('askue_type_id') or ''),
+            "askue_type_str": str(m.get('askue_type_str') or ''),
+        } for m in meters_list]}
+
         try:
-            rows = self._read_debt(db_name, region_name, 0.01)
+            rows = self._call(db_name, region_name, 'checkdebt', payload)
         except Exception as e:
             raise Exception(f"Ошибка проверки долга в 1С ({region_name}): {e}")
 
