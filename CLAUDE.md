@@ -170,8 +170,9 @@ django_app/
 │   ├── onec_service.py               # Клиент 1С
 │   ├── relay_queue.py                # Отмена/откладывание задач реле, задачи в полёте
 │   ├── models.py                     # Device, Reading, Subscriber, RelayTask, и др.
-│   ├── views.py                      # Веб-интерфейс, API (около 4500 строк, разбивается на модули)
+│   ├── views.py                      # Веб-интерфейс, API (около 3700 строк, разбивается на модули)
 │   ├── views_relay.py                # Управление реле: страница, API, массовые задачи, монитор
+│   ├── views_1c.py                   # Сверка с 1С: загрузка, заявки, статистика, синхронизация и проверка статусов
 │   ├── scheduler.py                  # Планировщик
 │   └── balance_calculator.py         # Логика баланса
 └── ...
@@ -188,7 +189,7 @@ django_app/
 
 ### Общее
 - `settings.py`: `DEBUG = True`, `ALLOWED_HOSTS = ['*']`, `USE_TZ = False` (время наивное).
-- `views.py` (около 4500 строк) разбивается на модули: реле уже вынесено в `views_relay.py` (маршруты `views_relay.*` в `urls.py`). Осталось: сверка с 1С, иерархия, баланс, устройства. `views_relay` импортирует `REVERSE_REGION_MAPPING` из `views`. Автотестов нет.
+- `views.py` (около 3700 строк) разбивается на модули: вынесены реле (`views_relay.py`) и сверка с 1С (`views_1c.py`), маршруты в `urls.py` ведут на них. Осталось: иерархия, баланс, устройства, показания. Модули импортируют общие хелперы из `views` (`REVERSE_REGION_MAPPING`, `is_allowed_user`, `compare_models`). `balance_report` без маршрута оставлен намеренно. Автотестов нет.
 - Дубль индекса в `Reading`: `idx_readings_dev_ts_dir` повторяет `unique_together`.
 - `Subscriber.region` — строка, `MeterConnection` ссылается на объект по числовому ID без внешнего ключа.
 - Sanxing_new: пароль (`SANXING_NEW_PASSWORD_ENCRYPTED`) статичный. Если Sanxing поменяет пароль в UI, его нужно перешифровать.
