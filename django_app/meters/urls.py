@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_relay, views_1c
+from . import views, views_relay, views_1c, views_hierarchy
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -51,19 +51,19 @@ urlpatterns = [
     path('readings/fetch/status/', views.fetch_readings_status, name='fetch_readings_status'),
     path('category-stats/', views.category_stats_table, name='category_stats_table'),
     path('devices/bulk-category/', views.bulk_update_category_page, name='bulk_update_category_page'),
-    path('hierarchy/', views.hierarchy_management, name='hierarchy_management'),
-    path('hierarchy/table/', views.hierarchy_table, name='hierarchy_table'),
-    path('hierarchy/add/', views.hierarchy_add, name='hierarchy_add'),
-    path('hierarchy/edit/<int:pk>/', views.hierarchy_edit, name='hierarchy_edit'),
-    path('hierarchy/delete/<int:pk>/', views.hierarchy_delete, name='hierarchy_delete'),
-    path('hierarchy/bulk-assign-tp/', views.bulk_assign_tp, name='bulk_assign_tp'),
-    path('hierarchy/parents/', views.hierarchy_parents, name='hierarchy_parents'),
+    path('hierarchy/', views_hierarchy.hierarchy_management, name='hierarchy_management'),
+    path('hierarchy/table/', views_hierarchy.hierarchy_table, name='hierarchy_table'),
+    path('hierarchy/add/', views_hierarchy.hierarchy_add, name='hierarchy_add'),
+    path('hierarchy/edit/<int:pk>/', views_hierarchy.hierarchy_edit, name='hierarchy_edit'),
+    path('hierarchy/delete/<int:pk>/', views_hierarchy.hierarchy_delete, name='hierarchy_delete'),
+    path('hierarchy/bulk-assign-tp/', views_hierarchy.bulk_assign_tp, name='bulk_assign_tp'),
+    path('hierarchy/parents/', views_hierarchy.hierarchy_parents, name='hierarchy_parents'),
     path('api/search-devices/', views.search_devices, name='search_devices'),
     path('balance/readings/', views.balance_readings, name='balance_readings'),
     path('balance/summary/', views.balance_summary, name='balance_summary'),
     path('balance/report/', views.balance_report_all, name='balance_report_all'),
     path('device/<int:device_id>/coefficients/', views.device_coefficients, name='device_coefficients'),
-    path('hierarchy/node-details/', views.hierarchy_node_details, name='hierarchy_node_details'),
+    path('hierarchy/node-details/', views_hierarchy.hierarchy_node_details, name='hierarchy_node_details'),
     path('sync-1c/', views_1c.sync_1c_manage, name='sync_1c_manage'),
     path('sync-1c/run/', views_1c.run_sync_1c, name='run_sync_1c'),
     path('sync-1c/download/<str:filename>/', views_1c.download_1c_report, name='download_1c_report'),
