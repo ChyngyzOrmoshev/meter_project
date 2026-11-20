@@ -170,8 +170,9 @@ django_app/
 │   ├── onec_service.py               # Клиент 1С
 │   ├── relay_queue.py                # Отмена/откладывание задач реле, задачи в полёте
 │   ├── models.py                     # Device, Reading, Subscriber, RelayTask, и др.
-│   ├── views.py                      # Веб-интерфейс, API (около 1300 строк, разбивается на модули)
+│   ├── views.py                      # Веб-интерфейс, API (около 900 строк)
 │   ├── views_relay.py                # Управление реле: страница, API, массовые задачи, монитор
+│   ├── views_balance.py              # Баланс: показания по связям, сводка, отчёт, коэффициенты
 │   ├── views_devices.py              # Устройства: список, карточка, загрузка, группы, массовые операции, реестры, экспорт
 │   ├── views_readings.py             # Показания: просмотр, ручной ввод, импорт из Excel, отчёты, опрос счётчиков
 │   ├── views_hierarchy.py            # Иерархия сети: районы, подстанции, фидеры, ТП
@@ -192,7 +193,7 @@ django_app/
 
 ### Общее
 - `settings.py`: `DEBUG = True`, `ALLOWED_HOSTS = ['*']`, `USE_TZ = False` (время наивное).
-- `views.py` (около 1300 строк) разбивается на модули: вынесены реле (`views_relay.py`), сверка с 1С (`views_1c.py`), иерархия (`views_hierarchy.py`), показания с импортом (`views_readings.py`) и устройства (`views_devices.py`), маршруты в `urls.py` ведут на них. Осталось в `views.py`: дашборд, вход/выход, модели ПУ и справочники, статистика по производителям/районам/категориям, баланс. Модули импортируют общие хелперы из `views` (`REVERSE_REGION_MAPPING`, `is_allowed_user`, `compare_models`, `find_device`, `get_producer_display`). `balance_report` без маршрута оставлен намеренно. Автотестов нет.
+- `views.py` (около 900 строк) разбит на модули: реле (`views_relay.py`), сверка с 1С (`views_1c.py`), иерархия (`views_hierarchy.py`), показания с импортом (`views_readings.py`), устройства (`views_devices.py`), баланс (`views_balance.py`); маршруты в `urls.py` ведут на них. В `views.py` остались дашборд, вход/выход, модели ПУ, статистика по производителям/районам/категориям, `restart_robot` и общие хелперы (`REVERSE_REGION_MAPPING`, `is_allowed_user`, `compare_models`, `find_device`, `get_producer_display`), которые импортируют модули. `balance_report` без маршрута оставлен намеренно. Страницы баланса считают и сохраняют `BalanceResult` при первом открытии (GET пишет в БД). В `balance_calculator.py` `get_reading_for_date` и `get_coefficient_for_date` определены дважды, действует вторая. Автотестов нет.
 - Дубль индекса в `Reading`: `idx_readings_dev_ts_dir` повторяет `unique_together`.
 - `Subscriber.region` — строка, `MeterConnection` ссылается на объект по числовому ID без внешнего ключа.
 - Sanxing_new: пароль (`SANXING_NEW_PASSWORD_ENCRYPTED`) статичный. Если Sanxing поменяет пароль в UI, его нужно перешифровать.

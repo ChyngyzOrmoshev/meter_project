@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_relay, views_1c, views_hierarchy, views_readings, views_devices
+from . import views, views_relay, views_1c, views_hierarchy, views_readings, views_devices, views_balance
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -59,10 +59,10 @@ urlpatterns = [
     path('hierarchy/bulk-assign-tp/', views_hierarchy.bulk_assign_tp, name='bulk_assign_tp'),
     path('hierarchy/parents/', views_hierarchy.hierarchy_parents, name='hierarchy_parents'),
     path('api/search-devices/', views_devices.search_devices, name='search_devices'),
-    path('balance/readings/', views.balance_readings, name='balance_readings'),
-    path('balance/summary/', views.balance_summary, name='balance_summary'),
-    path('balance/report/', views.balance_report_all, name='balance_report_all'),
-    path('device/<int:device_id>/coefficients/', views.device_coefficients, name='device_coefficients'),
+    path('balance/readings/', views_balance.balance_readings, name='balance_readings'),
+    path('balance/summary/', views_balance.balance_summary, name='balance_summary'),
+    path('balance/report/', views_balance.balance_report_all, name='balance_report_all'),
+    path('device/<int:device_id>/coefficients/', views_balance.device_coefficients, name='device_coefficients'),
     path('hierarchy/node-details/', views_hierarchy.hierarchy_node_details, name='hierarchy_node_details'),
     path('sync-1c/', views_1c.sync_1c_manage, name='sync_1c_manage'),
     path('sync-1c/run/', views_1c.run_sync_1c, name='run_sync_1c'),
