@@ -127,14 +127,27 @@ def readings(request):
     return render(request, 'meters/readings.html', context)
 
 
+def read_import_excel(file):
+    """
+    Читает Excel для импорта показаний. Все ячейки читаются как текст: так данные
+    безопасно кладутся в JSON-сессию (даты Excel не превращаются в Timestamp) и серийные
+    номера не становятся дробными ('61002510.0') из-за пустых ячеек в колонке.
+    Пустые ячейки — None.
+    """
+    df = pd.read_excel(file, engine='openpyxl', dtype=str)
+    return df.astype(object).where(df.notna(), None)
+
+
 # ===== ГРУППОВОЙ ВВОД И ИМПОРТ EXCEL (С ФОНОМ) =====
 def run_import_background(session_key):
-    from django.contrib.sessions.models import Session
+    from django.contrib.sessions.backends.db import SessionStore
     try:
-        session = Session.objects.get(session_key=session_key)
-        data = session.get_decoded()
-        import_data = data.get('import_data', [])
-        params = data.get('import_params', {})
+        session = SessionStore(session_key=session_key)
+        if not session.exists(session_key):
+            logger.warning("Сессия импорта не найдена")
+            return
+        import_data = session.get('import_data', [])
+        params = session.get('import_params', {})
         if not import_data or not params:
             logger.warning("Нет данных для фонового импорта")
             return
@@ -155,7 +168,7 @@ def run_import_background(session_key):
 
         with transaction.atomic():
             for row in import_data:
-                sn = str(row.get(col_serial, '')).strip()
+                sn = str(row.get(col_serial) or '').strip()
                 if not sn:
                     continue
                 device = find_device(sn)
@@ -240,8 +253,7 @@ def run_import_background(session_key):
                 else:
                     updated += 1
 
-        session_data = session.get_decoded()
-        session_data['import_result'] = {
+        session['import_result'] = {
             'success': success,
             'updated': updated,
             'errors': errors[:10],
@@ -251,8 +263,8 @@ def run_import_background(session_key):
             'skipped_count': len(skipped),
             'empty_count': len(skipped_empty),
         }
-        session_data.pop('import_data', None)
-        session_data.pop('import_params', None)
+        session.pop('import_data', None)
+        session.pop('import_params', None)
         session.save()
         logger.info(f"Фоновый импорт завершён: добавлено {success}, обновлено {updated}")
     except Exception as e:
@@ -318,7 +330,7 @@ def bulk_readings(request):
     if request.method == 'POST' and 'excel_submit' in request.POST and request.FILES.get('excel_file'):
         file = request.FILES['excel_file']
         try:
-            df = pd.read_excel(file, engine='openpyxl')
+            df = read_import_excel(file)
         except Exception as e:
             messages.error(request, f'Ошибка чтения файла: {e}')
             return redirect('bulk_readings')
@@ -349,6 +361,10 @@ def bulk_readings(request):
             'default_direction': request.POST.get('default_direction', 'aplus'),
             'date_format': request.POST.get('date_format', 'auto'),
         }
+        # Поток читает параметры из БД: сохраняем сессию до запуска, а после не даём
+        # middleware перезаписать её устаревшей копией (иначе потеряется результат импорта)
+        request.session.save()
+        request.session.modified = False
         thread = threading.Thread(target=run_import_background, args=(request.session.session_key,))
         thread.daemon = True
         thread.start()
@@ -630,8 +646,7 @@ def import_readings_excel(request):
     if request.method == 'POST' and request.FILES.get('excel_file'):
         file = request.FILES['excel_file']
         try:
-            import pandas as pd
-            df = pd.read_excel(file, engine='openpyxl')
+            df = read_import_excel(file)
         except Exception as e:
             messages.error(request, f'Ошибка чтения файла: {e}')
             return redirect('import_readings_excel')
@@ -677,7 +692,7 @@ def import_readings_excel(request):
         logger.info(f"Начинаем импорт {len(data)} строк из Excel")
 
         for idx, row in enumerate(data):
-            sn = str(row.get(col_serial, '')).strip()
+            sn = str(row.get(col_serial) or '').strip()
             if not sn:
                 errors.append(f"Строка {idx+1}: пустой серийный номер")
                 continue
