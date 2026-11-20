@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_relay, views_1c, views_hierarchy
+from . import views, views_relay, views_1c, views_hierarchy, views_readings
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -7,9 +7,9 @@ urlpatterns = [
     path('devices/', views.devices, name='devices'),
     path('devices/edit/<str:serial_number>/', views.edit_device, name='edit_device'),
     path('devices/delete/<str:serial_number>/', views.delete_device, name='delete_device'),
-    path('readings/', views.readings, name='readings'),
+    path('readings/', views_readings.readings, name='readings'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('bulk-readings/', views.bulk_readings, name='bulk_readings'),
+    path('bulk-readings/', views_readings.bulk_readings, name='bulk_readings'),
     path('models/', views.models, name='models'),
     path('models/add/', views.add_model, name='add_model'),
     path('models/edit/<int:model_id>/', views.edit_model, name='edit_model'),
@@ -20,11 +20,11 @@ urlpatterns = [
     path('devices/add/', views.add_device, name='add_device'),
     path('devices/upload/', views.upload_devices, name='upload_devices'),
     path('devices/template/', views.download_template, name='download_template'),
-    path('missing-readings/', views.missing_readings_report, name='missing_readings'),
+    path('missing-readings/', views_readings.missing_readings_report, name='missing_readings'),
     path('devices/bulk-status/', views.bulk_update_status_page, name='bulk_update_status_page'),
-    path('import-readings-excel/', views.import_readings_excel, name='import_readings_excel'),
+    path('import-readings-excel/', views_readings.import_readings_excel, name='import_readings_excel'),
     path('restart-robot/<str:robot_name>/', views.restart_robot, name='restart_robot'),
-    path('readings-with/', views.readings_with_report, name='readings_with'),
+    path('readings-with/', views_readings.readings_with_report, name='readings_with'),
     path('groups/', views.groups_list, name='groups_list'),
     path('groups/create/', views.group_create, name='group_create'),
     path('groups/edit/<int:group_id>/', views.group_edit, name='group_edit'),
@@ -47,8 +47,8 @@ urlpatterns = [
     path('compare-1c/check-offline/', views_1c.check_offline_issues, name='check_offline_issues'),
     path('compare-1c/issues/export/excel/', views_1c.compare_1c_issues_export_excel, name='compare_1c_issues_export_excel'),
     path('compare-1c/issues/<int:issue_id>/verify/', views_1c.compare_1c_issue_verify, name='compare_1c_issue_verify'),
-    path('readings/fetch/', views.fetch_device_readings, name='fetch_device_readings'),
-    path('readings/fetch/status/', views.fetch_readings_status, name='fetch_readings_status'),
+    path('readings/fetch/', views_readings.fetch_device_readings, name='fetch_device_readings'),
+    path('readings/fetch/status/', views_readings.fetch_readings_status, name='fetch_readings_status'),
     path('category-stats/', views.category_stats_table, name='category_stats_table'),
     path('devices/bulk-category/', views.bulk_update_category_page, name='bulk_update_category_page'),
     path('hierarchy/', views_hierarchy.hierarchy_management, name='hierarchy_management'),
