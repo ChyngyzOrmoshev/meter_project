@@ -153,11 +153,12 @@ class AggregateTests(HierarchyBase):
         self.assertEqual(feeder.substation, sub)
         self.assertEqual(tp.feeder, feeder)
 
-    def test_resolve_feeder_only(self):
+    def test_resolve_feeder_only_gives_nothing(self):
+        # нет ТП — фидер и подстанция прибору не ставятся, справочник не пополняется
         h = RegionHierarchy(self.region, commit=True)
-        sub, feeder, tp = resolve_for_device(h, aggregate_names([('', 'Ф')]), '', 'Ф')
-        self.assertIsNotNone(feeder)
-        self.assertIsNone(tp)
+        self.assertEqual(resolve_for_device(h, aggregate_names([('', 'Ф', 'ПС Х')]), '', 'Ф', 'ПС Х'), (None, None, None))
+        self.assertEqual(Feeder.objects.count(), 0)
+        self.assertEqual(Substation.objects.count(), 0)
 
 
 class TpPrefixAndSubstationTests(HierarchyBase):
@@ -168,9 +169,9 @@ class TpPrefixAndSubstationTests(HierarchyBase):
     def test_non_prefixed_tp_is_ignored_for_device(self):
         h = RegionHierarchy(self.region, commit=True)
         sub, feeder, tp = resolve_for_device(h, aggregate_names([('АС 341', 'Ф1')]), 'АС 341', 'Ф1')
-        self.assertIsNone(tp)
-        self.assertIsNotNone(feeder)  # фидер берётся независимо от ТП
+        self.assertEqual((sub, feeder, tp), (None, None, None))  # не «ТП-…» — как будто ТП нет
         self.assertEqual(TransformerSubstation.objects.count(), 0)
+        self.assertEqual(Feeder.objects.count(), 0)
 
     def test_latin_tp_prefix_accepted(self):
         from meters.hierarchy_sync import usable_tp
@@ -187,7 +188,7 @@ class TpPrefixAndSubstationTests(HierarchyBase):
     def test_existing_substation_found_by_key(self):
         ps = Substation.objects.create(region=self.region, name='ПС Западная')
         h = RegionHierarchy(self.region, commit=True)
-        sub, feeder, tp = resolve_for_device(h, aggregate_names([('', 'Новый', 'Западная')]), '', 'Новый', 'Западная')
+        sub, feeder, tp = resolve_for_device(h, aggregate_names([('ТП-1', 'Новый', 'Западная')]), 'ТП-1', 'Новый', 'Западная')
         self.assertEqual(sub, ps)
         self.assertEqual(feeder.substation, ps)
         self.assertEqual(Substation.objects.count(), 1)
@@ -206,11 +207,74 @@ class TpPrefixAndSubstationTests(HierarchyBase):
         Feeder.objects.create(substation=old, name='Ф1')
         Substation.objects.create(region=self.region, name='Новая')
         h = RegionHierarchy(self.region, commit=True)
-        sub, feeder, _ = resolve_for_device(h, aggregate_names([('', 'Ф1', 'Новая')]), '', 'Ф1', 'Новая')
+        sub, feeder, _ = resolve_for_device(h, aggregate_names([('ТП-1', 'Ф1', 'Новая')]), 'ТП-1', 'Ф1', 'Новая')
         self.assertEqual(sub.name, 'Новая')
-        self.assertEqual(feeder.substation, old)  # существующий фидер не переносим
+        # фидер — пара «название + подстанция»: Ф1 в «Новая» — другой фидер, прежний не трогаем
+        self.assertEqual(feeder.substation.name, 'Новая')
+        self.assertEqual(Feeder.objects.filter(name='Ф1').count(), 2)
+        self.assertEqual(Feeder.objects.get(substation=old).name, 'Ф1')
 
     def test_no_substation_in_row_uses_service(self):
         h = RegionHierarchy(self.region, commit=True)
-        sub, feeder, _ = resolve_for_device(h, aggregate_names([('', 'Ф1')]), '', 'Ф1')
+        sub, feeder, _ = resolve_for_device(h, aggregate_names([('ТП-1', 'Ф1')]), 'ТП-1', 'Ф1')
         self.assertEqual(sub.name, SERVICE_SUBSTATION)
+
+
+class SimilarFeederTests(HierarchyBase):
+    """Похожий фидер у разных подстанций: подстанция из строки, а без неё — по ТП."""
+
+    ROWS = [
+        ('ТП-1', 'ВЛ-10кВ ф. Насосный', 'ПС Ажиматов'),
+        ('ТП-1', 'Насосный', 'ПС Ажиматов'),
+        ('ТП-2', 'Насосный', 'ПС Барпы'),
+        ('ТП-2', 'ф. Насосный', ''),   # подстанции нет — её подскажет ТП-2
+    ]
+
+    def resolve(self, tp, feeder, sub, h=None):
+        h = h or RegionHierarchy(self.region, commit=True)
+        return resolve_for_device(h, aggregate_names(self.ROWS), tp, feeder, sub)
+
+    def test_same_name_in_two_substations_gives_two_feeders(self):
+        h = RegionHierarchy(self.region, commit=True)
+        a = self.resolve('ТП-1', 'Насосный', 'ПС Ажиматов', h)
+        b = self.resolve('ТП-2', 'Насосный', 'ПС Барпы', h)
+        self.assertNotEqual(a[1].pk, b[1].pk)
+        self.assertEqual(Feeder.objects.filter(name__icontains='Насосный').count(), 2)
+        self.assertEqual(a[1].substation.name, 'ПС Ажиматов')
+        self.assertEqual(b[1].substation.name, 'ПС Барпы')
+
+    def test_row_without_substation_follows_its_tp(self):
+        h = RegionHierarchy(self.region, commit=True)
+        self.resolve('ТП-1', 'Насосный', 'ПС Ажиматов', h)
+        sub, feeder, tp = self.resolve('ТП-2', 'ф. Насосный', '', h)
+        self.assertEqual(sub.name, 'ПС Барпы')
+        self.assertEqual(feeder.substation.name, 'ПС Барпы')
+        self.assertEqual(tp.feeder, feeder)
+
+    def test_ambiguous_feeder_without_hint_is_not_guessed(self):
+        h = RegionHierarchy(self.region, commit=True)
+        self.resolve('ТП-1', 'Насосный', 'ПС Ажиматов', h)
+        self.resolve('ТП-2', 'Насосный', 'ПС Барпы', h)
+        # ТП-3 вообще неизвестна: подсказки нет, оба фидера подходят
+        agg = aggregate_names(self.ROWS + [('ТП-3', 'Насосный', '')])
+        sub, feeder, tp = resolve_for_device(h, agg, 'ТП-3', 'Насосный', '')
+        self.assertIsNone(feeder)
+        self.assertIsNone(sub)
+        self.assertIsNotNone(tp)
+        self.assertEqual(Feeder.objects.filter(name__icontains='Насосный').count(), 2)
+
+    def test_tp_without_feeder_and_substation_gets_only_tp(self):
+        h = RegionHierarchy(self.region, commit=True)
+        agg = aggregate_names([('ТП-9', '', '')])
+        sub, feeder, tp = resolve_for_device(h, agg, 'ТП-9', '', '')
+        self.assertIsNone(sub)
+        self.assertIsNone(feeder)
+        self.assertEqual(tp.name, 'ТП-9')
+
+    def test_other_region_feeder_not_used(self):
+        other = Region.objects.create(name='04 Другой')
+        ps = Substation.objects.create(region=other, name='ПС Ажиматов')
+        Feeder.objects.create(substation=ps, name='Насосный')
+        h = RegionHierarchy(self.region, commit=True)
+        _, feeder, _ = resolve_for_device(h, aggregate_names(self.ROWS), 'ТП-1', 'Насосный', 'ПС Ажиматов')
+        self.assertEqual(feeder.substation.region, self.region)

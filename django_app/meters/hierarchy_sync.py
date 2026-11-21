@@ -82,6 +82,11 @@ def pick_name(variants, prefer=None):
         0 if prefer and prefer(kv[0]) else 1, -kv[1], -len(kv[0]), kv[0]))[0][0]
 
 
+def _same(a, b):
+    """Один и тот же объект: по pk, а у ещё не сохранённых — по идентичности."""
+    return a is b or (a is not None and b is not None and a.pk is not None and a.pk == b.pk)
+
+
 class RegionHierarchy:
     """Справочники одного района: поиск по ключу и (при commit) создание."""
 
@@ -91,7 +96,7 @@ class RegionHierarchy:
         self.created = {'substations': [], 'feeders': [], 'tps': []}
         self._service_sub = None
         self._subs = {}      # ключ -> Substation
-        self._feeders = {}   # ключ -> Feeder (в том числе ещё не сохранённый)
+        self._feeders = {}   # ключ -> [Feeder, ...] (в том числе ещё не сохранённые); похожие фидеры разных подстанций — разные объекты
         self._tps = {}       # ключ -> TransformerSubstation
         self._duplicates = []  # существующие объекты с одним ключом (только отчёт)
         self._load()
@@ -112,10 +117,12 @@ class RegionHierarchy:
             key = feeder_key(f.name)
             if not key:
                 continue
-            if key in self._feeders:
-                self._duplicates.append(('feeder', self._feeders[key].name, f.name))
+            same = self._feeders.setdefault(key, [])
+            twin = next((x for x in same if _same(x.substation, f.substation)), None)
+            if twin is not None:
+                self._duplicates.append(('feeder', twin.name, f.name))
             else:
-                self._feeders[key] = f
+                same.append(f)
         tps = TransformerSubstation.objects.filter(feeder__substation__region=self.region).select_related('feeder').order_by('id')
         for t in tps:
             key = tp_key(t.name)
@@ -162,14 +169,29 @@ class RegionHierarchy:
         return feeder
 
     def get_feeder(self, raw_name, display_name=None, substation=None):
-        """Фидер района по названию из 1С; нет — создаётся в `substation`
-        или, если подстанция не указана, в служебной."""
+        """Фидер района по названию из 1С.
+
+        Фидер определяется парой «название + подстанция»: «Насосный» двух разных
+        подстанций — два фидера. Без указанной подстанции подходит единственный
+        фидер с таким названием; если их несколько — однозначно выбрать нельзя
+        (None), решает вызывающий (по ТП). Нет совсем — создаётся в `substation`
+        или, если она не указана, в служебной.
+        """
         key = feeder_key(raw_name)
         if not key:
             return None
-        if key not in self._feeders:
-            self._feeders[key] = self._new_feeder(display_name or clean_name(raw_name), substation)
-        return self._feeders[key]
+        same = self._feeders.setdefault(key, [])
+        if substation is not None:
+            for f in same:
+                if _same(f.substation, substation):
+                    return f
+        elif len(same) == 1:
+            return same[0]
+        elif len(same) > 1:
+            return None
+        feeder = self._new_feeder(display_name or clean_name(raw_name), substation)
+        same.append(feeder)
+        return feeder
 
     def service_feeder(self):
         return self.get_feeder(SERVICE_FEEDER)
@@ -196,14 +218,17 @@ class RegionHierarchy:
 
 
 def aggregate_names(entries):
-    """По строкам 1С находит основной фидер каждой ТП и типичные написания.
+    """По строкам 1С находит основной фидер (и его подстанцию) каждой ТП и типичные написания.
 
     entries — итерируемое (tp_raw, feeder_raw[, substation_raw]). Возвращает словарь:
     tp_main_feeder: ключ ТП → сырое название основного фидера,
-    tp_names / feeder_names: ключ → самое частое написание.
+    tp_main_sub: ключ ТП → название подстанции этого фидера по строкам этой ТП (если указана),
+    feeder_main_sub: ключ фидера → подстанция, только если в выгрузке она одна
+        (похожий фидер у разных подстанций сюда не попадает: его решает ТП),
+    tp_names / feeder_names / sub_names: ключ → самое частое написание.
     """
     tp_variants, feeder_variants, sub_variants = {}, {}, {}
-    tp_feeders, feeder_subs = {}, {}
+    tp_feeders, tp_feeder_subs, feeder_subs = {}, {}, {}
     for entry in entries:
         tp_raw, feeder_raw = usable_tp(entry[0]), entry[1]
         sub_raw = entry[2] if len(entry) > 2 else ''
@@ -218,53 +243,68 @@ def aggregate_names(entries):
             feeder_variants.setdefault(fk, []).append(feeder_raw)
         if tk and fk:
             tp_feeders.setdefault(tk, Counter())[fk] += 1
+            if sk:
+                tp_feeder_subs.setdefault((tk, fk), Counter())[sk] += 1
     feeder_names = {k: pick_name(v) for k, v in feeder_variants.items()}
-    main_feeder = {}
+    sub_names = {k: pick_name(v) for k, v in sub_variants.items()}
+    main_feeder, main_sub = {}, {}
     for tk, counter in tp_feeders.items():
         fk = sorted(counter.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
         main_feeder[tk] = feeder_names[fk]
-    sub_names = {k: pick_name(v) for k, v in sub_variants.items()}
-    feeder_main_sub = {
-        fk: sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))[0][0] for fk, c in feeder_subs.items()}
+        subs = tp_feeder_subs.get((tk, fk))
+        if subs:
+            main_sub[tk] = sub_names[sorted(subs.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]]
     return {
         'tp_names': {k: pick_name(v, prefer=has_tp_prefix) for k, v in tp_variants.items()},
         'feeder_names': feeder_names,
         'tp_main_feeder': main_feeder,
+        'tp_main_sub': main_sub,
         'sub_names': sub_names,
-        'feeder_main_sub': {fk: sub_names[sk] for fk, sk in feeder_main_sub.items()},
+        'feeder_main_sub': {fk: sub_names[next(iter(c))] for fk, c in feeder_subs.items() if len(c) == 1},
     }
 
 
 def resolve_for_device(hier, agg, tp_raw, feeder_raw, substation_raw=''):
-    """(substation, feeder, tp) для строки 1С; None там, где 1С ничего не указала.
+    """(substation, feeder, tp) для строки 1С.
 
-    Если в строке указана подстанция, она главнее подстанции фидера.
-    Новые фидеры создаются в указанной подстанции (или в основной подстанции
-    этого фидера по выгрузке), иначе — в служебной.
+    Правила:
+    * нет допустимой ТП («ТП-…») — (None, None, None): фидер и подстанция
+      ставятся прибору только вместе с ТП;
+    * есть ТП, но в строке нет ни фидера, ни подстанции — прибор получает
+      только ТП;
+    * фидер — это пара «название + подстанция»: подстанция из строки главнее;
+      если её нет, подстанцию подсказывает ТП этой строки (основной фидер
+      ТП по выгрузке района), затем единственная подстанция этого фидера;
+    * похожий фидер у разных подстанций без подсказки не выбирается (None).
     """
-    feeder = tp = None
     tp_raw = usable_tp(tp_raw)
     fk, tk, sk = feeder_key(feeder_raw), tp_key(tp_raw), substation_key(substation_raw)
+    if not tk:
+        return None, None, None
     sub_names = agg.get('sub_names', {})
     named_sub = hier.get_substation(substation_raw, sub_names.get(sk)) if sk else None
+    main_feeder = agg['tp_main_feeder'].get(tk)
+    main_fk = feeder_key(main_feeder) if main_feeder else None
+    tp_sub_name = agg.get('tp_main_sub', {}).get(tk)
 
-    def home_sub(feeder_k):
-        """Подстанция для нового фидера: из строки, иначе основная по выгрузке."""
-        if named_sub is not None:
+    def home_sub(feeder_k, use_row=True):
+        """Подстанция фидера: из строки, иначе по ТП, иначе единственная по выгрузке."""
+        if use_row and named_sub is not None:
             return named_sub
-        main = agg.get('feeder_main_sub', {}).get(feeder_k)
-        return hier.get_substation(main) if main else None
+        if tp_sub_name and feeder_k == main_fk:
+            return hier.get_substation(tp_sub_name)
+        only = agg.get('feeder_main_sub', {}).get(feeder_k)
+        return hier.get_substation(only) if only else None
 
+    feeder = None
     if fk:
         feeder = hier.get_feeder(feeder_raw, agg['feeder_names'].get(fk), home_sub(fk))
-    if tk:
-        main_feeder = agg['tp_main_feeder'].get(tk)
-        tp = hier.get_tp(
-            tp_raw,
-            feeder_raw=main_feeder,
-            display_name=agg['tp_names'].get(tk),
-            feeder_display=main_feeder,
-            feeder_substation=home_sub(feeder_key(main_feeder)) if main_feeder else None,
-        )
+    tp = hier.get_tp(
+        tp_raw,
+        feeder_raw=main_feeder,
+        display_name=agg['tp_names'].get(tk),
+        feeder_display=main_feeder,
+        feeder_substation=home_sub(main_fk, use_row=False) if main_fk else None,
+    )
     substation = named_sub if named_sub is not None else (feeder.substation if feeder is not None else None)
     return substation, feeder, tp
