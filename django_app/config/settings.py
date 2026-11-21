@@ -83,3 +83,12 @@ LOGOUT_REDIRECT_URL = '/login/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520 # 20 MB
+
+# Общий кэш на файлах: его видят и 3 процесса gunicorn, и планировщик (разные контейнеры
+# с общим томом ./django_app). Встроенный locmem у каждого процесса свой и пустеет при перезапуске.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/app/cache/django',
+    }
+}

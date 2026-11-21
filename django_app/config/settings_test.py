@@ -13,3 +13,6 @@ DATABASES = {
 
 # Быстрый хешер: PBKDF2 с миллионом итераций замедляет каждый тест, создающий пользователя
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+# Тесты не должны писать в боевой файловый кэш
+CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}

@@ -92,6 +92,25 @@ def start():
         coalesce=True,
     )
 
+    # Статистика дашборда: «сегодня» каждые 10 минут, длинные периоды раз в час
+    # (расчёт за 30 дней занимает десятки секунд, поэтому не в запросе пользователя)
+    sched.add_job(
+        run_command,
+        IntervalTrigger(minutes=10),
+        args=['warm_dashboard_cache'],
+        id='warm_dashboard_today',
+        max_instances=1,
+        coalesce=True,
+    )
+    sched.add_job(
+        run_command,
+        CronTrigger(minute='20'),
+        args=['warm_dashboard_cache', '--all'],
+        id='warm_dashboard_all',
+        max_instances=1,
+        coalesce=True,
+    )
+
     # Playwright-роботы — каждый в своём слоте, чтобы не мешали друг другу
     # (раньше все 4 стартовали в 03:00 / 15:00 одновременно и роняли Sanxing_new_100A)
     PLAYWRIGHT_JOBS = [

@@ -48,3 +48,6 @@ tree.txt
 /192168144959090soap.txt
 /1С_API.txt
 /.continue/
+
+# Файловый кэш Django
+/django_app/cache/

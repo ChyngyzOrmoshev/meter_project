@@ -135,91 +135,8 @@ def logout_view(request):
 
 # ===== ДАШБОРД =====
 def dashboard(request):
-    period = request.GET.get('period', 'today')
-    cache_key = f'dashboard_stats_{period}'
-    data = cache.get(cache_key)
-    if data is None or request.GET.get('refresh') == '1':
-        today = timezone.now().date()
-        if period == 'today':
-            start_date = today
-        elif period == '3d':
-            start_date = today - timedelta(days=3)
-        elif period == '7d':
-            start_date = today - timedelta(days=7)
-        elif period == '30d':
-            start_date = today - timedelta(days=30)
-        else:
-            start_date = today
-
-        start_dt = datetime.combine(start_date, datetime.min.time())
-        end_dt = datetime.combine(today, datetime.max.time())
-
-        total_devices = Device.objects.filter(status='active').count()
-
-        active_device_ids = list(Reading.objects.filter(
-            device__status='active',
-            timestamp__gte=start_dt,
-            timestamp__lte=end_dt
-        ).values_list('device_id', flat=True).distinct())
-        active_today = len(active_device_ids)
-        active_percent = round((active_today / total_devices * 100), 1) if total_devices else 0
-
-        auto_notes = [
-            "Авто-сбор: База cEnergo",       # sync_mssql
-            "Авто-сбор: Sanxing_old",        # sync_sanxing
-            "Авто-сбор: SunRise",            # sync_sanrise
-            "Авто-сбор: RiseSun API",        # sync_risesun_api
-            "Авто-сбор: Inhemeter",          # sync_inhemeter
-            "Hexing KUK",                    # sync_hexing
-            "Hexing Raw sync",               # sync_hxn
-            "RiseSun",                       # sync_risesun (старый)
-            "Star sync",                     # sync_star (API)
-            "Website sync",                  # sync_website (Sanxing 100A)
-            "Website sync Period1 S34U18",   # sync_website_period1 (Sanxing 5A)
-        ]
-        manual_today = Reading.objects.filter(
-            device__status='active',
-            timestamp__gte=start_dt,
-            timestamp__lte=end_dt
-        ).exclude(notes__in=auto_notes).count()
-
-        grouped = Device.objects.filter(status='active').values(
-            'model__device_type_str', 'model__device_type_id'
-        ).annotate(
-            total=Count('id'),
-            active=Count('id', filter=Q(id__in=active_device_ids)),
-        )
-
-        producer_stats_dict = {}
-        for row in grouped:
-            code = row['model__device_type_str'] or ""
-            type_id = row['model__device_type_id'] or ""
-            display_name = get_producer_display(code, type_id)
-            entry = producer_stats_dict.setdefault(display_name, {'total': 0, 'active': 0})
-            entry['total'] += row['total']
-            entry['active'] += row['active']
-
-        producer_stats = []
-        for name, stats in producer_stats_dict.items():
-            percent = round((stats['active'] / stats['total'] * 100), 1) if stats['total'] else 0
-            producer_stats.append({
-                'producer': name,
-                'total': stats['total'],
-                'active': stats['active'],
-                'percent': percent,
-            })
-        producer_stats.sort(key=lambda x: x['producer'])
-
-        data = {
-            'total_devices': total_devices,
-            'active_today': active_today,
-            'active_percent': active_percent,
-            'manual_today': manual_today,
-            'sync_statuses': list(SyncStatus.objects.all().order_by('-last_update')),
-            'producer_stats': producer_stats,
-            'period': period,
-        }
-        cache.set(cache_key, data, 600)
+    from .dashboard_stats import get_dashboard_stats
+    data = get_dashboard_stats(request.GET.get('period', 'today'), refresh=request.GET.get('refresh') == '1')
     return render(request, 'meters/dashboard.html', data)
 
 
@@ -293,6 +210,11 @@ def delete_model(request, model_id):
 def producer_stats_table(request):
     period = request.GET.get('period', 'today')
     region_id = request.GET.get('region_id')
+    if not region_id:
+        # Все районы: берём прогретый кэш дашборда (его считает планировщик)
+        from .dashboard_stats import get_dashboard_stats, normalize_period
+        stats = get_dashboard_stats(normalize_period(period))['producer_stats']
+        return HttpResponse(render_to_string('meters/_producer_table.html', {'producer_stats': stats}))
     cache_key = f'producer_stats_table_{period}_{region_id}'
     html = cache.get(cache_key)
     if html is None:
@@ -629,68 +551,9 @@ def restart_robot(request, robot_name):
 
 # Доступ без входа (гостевая страница)
 def region_stats_table(request):
-    period = request.GET.get('period', 'today')
-    cache_key = f'region_stats_table_{period}'
-    html = cache.get(cache_key)
-    if html is None:
-        today = timezone.now().date()
-        if period == 'today':
-            start_date = today
-        elif period == '3d':
-            start_date = today - timedelta(days=3)
-        elif period == '7d':
-            start_date = today - timedelta(days=7)
-        elif period == '30d':
-            start_date = today - timedelta(days=30)
-        else:
-            start_date = today
-
-        start_dt = datetime.combine(start_date, datetime.min.time())
-        end_dt = datetime.combine(today, datetime.max.time())
-
-        # Получаем все активные устройства
-        devices = Device.objects.filter(status='active')
-
-        # Всего устройств по районам
-        totals_qs = devices.values('region__id', 'region__name').annotate(
-            total=Count('id')
-        ).order_by('region__name')
-
-        # Устройства с показанием за период — быстрый запрос БЕЗ JOIN к devices,
-        # используя только индекс по timestamp (JOIN с devices заставлял MySQL
-        # перебирать по циклу каждое активное устройство отдельно, что было медленно)
-        device_ids_with_readings = set(Reading.objects.filter(
-            timestamp__gte=start_dt,
-            timestamp__lte=end_dt
-        ).values_list('device_id', flat=True).distinct())
-
-        # Активных устройств по районам считаем в Python (быстрая проверка через set),
-        # чтобы не передавать в SQL гигантский список IN(...) при широких диапазонах дат,
-        # где почти все устройства попадают в выборку
-        active_by_region = {}
-        for device_id, region_id in devices.values_list('id', 'region__id'):
-            if device_id in device_ids_with_readings:
-                active_by_region[region_id] = active_by_region.get(region_id, 0) + 1
-
-        # Преобразуем для шаблона
-        stats = []
-        for stat in totals_qs:
-            total = stat['total']
-            active = active_by_region.get(stat['region__id'], 0)
-            offline = total - active
-            percent = round((active / total * 100), 1) if total else 0
-            stats.append({
-                'region_id': stat['region__id'],
-                'region_name': stat['region__name'] if stat['region__name'] else 'Без района',
-                'total': total,
-                'active': active,
-                'offline': offline,
-                'percent': percent,
-            })
-
-        html = render_to_string('meters/_region_table.html', {'region_stats': stats})
-        cache.set(cache_key, html, 600)
-    return HttpResponse(html)
+    from .dashboard_stats import get_region_stats, normalize_period
+    stats = get_region_stats(normalize_period(request.GET.get('period', 'today')))
+    return HttpResponse(render_to_string('meters/_region_table.html', {'region_stats': stats}))
 
 
 # Доступ без входа (гостевая страница)
