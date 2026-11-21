@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap&subset=cyrillic" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
     <script>document.documentElement.classList.add('js');</script>
+    <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/countup.js' %}" defer></script>
     <!-- <style>
         /* === ГЛОБАЛЬНЫЕ СТИЛИ === */
@@ -746,6 +747,7 @@
             <a class="navbar-brand" href="{% url 'dashboard' %}">
                 <i class="fas fa-bolt" style="color: #7fa3b8;"></i> Инфо<span style="color: #7fa3b8;">Энерго</span>
             </a>
+            <button type="button" class="theme-toggle theme-toggle--top ms-auto me-2" aria-label="Включить тёмную тему" title="Тёмная тема"><i class="fas fa-moon icon-moon"></i><i class="fas fa-sun icon-sun"></i></button>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -896,6 +898,7 @@
                         <i class="fas fa-user-circle"></i>
                         {% if user.is_authenticated %}{{ user.username }}{% else %}Гость{% endif %}
                     </span>
+                    <button type="button" class="theme-toggle me-2 d-none d-lg-inline-flex" aria-label="Включить тёмную тему" title="Тёмная тема"><i class="fas fa-moon icon-moon"></i><i class="fas fa-sun icon-sun"></i></button>
                     {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm"><i
                             class="fas fa-sign-out-alt"></i></a>

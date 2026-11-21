@@ -427,7 +427,7 @@
                 textStyle: {
                     fontSize: 16,
                     fontWeight: 300,
-                    color: '#1e292d'
+                    color: themeVar('--ink')
                 },
             },
             tooltip: {
@@ -452,7 +452,7 @@
                 axisLabel: {
                     formatter: '{value}%',
                     fontSize: 11,
-                    color: '#5a6b7c'
+                    color: themeVar('--ink-3')
                 },
                 splitLine: {
                     lineStyle: {
@@ -485,7 +485,7 @@
                     barWidth: 30,
 
                     itemStyle: {
-                        color: 'rgba(30,41,45,0.06)',
+                        color: themeVar('--track'),
                         borderRadius: 999
                     },
                     z: 1,
@@ -544,6 +544,15 @@
             }
         });
     }
+    // Цвета диаграмм берём из переменных темы (светлая/тёмная)
+    function themeVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+    document.addEventListener('themechange', function () {
+        if (typeof buildRegionChart === 'function') buildRegionChart();
+        if (typeof buildProducerChart === 'function') buildProducerChart();
+    });
+
     // диаграмма район
     let regionChartInstance = null;
 
@@ -612,7 +621,7 @@
                 textStyle: {
                     fontSize: 16,
                     fontWeight: 300,
-                    color: '#1e292d'
+                    color: themeVar('--ink')
                 }
             },
             tooltip: {
@@ -638,7 +647,7 @@
                 axisLabel: {
                     fontSize: 12,
                     fontWeight: 400,
-                    color: '#6a7a80',
+                    color: themeVar('--ink-2'),
                     interval: 0,
                     rotate: 30
                 }
@@ -649,10 +658,10 @@
                 max: 100,
                 axisLabel: {
                     fontSize: 11,
-                    color: '#98a6ab',
+                    color: themeVar('--ink-3'),
                     formatter: '{value}%'
                 },
-                splitLine: { show: true, lineStyle: { type: 'dashed', color: 'rgba(30,41,45,0.12)' } },
+                splitLine: { show: true, lineStyle: { type: 'dashed', color: themeVar('--grid') } },
                 axisLine: { show: false },
                 axisTick: { show: false }
             },
@@ -663,7 +672,7 @@
                     data: gradientData,
                     barWidth: 22,
                     showBackground: true,
-                    backgroundStyle: { color: 'rgba(30,41,45,0.06)', borderRadius: 999 },
+                    backgroundStyle: { color: themeVar('--track'), borderRadius: 999 },
                     label: {
                         show: true,
                         position: 'top',
@@ -672,7 +681,7 @@
                         },
                         fontSize: 13,
                         fontWeight: 400,
-                        color: '#1e292d'
+                        color: themeVar('--ink')
                     }
                 }
             ]

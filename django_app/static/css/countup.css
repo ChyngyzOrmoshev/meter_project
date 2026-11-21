@@ -39,7 +39,7 @@ count-up { font-variant-numeric: tabular-nums; }
     font-size: 2rem;
     font-weight: 700;
     line-height: 1.15;
-    color: #2d3e50;
+    color: var(--ink, #2d3e50);
     font-variant-numeric: tabular-nums;
 }
 .stat-card .stat-label {
@@ -90,7 +90,7 @@ count-up { font-variant-numeric: tabular-nums; }
     margin-bottom: 0.9rem;
 }
 .region-card__head .region-link,
-.region-card__title { color: #2d3e50; text-decoration: none; font-size: 1.2rem; }
+.region-card__title { color: var(--ink, #2d3e50); text-decoration: none; font-size: 1.2rem; }
 .region-card__head .region-link:hover { color: var(--accent); }
 .region-card__percent { font-size: 1.9rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1; }
 .region-card .progress-pastel { height: 10px; border-radius: 10px; }
