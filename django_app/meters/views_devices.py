@@ -20,7 +20,7 @@ from .models import (
     TransformerSubstation,
 )
 from .registration import register_devices_for_robot, ROBOT_CONFIGS
-from .views import is_allowed_user, get_producer_display
+from .views import is_allowed_user, get_producer_display, producer_model_ids
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +53,11 @@ def devices(request):
 
     if search:
         qs = qs.filter(Q(serial_number__icontains=search) | Q(model__model_name__icontains=search))
+    producer_name = request.GET.get('producer_name', '')
     if producer_filter:
         qs = qs.filter(model__device_type_str=producer_filter)
+    if producer_name:
+        qs = qs.filter(model_id__in=producer_model_ids(producer_name))
     if model_filter:
         qs = qs.filter(model__id=model_filter)
     if status_filter:

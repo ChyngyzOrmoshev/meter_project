@@ -1,13 +1,13 @@
 {% load l10n %}
 {# Карточки районов. Диаграмма читает data-region-card (название и % чтения). Откат: git checkout этого файла. #}
-<div class="row g-3">
+<div class="row g-4">
     {% for stat in region_stats %}
-    <div class="col-xl-3 col-lg-4 col-md-6 col-12">
+    <div class="col-xl-4 col-md-6 col-12">
         <div class="metric-modern stat-card region-card" data-reveal data-region-card
             data-name="{{ stat.region_name }}" data-percent="{{ stat.percent|unlocalize }}">
             <div class="region-card__head">
                 <a href="#" class="region-link" data-region-id="{{ stat.region_id }}"
-                    data-region-name="{{ stat.region_name }}">
+                    data-region-name="{{ stat.region_name }}" title="Статистика по категориям">
                     <strong>{{ stat.region_name }}</strong>
                 </a>
                 <span class="region-card__percent">
@@ -19,22 +19,18 @@
                     aria-valuenow="{{ stat.percent|floatformat:0|unlocalize }}" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
             <div class="region-card__stats">
-                <div>
+                <a class="stat-link" {% if stat.region_id %}href="{% url 'devices' %}?region={{ stat.region_id }}&status=active"{% endif %} title="Открыть список приборов района">
                     <div class="stat-value region-card__num"><count-up value="{{ stat.total|unlocalize }}">{{ stat.total }}</count-up></div>
                     <div class="stat-sub">всего</div>
-                </div>
-                <div>
-                    <a href="{% url 'readings_with' %}?region={{ stat.region_id }}&online=yes" class="text-decoration-none">
-                        <div class="stat-value region-card__num"><count-up value="{{ stat.active|unlocalize }}">{{ stat.active }}</count-up></div>
-                    </a>
+                </a>
+                <a class="stat-link stat-link--ok" {% if stat.region_id %}href="{% url 'readings_with' %}?region={{ stat.region_id }}&status=active&period={{ period }}"{% endif %} title="Открыть отчёт: есть показания">
+                    <div class="stat-value region-card__num"><count-up value="{{ stat.active|unlocalize }}">{{ stat.active }}</count-up></div>
                     <div class="stat-sub">активных</div>
-                </div>
-                <div>
-                    <a href="{% url 'missing_readings' %}?region={{ stat.region_id }}&online=no" class="text-decoration-none text-danger">
-                        <div class="stat-value region-card__num text-danger"><count-up value="{{ stat.offline|unlocalize }}">{{ stat.offline }}</count-up></div>
-                    </a>
+                </a>
+                <a class="stat-link stat-link--bad" {% if stat.region_id %}href="{% url 'missing_readings' %}?region={{ stat.region_id }}&status=active&period={{ period }}"{% endif %} title="Открыть отчёт: нет показаний">
+                    <div class="stat-value region-card__num"><count-up value="{{ stat.offline|unlocalize }}">{{ stat.offline }}</count-up></div>
                     <div class="stat-sub">оффлайн</div>
-                </div>
+                </a>
             </div>
         </div>
     </div>

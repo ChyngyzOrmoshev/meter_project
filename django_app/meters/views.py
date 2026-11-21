@@ -68,6 +68,11 @@ def get_producer_display(code, type_id):
     }
     return mapping.get(code, code or "Неизвестно")
 
+def producer_model_ids(name):
+    """ID моделей ПУ, которые на дашборде показываются под названием производителя `name`."""
+    pairs = MeterModel.objects.values_list('id', 'device_type_str', 'device_type_id')
+    return [mid for mid, code, type_id in pairs if get_producer_display(code or "", type_id or "") == name]
+
 def normalize_model_name(model):
     """Приводит название модели к каноническому виду для сравнения."""
     if not model:
@@ -213,8 +218,9 @@ def producer_stats_table(request):
     if not region_id:
         # Все районы: берём прогретый кэш дашборда (его считает планировщик)
         from .dashboard_stats import get_dashboard_stats, normalize_period
-        stats = get_dashboard_stats(normalize_period(period))['producer_stats']
-        return HttpResponse(render_to_string('meters/_producer_table.html', {'producer_stats': stats}))
+        period = normalize_period(period)
+        stats = get_dashboard_stats(period)['producer_stats']
+        return HttpResponse(render_to_string('meters/_producer_table.html', {'producer_stats': stats, 'period': period}))
     cache_key = f'producer_stats_table_{period}_{region_id}'
     html = cache.get(cache_key)
     if html is None:
@@ -552,8 +558,9 @@ def restart_robot(request, robot_name):
 # Доступ без входа (гостевая страница)
 def region_stats_table(request):
     from .dashboard_stats import get_region_stats, normalize_period
-    stats = get_region_stats(normalize_period(request.GET.get('period', 'today')))
-    return HttpResponse(render_to_string('meters/_region_table.html', {'region_stats': stats}))
+    period = normalize_period(request.GET.get('period', 'today'))
+    stats = get_region_stats(period)
+    return HttpResponse(render_to_string('meters/_region_table.html', {'region_stats': stats, 'period': period}))
 
 
 # Доступ без входа (гостевая страница)

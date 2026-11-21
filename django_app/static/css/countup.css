@@ -79,18 +79,40 @@ count-up { font-variant-numeric: tabular-nums; }
     .js .stat-card[data-reveal]:not(.is-visible) { opacity: 1; transform: none; filter: none; }
 }
 
-/* ----- Карточки районов ----- */
-.region-card { text-align: left; min-height: 0; padding: 1rem 1.1rem; }
+/* ----- Карточки районов и производителей ----- */
+.region-card { text-align: left; min-height: 190px; padding: 1.4rem 1.5rem; }
 .region-card__head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
 }
-.region-card__head .region-link { color: #2d3e50; text-decoration: none; font-size: 1rem; }
+.region-card__head .region-link,
+.region-card__title { color: #2d3e50; text-decoration: none; font-size: 1.2rem; }
 .region-card__head .region-link:hover { color: var(--accent); }
-.region-card__percent { font-size: 1.35rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-.region-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; }
-.region-card .region-card__num { font-size: 1.15rem; }
-.region-card .stat-sub { margin-top: 0; }
+.region-card__percent { font-size: 1.9rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1; }
+.region-card .progress-pastel { height: 10px; border-radius: 10px; }
+.region-card .progress-pastel .progress-bar { border-radius: 10px; }
+.region-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; text-align: center; }
+.region-card__stats--2 { grid-template-columns: repeat(2, 1fr); }
+.region-card .region-card__num { font-size: 1.7rem; }
+.region-card .stat-sub { margin-top: 0.1rem; font-size: 0.8rem; }
+
+/* Числа-ссылки на отчёты */
+.stat-link {
+    display: block;
+    padding: 0.4rem 0.25rem;
+    border-radius: 12px;
+    color: inherit;
+    text-decoration: none;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-link:hover {
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 0 0 1px rgba(31, 45, 61, 0.1);
+    color: inherit;
+}
+.stat-link:hover .stat-value { text-decoration: underline; text-underline-offset: 4px; }
+.stat-link--ok .stat-value { color: #00a383; }
+.stat-link--bad .stat-value { color: #d63031; }

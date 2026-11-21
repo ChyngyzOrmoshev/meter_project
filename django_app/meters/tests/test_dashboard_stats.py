@@ -122,3 +122,53 @@ class ProducerStatsViewTests(StatsBase):
         stats = dashboard_stats.compute_period_stats('today')[0]['producer_stats']
         self.assertEqual(len(stats), 1)
         self.assertEqual((stats[0]['total'], stats[0]['active'], stats[0]['percent']), (2, 1, 50.0))
+
+
+class CardLinksTests(StatsBase):
+    def test_region_links_carry_region_status_and_period(self):
+        from meters.models import Region
+        r = Region.objects.create(name='01 Манас')
+        Device.objects.filter(pk=self.active.pk).update(region=r)
+        resp = self.client.get('/region-stats-table/?period=7d')
+        self.assertContains(resp, f'/devices/?region={r.pk}&status=active')
+        self.assertContains(resp, f'/readings-with/?region={r.pk}&status=active&period=7d')
+        self.assertContains(resp, f'/missing-readings/?region={r.pk}&status=active&period=7d')
+
+    def test_producer_links_use_producer_name(self):
+        resp = self.client.get('/producer-stats/?period=3d')
+        self.assertContains(resp, 'producer_name=Sanxing_old&status=active&period=3d')
+        self.assertContains(resp, 'data-producer-card', count=1)
+
+    def test_producer_model_ids_groups_by_display_name(self):
+        from meters.views import producer_model_ids
+        self.assertEqual(producer_model_ids('Sanxing_old'), [self.active.model_id])
+        self.assertEqual(producer_model_ids('Нет такого'), [])
+
+    def test_reports_filter_by_producer_name(self):
+        from django.contrib.auth.models import User
+        self.client.force_login(User.objects.create_superuser('adm', 'a@a.a', 'x'))
+        other = MeterModel.objects.create(
+            catalog_code='M2', model_name='M2', digit_capacity=6, phases='1', nominal_current='5',
+            nominal_voltage='220', system_type='x', period='1', device_type_id='23', device_type_str='EM')
+        em = Device.objects.create(serial_number='ENERGO77', model=other, status='active')
+        sx = Device.objects.create(serial_number='SANXFOREIGN', model=self.active.model, status='active')
+        Reading.objects.create(device=em, timestamp=timezone.now().replace(microsecond=0),
+                               reading_value=Decimal('1'), direction='aplus')
+        # missing-readings: ПУ без показаний, поэтому ENERGO77 (с показанием) там не нужен
+        cases = {'/devices/': (['ENERGO77'], ['SANXFOREIGN']),
+                 '/readings-with/': (['ENERGO77'], ['SANXFOREIGN'])}
+        for url, (present, absent) in cases.items():
+            body = self.client.get(url + '?producer_name=Energomera&status=active&period=30d').content.decode()
+            for serial in present:
+                self.assertIn(serial, body, url)
+            for serial in absent:
+                self.assertNotIn(serial, body, url)
+        # missing-readings: SX без показаний виден по своему производителю и не виден по чужому
+        body = self.client.get('/missing-readings/?producer_name=Sanxing_old&status=active&period=30d').content.decode()
+        self.assertIn('SANXFOREIGN', body)
+        body = self.client.get('/missing-readings/?producer_name=Energomera&status=active&period=30d').content.decode()
+        self.assertNotIn('SANXFOREIGN', body)
+
+    def test_region_without_id_has_no_report_links(self):
+        resp = self.client.get('/region-stats-table/?period=today')
+        self.assertNotContains(resp, 'region=None')

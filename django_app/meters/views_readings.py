@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import Device, DeviceGroup, MeterConnection, MeterModel, Reading, ReadingFetchTask, Region
-from .views import is_allowed_user, find_device, get_producer_display
+from .views import is_allowed_user, find_device, get_producer_display, producer_model_ids
 
 logger = logging.getLogger(__name__)
 
@@ -475,8 +475,11 @@ def missing_readings_report(request):
         devices_qs = devices_qs.filter(status=status_filter)
     if model_filter:
         devices_qs = devices_qs.filter(model__id=model_filter)
+    producer_name = request.GET.get('producer_name', '')
     if producer_filter:
         devices_qs = devices_qs.filter(model__device_type_str=producer_filter)
+    if producer_name:
+        devices_qs = devices_qs.filter(model_id__in=producer_model_ids(producer_name))
     if region_filter:
         devices_qs = devices_qs.filter(region_id=region_filter)
     if group_filter:
@@ -895,8 +898,11 @@ def readings_with_report(request):
         devices_qs = devices_qs.filter(status=status_filter)
     if model_filter:
         devices_qs = devices_qs.filter(model__id=model_filter)
+    producer_name = request.GET.get('producer_name', '')
     if producer_filter:
         devices_qs = devices_qs.filter(model__device_type_str=producer_filter)
+    if producer_name:
+        devices_qs = devices_qs.filter(model_id__in=producer_model_ids(producer_name))
     if region_filter:
         devices_qs = devices_qs.filter(region_id=region_filter)
     if group_filter:

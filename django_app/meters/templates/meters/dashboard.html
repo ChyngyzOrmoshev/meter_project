@@ -209,6 +209,7 @@
                     container.innerHTML = html;
                     if (window.initProgressBars) window.initProgressBars();
                     if (window.animateNumbers) window.animateNumbers();
+                    if (window.initReveal) window.initReveal();
                     if (typeof buildProducerChart === 'function') buildProducerChart();
                 }, delay);
             })
@@ -384,26 +385,15 @@
     function buildProducerChart() {
         const dom = document.getElementById('producer-chart-container');
         if (!dom) return;
-        const table = document.querySelector('#producer-stats-container table');
-        if (!table) return;
-        const rows = table.querySelectorAll('tbody tr');
         const labels = [];
         const data = [];
         const totalData = [];
         const activeData = [];
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length >= 4) {
-                const label = cells[0].textContent.trim();
-                const total = parseInt(cells[1].textContent.replace(/\s/g, '')) || 0;
-                const active = parseInt(cells[2].textContent.replace(/\s/g, '')) || 0;
-                const percentText = cells[3].textContent.trim();
-                const percent = parseFloat(percentText.replace('%', '').replace(',', '.')) || 0;
-                labels.push(label);
-                data.push(percent);
-                totalData.push(total);
-                activeData.push(active);
-            }
+        document.querySelectorAll('#producer-stats-container [data-producer-card]').forEach(card => {
+            labels.push(card.dataset.name);
+            data.push(parseFloat(card.dataset.percent) || 0);
+            totalData.push(parseInt(card.dataset.total) || 0);
+            activeData.push(parseInt(card.dataset.active) || 0);
         });
         if (labels.length === 0) return;
 
