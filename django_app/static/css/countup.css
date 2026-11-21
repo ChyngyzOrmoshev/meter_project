@@ -1,0 +1,96 @@
+/* Карточки статистики: стекло, каскадное появление, hover. Подключается после style.css.
+   Откат: убрать подключение этого файла и классы stat-card / data-reveal в шаблонах. */
+
+count-up { font-variant-numeric: tabular-nums; }
+
+.stat-card {
+    --accent: #0984e3;
+    position: relative;
+    background: rgba(255, 255, 255, 0.6);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 45, 61, 0.08);
+    padding: 1.1rem 0.9rem 1rem;
+    min-height: 150px;
+    text-align: center;
+}
+.stat-card--orange { --accent: #e17055; }
+.stat-card--green  { --accent: #00b894; }
+.stat-card--amber  { --accent: #f39c12; }
+.stat-card--blue   { --accent: #0984e3; }
+
+.stat-card .stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0.5rem;
+    border-radius: 50%;
+    font-size: 1.05rem;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.stat-card .stat-value {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #2d3e50;
+    font-variant-numeric: tabular-nums;
+}
+.stat-card .stat-label {
+    margin: 0.15rem 0 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #6f8a9e;
+    line-height: 1.3;
+}
+.stat-card .stat-sub {
+    margin: 0.1rem 0 0;
+    font-size: 0.75rem;
+    color: #9aa7b3;
+}
+
+/* Появление: скрываем только если JS работает (класс js ставится скриптом) */
+.js .stat-card[data-reveal]:not(.is-visible) {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(8px);
+}
+.stat-card[data-reveal] {
+    transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease, box-shadow 0.25s ease;
+}
+/* После появления - быстрые переходы для hover */
+.stat-card.reveal-done {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 36px rgba(31, 45, 61, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stat-card, .stat-card[data-reveal], .stat-card.reveal-done { transition: none; }
+    .js .stat-card[data-reveal]:not(.is-visible) { opacity: 1; transform: none; filter: none; }
+}
+
+/* ----- Карточки районов ----- */
+.region-card { text-align: left; min-height: 0; padding: 1rem 1.1rem; }
+.region-card__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+.region-card__head .region-link { color: #2d3e50; text-decoration: none; font-size: 1rem; }
+.region-card__head .region-link:hover { color: var(--accent); }
+.region-card__percent { font-size: 1.35rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.region-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; }
+.region-card .region-card__num { font-size: 1.15rem; }
+.region-card .stat-sub { margin-top: 0; }

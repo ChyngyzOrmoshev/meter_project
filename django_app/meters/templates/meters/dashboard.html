@@ -2,33 +2,38 @@
 {% block content %}
 <h1 class="page-title"><i class="fas fa-chart-pie"></i>Аналитика по приборам учета</h1>
 
+{% load l10n %}
 <div class="row g-3 mb-4 justify-content-center">
     <div class="col-lg-3 col-md-3 col-sm-4 col-6">
-        <div class="metric-modern">
-            <div class="metric-icon"><i class="fas fa-cubes"></i></div>
-            <h5>Всего приборов</h5>
-            <h2>{{ total_devices }}</h2>
+        <div class="metric-modern stat-card stat-card--orange" data-reveal>
+            <div class="stat-icon"><i class="fas fa-cubes"></i></div>
+            <h2 class="stat-value"><count-up value="{{ total_devices|unlocalize }}">{{ total_devices }}</count-up></h2>
+            <h5 class="stat-label">Всего приборов</h5>
+            <div class="stat-sub">со статусом «активен»</div>
         </div>
     </div>
     <div class="col-lg-3 col-md-3 col-sm-4 col-6">
-        <div class="metric-modern">
-            <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
-            <h5>Активных на текущий день</h5>
-            <h2>{{ active_today }}</h2>
+        <div class="metric-modern stat-card stat-card--green" data-reveal>
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <h2 class="stat-value"><count-up value="{{ active_today|unlocalize }}">{{ active_today }}</count-up></h2>
+            <h5 class="stat-label">Активных на текущий день</h5>
+            <div class="stat-sub">передали показания</div>
         </div>
     </div>
     <div class="col-lg-3 col-md-3 col-sm-4 col-6">
-        <div class="metric-modern">
-            <div class="metric-icon"><i class="fas fa-percent"></i></div>
-            <h5>% чтения</h5>
-            <h2>{{ active_percent }}%</h2>
+        <div class="metric-modern stat-card stat-card--amber" data-reveal>
+            <div class="stat-icon"><i class="fas fa-percent"></i></div>
+            <h2 class="stat-value"><count-up value="{{ active_percent|unlocalize }}" decimals="1" suffix="%">{{ active_percent|unlocalize }}%</count-up></h2>
+            <h5 class="stat-label">% чтения</h5>
+            <div class="stat-sub">доля активных приборов</div>
         </div>
     </div>
     <div class="col-lg-3 col-md-3 col-sm-4 col-6">
-        <div class="metric-modern">
-            <div class="metric-icon"><i class="fas fa-edit"></i></div>
-            <h5>Ручных показаний</h5>
-            <h2>{{ manual_today }}</h2>
+        <div class="metric-modern stat-card stat-card--blue" data-reveal>
+            <div class="stat-icon"><i class="fas fa-edit"></i></div>
+            <h2 class="stat-value"><count-up value="{{ manual_today|unlocalize }}">{{ manual_today }}</count-up></h2>
+            <h5 class="stat-label">Ручных показаний</h5>
+            <div class="stat-sub">введено вручную</div>
         </div>
     </div>
 </div>
@@ -233,6 +238,7 @@
                     container.innerHTML = html;
                     if (window.initProgressBars) window.initProgressBars();
                     if (window.animateNumbers) window.animateNumbers();
+                    if (window.initReveal) window.initReveal();
                     if (typeof buildRegionChart === 'function') buildRegionChart();
                 }, delay);
             })
@@ -555,20 +561,11 @@
     function buildRegionChart() {
         const dom = document.getElementById('region-chart-container');
         if (!dom) return;
-        const table = document.querySelector('#region-stats-container table');
-        if (!table) return;
-        const rows = table.querySelectorAll('tbody tr');
         const labels = [];
         const percentData = [];
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length >= 4) {
-                const label = cells[0].textContent.trim();
-                const percentText = cells[4].textContent.trim();
-                const percent = parseFloat(percentText.replace('%', '').replace(',', '.')) || 0;
-                labels.push(label);
-                percentData.push(percent);
-            }
+        document.querySelectorAll('#region-stats-container [data-region-card]').forEach(card => {
+            labels.push(card.dataset.name);
+            percentData.push(parseFloat(card.dataset.percent) || 0);
         });
         if (labels.length === 0) return;
 
