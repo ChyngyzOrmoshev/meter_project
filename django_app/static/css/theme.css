@@ -120,7 +120,7 @@ textarea.form-control { border-radius: 18px !important; }
 .badge-pastel { border-radius: 999px !important; font-weight: 500; }
 
 /* ---------- Подвал ---------- */
-.footer-pastel { color: var(--ink-3) !important; background: transparent !important; }
+.footer-pastel { color: var(--ink-3) !important; background: transparent !important; border-top-color: var(--line) !important; font-size: 0.85rem !important; padding: 1rem 0 1.25rem !important; }
 
 /* =================================================================
    Боковое меню (≥ lg). На узких экранах остаётся верхняя панель.
@@ -179,7 +179,6 @@ textarea.form-control { border-radius: 18px !important; }
         margin: auto 0 0 !important; padding-top: 1rem; border-top: 1px solid var(--line);
         justify-content: space-between;
     }
-    body { display: block !important; }
     main.container-1190, footer.container-1190 {
         max-width: none !important;
         width: auto !important;
@@ -193,3 +192,24 @@ textarea.form-control { border-radius: 18px !important; }
 .bg-success-pastel { background: linear-gradient(90deg, #1d2b4f, #7c6cf0) !important; }
 .bg-warning-pastel { background: linear-gradient(90deg, #ffc9a8, #ff9a76) !important; }
 .bg-danger-pastel  { background: linear-gradient(90deg, #ffb3a8, #ff7a68) !important; }
+
+/* ---------- Совместимость ---------- */
+/* Браузеры без backdrop-filter: делаем стекло плотнее, чтобы текст читался */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .card-pastel, .metric-modern, .metric-card, .metric-pastel, .stat-card, .navbar-custom, .modal-content, .dropdown-menu {
+        background: rgba(255, 255, 255, 0.92) !important;
+    }
+}
+/* iOS и мобильные: fixed-фон дёргается и тормозит, на малых экранах он обычный */
+@media (max-width: 991.98px) {
+    body { background-attachment: scroll !important; }
+    .navbar-custom { border-radius: 0 0 20px 20px !important; }
+}
+/* Уважаем системную настройку «уменьшить прозрачность/движение» */
+@media (prefers-reduced-transparency: reduce) {
+    .card-pastel, .metric-modern, .metric-card, .metric-pastel, .stat-card, .navbar-custom, .modal-content, .dropdown-menu {
+        background: #fff !important;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}

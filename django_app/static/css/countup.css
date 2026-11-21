@@ -31,6 +31,7 @@ count-up { font-variant-numeric: tabular-nums; }
     border-radius: 50%;
     font-size: 1.05rem;
     color: var(--accent);
+    background: rgba(0, 0, 0, 0.06);  /* запасной вариант для браузеров без color-mix */
     background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 .stat-card .stat-value {
