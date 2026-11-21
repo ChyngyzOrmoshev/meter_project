@@ -3,7 +3,6 @@
 Вынесено из views.py. Маршруты подключены в urls.py через `views_balance`.
 `balance_report` намеренно оставлен без маршрута (отключённая функция).
 """
-import json
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -377,9 +376,9 @@ def balance_report_all(request):
         'data': data,
         'year': year,
         'month': month,
-        'chart_labels': json.dumps(chart_labels),
-        'chart_imbalance': json.dumps(chart_imbalance),
-        'chart_input': json.dumps(chart_input),
+        'chart_labels': chart_labels,
+        'chart_imbalance': chart_imbalance,
+        'chart_input': chart_input,
         'total_input': total_input,
         'total_output': total_output,
         'total_imbalance': total_imbalance,

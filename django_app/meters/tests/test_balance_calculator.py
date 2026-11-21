@@ -194,3 +194,18 @@ class SubstationBalanceTests(BalanceBase):
         self.fill(second, 0, (10, 20, 30))
         result = calculate_balance_for_substation(self.substation, 2026, 11)
         self.assertEqual(result['decade1']['output'], Decimal(100))
+
+
+class BalanceReportAllViewTests(BalanceBase):
+    """Данные диаграмм уходят в json_script списками: строка вместо массива ломала JS (`.map is not a function`)."""
+
+    def test_chart_data_are_lists_and_render_as_json_arrays(self):
+        from django.contrib.auth.models import User
+        self.client.force_login(User.objects.create_superuser('bal', 'b@b.b', 'x'))
+        resp = self.client.get('/balance/report/?year=2026&month=11')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context['chart_labels'], ['ПС-1'])
+        self.assertIsInstance(resp.context['chart_imbalance'], list)
+        body = resp.content.decode()
+        self.assertIn('<script id="chartImbalance" type="application/json">[', body)
+        self.assertIn('<script id="chartLabels" type="application/json">["', body)
