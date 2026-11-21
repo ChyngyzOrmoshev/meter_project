@@ -320,3 +320,24 @@ body::before {
         radial-gradient(600px 500px at 80% 90%, var(--blob-3), transparent 70%),
         radial-gradient(520px 440px at 14% 88%, var(--blob-4), transparent 70%);
 }
+
+/* ===== Служебные страницы: пастельные кнопки и бейджи, итоги таблиц, приветствие ===== */
+[data-bs-theme="dark"] .btn-pastel-success { background: rgba(72, 187, 120, .22); color: #9be3b5; }
+[data-bs-theme="dark"] .btn-pastel-success:hover { background: rgba(72, 187, 120, .34); color: #b9efcc; }
+[data-bs-theme="dark"] .btn-pastel-primary { background: rgba(110, 168, 204, .22); color: #b6d6ec; }
+[data-bs-theme="dark"] .btn-pastel-primary:hover { background: rgba(110, 168, 204, .34); color: #d3e8f6; }
+[data-bs-theme="dark"] .btn-pastel-outline { border-color: var(--line, rgba(255,255,255,.18)); color: var(--ink-2); }
+[data-bs-theme="dark"] .btn-pastel-outline:hover { background: rgba(255,255,255,.08); color: var(--ink); }
+[data-bs-theme="dark"] .badge-pastel.success { background: rgba(72, 187, 120, .22); color: #9be3b5; }
+[data-bs-theme="dark"] .badge-pastel.error { background: rgba(240, 100, 100, .22); color: #f5a3a3; }
+[data-bs-theme="dark"] .badge-pastel.warning { background: rgba(236, 180, 60, .22); color: #f0cf84; }
+[data-bs-theme="dark"] .badge-pastel.idle { background: rgba(255, 255, 255, .10); color: var(--ink-2); }
+[data-bs-theme="dark"] tfoot { background: rgba(255, 255, 255, .08) !important; color: var(--ink); }
+[data-bs-theme="dark"] #welcome-overlay { background: linear-gradient(135deg, #12191c 0%, #1b2629 100%) !important; }
+[data-bs-theme="dark"] #welcome-overlay h1, [data-bs-theme="dark"] #welcome-overlay strong { color: var(--ink) !important; }
+[data-bs-theme="dark"] #welcome-overlay p { color: var(--ink-2) !important; }
+[data-bs-theme="dark"] #welcome-overlay #skip-welcome { border-color: rgba(255,255,255,.22) !important; color: var(--ink-2) !important; }
+[data-bs-theme="dark"] .text-dark { color: var(--ink) !important; }
+[data-bs-theme="dark"] .metric-card .metric-content h2 { color: var(--ink) !important; }
+[data-bs-theme="dark"] .metric-card .metric-content h5,
+[data-bs-theme="dark"] .metric-card .metric-content small { color: var(--ink-2) !important; }
