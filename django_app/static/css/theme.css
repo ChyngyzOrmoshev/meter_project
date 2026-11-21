@@ -1,0 +1,195 @@
+/* =================================================================
+   Тема «Synthex»: матовое стекло на холодном мятно-сером фоне.
+   Подключается ПОСЛЕДНЕЙ в base.html и только переопределяет стили.
+   Откат: убрать подключение theme.css (и шрифта Inter) в base.html
+   или вернуться на ветку main.
+   ================================================================= */
+
+:root {
+    --bg-1: #eef3f1;
+    --bg-2: #dde7e4;
+    --ink: #1e292d;
+    --ink-2: #6a7a80;
+    --ink-3: #98a6ab;
+    --glass: rgba(255, 255, 255, 0.55);
+    --glass-strong: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.75);
+    --line: rgba(30, 41, 45, 0.08);
+    --navy: #1d2b4f;
+    --violet: #7c6cf0;
+    --coral: #ff7a68;
+    --radius: 24px;
+    --shadow: 0 10px 40px rgba(40, 70, 60, 0.08);
+    --sidebar-w: 252px;
+}
+
+html { background: var(--bg-2); }
+body {
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%) fixed !important;
+    color: var(--ink) !important;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+}
+
+/* ---------- Заголовки ---------- */
+.page-title { font-weight: 300 !important; font-size: 2rem !important; letter-spacing: -0.02em; color: var(--ink) !important; }
+.page-title i { color: var(--ink-3) !important; }
+h1, h2, h3, h4 { font-weight: 400; }
+
+/* ---------- Карточки (стекло) ---------- */
+.card-pastel, .metric-modern, .metric-card, .metric-pastel, .stat-card,
+.modal-content, .dropdown-menu {
+    background: var(--glass) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+}
+.modal-content { background: var(--glass-strong) !important; }
+.dropdown-menu { border-radius: 18px !important; padding: 0.4rem !important; }
+.dropdown-item { border-radius: 12px; font-size: 0.9rem; color: var(--ink); }
+.dropdown-item:hover, .dropdown-item:focus { background: rgba(255, 255, 255, 0.8); color: var(--ink); }
+.card-pastel:hover { box-shadow: 0 16px 48px rgba(40, 70, 60, 0.11) !important; }
+.card-pastel .card-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--line) !important;
+    font-weight: 400;
+    color: var(--ink);
+}
+.card-pastel .card-header span { font-weight: 500; }
+
+/* Карточки-метрики: тонкие крупные цифры, серые подписи */
+.stat-card .stat-value, .metric-modern h2 { font-weight: 300 !important; letter-spacing: -0.03em; color: var(--ink) !important; }
+.stat-card .stat-value { font-size: 2.3rem; }
+.stat-card .stat-label, .metric-modern h5 { color: var(--ink-2) !important; font-weight: 400 !important; letter-spacing: 0.06em; }
+.stat-card .stat-sub { color: var(--ink-3); }
+.region-card .region-card__num { font-size: 1.5rem; white-space: nowrap; }
+.region-card__stats > * { min-width: 0; }
+.region-card .stat-sub { white-space: nowrap; }
+.region-card__percent { font-weight: 300 !important; letter-spacing: -0.03em; }
+.region-card__head .region-link, .region-card__title { font-weight: 500; }
+.stat-card .stat-icon { background: rgba(255, 255, 255, 0.85) !important; box-shadow: 0 2px 10px rgba(40, 70, 60, 0.08); }
+.stat-link:hover { background: var(--glass-strong); }
+.stat-link--ok .stat-value { color: var(--ink) !important; }
+.stat-link--ok .stat-sub::before, .stat-link--bad .stat-sub::before {
+    content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    margin-right: 6px; vertical-align: middle; background: var(--violet);
+}
+.stat-link--bad .stat-sub::before { background: var(--coral); }
+.stat-link--bad .stat-value { color: var(--ink) !important; }
+
+/* Прогресс: тонкая «таблетка» */
+.progress-pastel { background: rgba(30, 41, 45, 0.07) !important; border-radius: 999px !important; overflow: hidden; }
+.progress-pastel .progress-bar { border-radius: 999px !important; }
+.region-card .progress-pastel { height: 8px; }
+
+/* ---------- Таблицы ---------- */
+.table-pastel, .table-pastel > :not(caption) > * > * { background: transparent !important; color: var(--ink); }
+.table-pastel thead th, .table-header-dark thead th {
+    background: rgba(255, 255, 255, 0.45) !important;
+    color: var(--ink-2) !important;
+    font-weight: 500; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+    border-bottom: 1px solid var(--line) !important;
+}
+.table-pastel tbody tr:hover > * { background: rgba(255, 255, 255, 0.5) !important; }
+.table-pastel td, .table-pastel th { border-color: var(--line) !important; }
+
+/* ---------- Кнопки и фильтры-капсулы ---------- */
+.btn-pastel-outline, .btn-outline-secondary, .btn-outline-primary, .form-select, .form-control, .form-control-pastel {
+    border-radius: 999px !important;
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--ink) !important;
+    box-shadow: 0 2px 8px rgba(40, 70, 60, 0.05);
+}
+textarea.form-control { border-radius: 18px !important; }
+.form-control:focus, .form-select:focus { box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.18) !important; border-color: rgba(124, 108, 240, 0.5) !important; }
+.btn-pastel-outline:hover { background: var(--glass-strong) !important; }
+.btn-pastel-primary, .btn-primary, .btn-group-pill .btn-pastel-primary {
+    background: var(--navy) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 999px !important;
+    box-shadow: 0 6px 18px rgba(29, 43, 79, 0.25);
+}
+.btn-pastel-primary:hover, .btn-primary:hover { background: #2a3b66 !important; color: #fff !important; }
+.btn-group-pill .btn-pastel-outline { background: rgba(255, 255, 255, 0.55) !important; color: var(--ink-2) !important; }
+.btn-pastel-success, .btn-success { border-radius: 999px !important; }
+.badge-pastel { border-radius: 999px !important; font-weight: 500; }
+
+/* ---------- Подвал ---------- */
+.footer-pastel { color: var(--ink-3) !important; background: transparent !important; }
+
+/* =================================================================
+   Боковое меню (≥ lg). На узких экранах остаётся верхняя панель.
+   ================================================================= */
+.navbar-custom {
+    background: var(--glass) !important;
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow) !important;
+}
+.navbar-custom .navbar-brand { color: var(--ink) !important; font-weight: 500; letter-spacing: -0.02em; }
+.navbar-custom .nav-link { color: var(--ink-2) !important; border-radius: 14px !important; font-weight: 400; }
+.navbar-custom .nav-link:hover { background: rgba(255, 255, 255, 0.7) !important; color: var(--ink) !important; }
+.navbar-custom .nav-link.active { background: var(--navy) !important; color: #fff !important; }
+.navbar-custom .nav-link i { color: inherit !important; opacity: 0.85; }
+.navbar-custom .user-info { color: var(--ink-2) !important; }
+.navbar-custom .btn-outline-light { border-color: var(--line) !important; color: var(--ink-2) !important; border-radius: 999px !important; background: rgba(255,255,255,.6) !important; }
+
+@media (min-width: 992px) {
+    .navbar-custom {
+        position: fixed !important;
+        top: 16px; left: 16px; bottom: 16px;
+        width: var(--sidebar-w);
+        height: auto;
+        padding: 1.25rem 0.9rem !important;
+        border-radius: 28px !important;
+        z-index: 1030;
+        overflow-y: auto;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .navbar-custom > .container-1190 {
+        display: flex; flex-direction: column; flex-wrap: nowrap !important; align-items: stretch; flex: 1;
+        max-width: none; padding: 0; margin: 0;
+    }
+    .navbar-custom .navbar-brand { font-size: 1.35rem; margin: 0 0.6rem 1.25rem; flex: 0 0 auto !important; }
+    .navbar-custom .navbar-toggler { display: none; }
+    .navbar-custom .navbar-collapse { display: flex !important; flex-direction: column; flex: 1; align-items: stretch; justify-content: flex-start !important; }
+    .navbar-custom .navbar-nav { flex-direction: column; margin: 0 !important; gap: 0.2rem !important; }
+    .navbar-custom .nav-link { padding: 0.65rem 0.9rem !important; display: flex; align-items: center; gap: 0.6rem; }
+    .navbar-custom .nav-link i { width: 1.2rem; text-align: center; }
+    .navbar-custom .dropdown-toggle::after { margin-left: auto; }
+    /* выпадающие пункты раскрываются внутри меню, а не поверх страницы */
+    .navbar-custom .dropdown-menu {
+        position: static !important; transform: none !important; inset: auto !important;
+        float: none; width: 100%; min-width: 0;
+        background: transparent !important; border: none !important; box-shadow: none !important;
+        -webkit-backdrop-filter: none; backdrop-filter: none;
+        padding: 0.1rem 0 0.3rem 1.4rem !important; margin: 0 !important;
+    }
+    .navbar-custom .dropdown-item { padding: 0.45rem 0.8rem; font-size: 0.86rem; color: var(--ink-2); white-space: normal; }
+    .navbar-custom .dropdown-item i { width: 1.1rem; margin-right: 0.35rem; opacity: 0.7; }
+    .navbar-custom .dropdown-header { padding: 0.4rem 0.8rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .navbar-custom .navbar-collapse > .d-flex {
+        margin: auto 0 0 !important; padding-top: 1rem; border-top: 1px solid var(--line);
+        justify-content: space-between;
+    }
+    body { display: block !important; }
+    main.container-1190, footer.container-1190 {
+        max-width: none !important;
+        width: auto !important;
+        margin: 0 24px 0 calc(var(--sidebar-w) + 16px + 24px) !important;
+    }
+    main.container-1190 { padding-top: 1.5rem !important; }
+}
+
+/* Спокойная палитра: акценты только фиолетовый и коралловый */
+.region-card__percent { color: var(--ink) !important; }
+.bg-success-pastel { background: linear-gradient(90deg, #1d2b4f, #7c6cf0) !important; }
+.bg-warning-pastel { background: linear-gradient(90deg, #ffc9a8, #ff9a76) !important; }
+.bg-danger-pastel  { background: linear-gradient(90deg, #ffb3a8, #ff7a68) !important; }

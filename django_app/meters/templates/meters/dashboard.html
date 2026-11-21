@@ -410,14 +410,13 @@
         producerChartInstance = echarts.init(dom);
 
         // Для второго ряда (цветной) создаём данные с itemStyle
-        const colorSeriesData = data.map((val, idx) => ({
+        const colorSeriesData = data.map(val => ({
             value: val,
             itemStyle: {
-                color: colors[idx % colors.length],
-                borderRadius: 20,
-                shadowBlur: 15,                      // размытие тени
-                shadowColor: 'rgba(0,0,0,0.3)',     // цвет тени (тёмный с прозрачностью)
-                shadowOffsetY: 8                     // смещение тени вниз
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, val < 80
+                    ? [{ offset: 0, color: '#ffb3a8' }, { offset: 1, color: '#ff7a68' }]
+                    : [{ offset: 0, color: '#1d2b4f' }, { offset: 1, color: '#7c6cf0' }]),
+                borderRadius: 999
             }
         }));
 
@@ -427,8 +426,8 @@
                 left: 'center',
                 textStyle: {
                     fontSize: 16,
-                    fontWeight: 'bold',
-                    color: '#2d3e50'
+                    fontWeight: 300,
+                    color: '#1e292d'
                 },
             },
             tooltip: {
@@ -442,7 +441,7 @@
             grid: {
                 left: '15%',
                 right: '20%',
-                top: 10,
+                top: 44,
                 bottom: 30,
                 containLabel: false
             },
@@ -483,11 +482,11 @@
                     name: 'Фон',
                     type: 'bar',
                     data: labels.map(() => 100),
-                    barWidth: 40,
+                    barWidth: 30,
 
                     itemStyle: {
-                        color: 'rgba(0,0,0,0)',
-                        borderRadius: 20
+                        color: 'rgba(30,41,45,0.06)',
+                        borderRadius: 999
                     },
                     z: 1,
                     silent: true,
@@ -498,7 +497,7 @@
                     name: 'Процент',
                     type: 'bar',
                     data: colorSeriesData,
-                    barWidth: 40,
+                    barWidth: 30,
                     z: 2,
                     label: {
                         show: true,
@@ -509,9 +508,9 @@
                             return name + ' ' + value + '%';
                         },
                         color: '#ffffff',
-                        fontWeight: 'bold',
-                        fontSize: 16,
-                        padding: 0
+                        fontWeight: 500,
+                        fontSize: 14,
+                        padding: [0, 12, 0, 0]
                     }
                 },
                 // 3️⃣ Прозрачный столбец для текста справа
@@ -586,23 +585,16 @@
             return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
         }
 
-        // Создаём данные с градиентами для каждого столбца
-        const gradientData = percentData.map((val, idx) => {
-            const baseColor = colors[idx % colors.length];
-            const dark = darkenColor(baseColor, 40);
-            const light = lightenColor(baseColor, 40);
-            const gradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: light },
-                { offset: 1, color: dark }
-            ]);
+        // Столбики-«таблетки»: сине-фиолетовый градиент, ниже 80% - коралловый
+        const gradientData = percentData.map(val => {
+            const stops = val < 80 ? ['#ffb3a8', '#ff7a68'] : ['#7c6cf0', '#1d2b4f'];
             return {
                 value: val,
                 itemStyle: {
-                    color: gradient,
-                    borderRadius: 20,
-                    shadowBlur: 8,
-                    shadowColor: 'rgba(0,0,0,0.15)',
-                    shadowOffsetY: 4
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: stops[0] }, { offset: 1, color: stops[1] }
+                    ]),
+                    borderRadius: 999
                 }
             };
         });
@@ -619,8 +611,8 @@
                 left: 'center',
                 textStyle: {
                     fontSize: 16,
-                    fontWeight: 'bold',
-                    color: '#2d3e50'
+                    fontWeight: 300,
+                    color: '#1e292d'
                 }
             },
             tooltip: {
@@ -645,8 +637,8 @@
                 axisTick: { show: false },
                 axisLabel: {
                     fontSize: 12,
-                    fontWeight: 'bold',
-                    color: '#2d3e50',
+                    fontWeight: 400,
+                    color: '#6a7a80',
                     interval: 0,
                     rotate: 30
                 }
@@ -657,10 +649,10 @@
                 max: 100,
                 axisLabel: {
                     fontSize: 11,
-                    color: '#5a6b7c',
+                    color: '#98a6ab',
                     formatter: '{value}%'
                 },
-                splitLine: { show: false },
+                splitLine: { show: true, lineStyle: { type: 'dashed', color: 'rgba(30,41,45,0.12)' } },
                 axisLine: { show: false },
                 axisTick: { show: false }
             },
@@ -669,7 +661,9 @@
                     name: '% чтения',
                     type: 'bar',
                     data: gradientData,
-                    barWidth: '45%',   // увеличенная ширина
+                    barWidth: 22,
+                    showBackground: true,
+                    backgroundStyle: { color: 'rgba(30,41,45,0.06)', borderRadius: 999 },
                     label: {
                         show: true,
                         position: 'top',
@@ -677,8 +671,8 @@
                             return params.value + '%';
                         },
                         fontSize: 13,
-                        fontWeight: 'bold',
-                        color: '#2d3e50'
+                        fontWeight: 400,
+                        color: '#1e292d'
                     }
                 }
             ]
