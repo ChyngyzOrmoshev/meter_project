@@ -47,7 +47,7 @@ class DashboardStatsTests(StatsBase):
 
     def test_refresh_recomputes(self):
         dashboard_stats.get_dashboard_stats('today')
-        with mock.patch.object(dashboard_stats, 'compute_period_stats', return_value=({'x': 1}, [])) as compute:
+        with mock.patch.object(dashboard_stats, 'compute_period_stats', return_value=({'x': 1}, [], [])) as compute:
             self.assertEqual(dashboard_stats.get_dashboard_stats('today', refresh=True), {'x': 1})
         compute.assert_called_once()
 
@@ -172,3 +172,67 @@ class CardLinksTests(StatsBase):
     def test_region_without_id_has_no_report_links(self):
         resp = self.client.get('/region-stats-table/?period=today')
         self.assertNotContains(resp, 'region=None')
+
+
+class ReportsViaCacheTests(StatsBase):
+    """Отчёты «с показаниями / без показаний» и «приборы по типам» берут период из кэша прогрева."""
+
+    def setUp(self):
+        super().setUp()
+        from django.contrib.auth.models import User
+        self.client.force_login(User.objects.create_superuser('adm2', 'a@a.a', 'x'))
+
+    def test_no_reading_ids_exclude_devices_with_readings(self):
+        ids = dashboard_stats.get_no_reading_ids('today')
+        self.assertIn(self.silent.pk, ids)
+        self.assertNotIn(self.active.pk, ids)
+
+    def test_no_reading_cache_expires_on_new_day(self):
+        dashboard_stats.get_no_reading_ids('today')
+        payload = cache.get(dashboard_stats.no_reading_cache_key('today'))
+        from datetime import timedelta
+        payload['date'] = timezone.now().date() - timedelta(days=1)
+        cache.set(dashboard_stats.no_reading_cache_key('today'), payload, 60)
+        # новый прибор без показаний должен попасть в список после пересчёта
+        new = Device.objects.create(serial_number='NEWDEV', model=self.active.model, status='active')
+        self.assertIn(new.pk, dashboard_stats.get_no_reading_ids('today'))
+
+    def test_readings_with_shows_only_devices_with_readings(self):
+        body = self.client.get('/readings-with/?period=today&status=active').content.decode()
+        self.assertIn(self.active.serial_number, body)
+        self.assertNotIn('>2</strong>', body)
+
+    def test_missing_readings_shows_only_devices_without_readings(self):
+        resp = self.client.get('/missing-readings/?period=today&status=active')
+        serials = [d.serial_number for d in resp.context['devices']]
+        self.assertEqual(serials, ['2'])
+        self.assertTrue(all(hasattr(d, 'last_reading_date') and hasattr(d, 'has_recent_reading') for d in resp.context['devices']))
+
+    def test_readings_with_context_has_flags_and_window_range(self):
+        resp = self.client.get('/readings-with/?period=today&status=active')
+        devices = resp.context['devices']
+        self.assertEqual([d.serial_number for d in devices], ['1'])
+        self.assertTrue(devices[0].has_recent_reading)
+        self.assertIsNotNone(devices[0].last_reading_date)
+
+    def test_online_filter_still_works(self):
+        resp = self.client.get('/missing-readings/?period=today&status=active&online=no')
+        self.assertEqual([d.serial_number for d in resp.context['devices']], ['2'])
+        resp = self.client.get('/missing-readings/?period=today&status=active&online=yes')
+        self.assertEqual(list(resp.context['devices']), [])
+
+    def test_devices_page_has_recent_flag_per_page(self):
+        resp = self.client.get('/devices/')
+        flags = {d.serial_number: d.has_recent_reading for d in resp.context['devices']}
+        self.assertEqual(flags, {'1': True, '2': False, '3': True})
+
+    def test_device_types_report_counts_online(self):
+        resp = self.client.get('/reports/device-types/?period=today')
+        self.assertEqual(resp.status_code, 200)
+
+    def test_window_page_range(self):
+        from meters.report_helpers import window_page_range
+        self.assertEqual(window_page_range(1, 1), [1])
+        self.assertEqual(window_page_range(1, 5), [1, 2, 3, 4, 5])
+        self.assertEqual(window_page_range(500, 1000), [1, 497, 498, 499, 500, 501, 502, 503, 1000])
+        self.assertEqual(window_page_range(1000, 1000), [1, 997, 998, 999, 1000])

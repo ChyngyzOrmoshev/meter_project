@@ -20,6 +20,8 @@ from django.views.decorators.http import require_POST
 
 from .models import Device, DeviceGroup, MeterConnection, MeterModel, Reading, ReadingFetchTask, Region
 from .views import is_allowed_user, find_device, get_producer_display, producer_model_ids
+from .report_helpers import annotate_reading_flags, filter_by_period, page_devices, window_page_range
+from .dashboard_stats import normalize_period
 
 logger = logging.getLogger(__name__)
 
@@ -431,7 +433,9 @@ def missing_readings_report(request):
         )
         # Для пагинации и шаблона будем использовать start_date = target_date (для совместимости)
         start_date = target_date
+        annotated = True
     else:
+        annotated = False
         # --- Старый режим: период ---
         if period == 'today':
             start_date = today
@@ -444,31 +448,9 @@ def missing_readings_report(request):
         else:
             start_date = today
 
-        last_reading_subquery = Reading.objects.filter(
-            device=OuterRef('pk')
-        ).order_by('-timestamp').values('timestamp')[:1]
-        devices_qs = devices_qs.annotate(
-            last_reading_date=Subquery(last_reading_subquery)
-        )
-
-        seven_days_ago = timezone.now() - timedelta(days=7)
-        devices_qs = devices_qs.annotate(
-            has_recent_reading=Exists(
-                Reading.objects.filter(
-                    device=OuterRef('pk'),
-                    timestamp__gte=seven_days_ago
-                )
-            )
-        )
-
-        # Подсчёт количества показаний за период (материализуем id отдельным быстрым запросом,
-        # чтобы MySQL не выбирал плохой план для вложенного подзапроса)
-        qualifying_device_ids = list(Reading.objects.filter(
-            timestamp__gte=start_date,
-            timestamp__lt=today + timedelta(days=1)
-        ).values_list('device_id', flat=True).distinct())
-
-        devices_qs = devices_qs.exclude(id__in=qualifying_device_ids)
+        # Приборы без показаний за период берём из кэша прогрева (см. dashboard_stats);
+        # last_reading_date и has_recent_reading считаются позже, только для страницы
+        devices_qs = filter_by_period(devices_qs, period, missing=True)
 
     # --- Применяем остальные фильтры (статус, Тип ПУ, производитель, регион, группа) ---
     if status_filter:
@@ -488,6 +470,9 @@ def missing_readings_report(request):
         devices_qs = devices_qs.filter(category__isnull=True)
     elif category_filter:
         devices_qs = devices_qs.filter(category=category_filter)
+    if online_filter in ('yes', 'no') and not annotated:
+        devices_qs = annotate_reading_flags(devices_qs)
+        annotated = True
     if online_filter == 'yes':
         devices_qs = devices_qs.filter(has_recent_reading=True)
     elif online_filter == 'no':
@@ -495,6 +480,9 @@ def missing_readings_report(request):
     
 
     # --- Экспорт ---
+    if export in ('1', 'xlsx') and not annotated:
+        devices_qs = annotate_reading_flags(devices_qs)
+        annotated = True
     if export == '1':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="missing_readings_{specific_date or period}_{today}.csv"'
@@ -562,8 +550,8 @@ def missing_readings_report(request):
     total_pages = (total + per_page - 1) // per_page if total > 0 else 1
     if page > total_pages:
         page = total_pages
-    devices_list = devices_qs.order_by('serial_number')[(page-1)*per_page:page*per_page]
-    page_range = range(1, total_pages + 1)
+    devices_list = page_devices(devices_qs, page, per_page, annotated)
+    page_range = window_page_range(page, total_pages)
 
     # Добавляем producer_display для отображения
     for device in devices_list:
@@ -866,30 +854,13 @@ def readings_with_report(request):
         devices_qs = devices_qs.annotate(
             last_reading_date=Subquery(last_reading_subquery)
         )
+        annotated = True
     else:
+        annotated = False
         # Старый режим: период
-        last_reading_subquery = Reading.objects.filter(
-            device=OuterRef('pk')
-        ).order_by('-timestamp').values('timestamp')[:1]
-        devices_qs = devices_qs.annotate(
-            last_reading_date=Subquery(last_reading_subquery)
-        )
-        seven_days_ago = timezone.now() - timedelta(days=7)
-        devices_qs = devices_qs.annotate(
-            has_recent_reading=Exists(
-                Reading.objects.filter(
-                    device=OuterRef('pk'),
-                    timestamp__gte=seven_days_ago
-                )
-            )
-        )
-        # Подсчёт количества показаний за период (материализуем id отдельным быстрым запросом,
-        # чтобы MySQL не выбирал плохой план для вложенного подзапроса)
-        qualifying_device_ids = list(Reading.objects.filter(
-            timestamp__gte=start_date,
-            timestamp__lt=today + timedelta(days=1)
-        ).values_list('device_id', flat=True).distinct())
-        devices_qs = devices_qs.filter(id__in=qualifying_device_ids)
+        # Приборы с показаниями за период = все, кроме «без показаний» (список в кэше прогрева);
+        # last_reading_date и has_recent_reading считаются позже, только для страницы
+        devices_qs = filter_by_period(devices_qs, period, missing=False)
         # Поле значения на дату не нужно
         show_reading_value = False
 
@@ -911,12 +882,18 @@ def readings_with_report(request):
         devices_qs = devices_qs.filter(category__isnull=True)
     elif category_filter:
         devices_qs = devices_qs.filter(category=category_filter)
+    if online_filter in ('yes', 'no') and not annotated:
+        devices_qs = annotate_reading_flags(devices_qs)
+        annotated = True
     if online_filter == 'yes':
         devices_qs = devices_qs.filter(has_recent_reading=True)
     elif online_filter == 'no':
         devices_qs = devices_qs.filter(has_recent_reading=False)
 
     # Экспорт (CSV/Excel) – аналогично missing_readings, но с дополнительной колонкой "Значение"
+    if export in ('1', 'xlsx') and not annotated:
+        devices_qs = annotate_reading_flags(devices_qs)
+        annotated = True
     if export == '1':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="readings_with_{period}_{today}.csv"'
@@ -1002,12 +979,8 @@ def readings_with_report(request):
     total_pages = (total + per_page - 1) // per_page if total > 0 else 1
     if page > total_pages:
         page = total_pages
-    page_ids = list(
-        devices_qs.order_by('serial_number').values_list('id', flat=True)[(page-1)*per_page:page*per_page]
-    )
-    order_map = {pk: i for i, pk in enumerate(page_ids)}
-    devices_list = sorted(devices_qs.filter(pk__in=page_ids), key=lambda d: order_map.get(d.id, 0))
-    page_range = range(1, total_pages + 1)
+    devices_list = page_devices(devices_qs, page, per_page, annotated)
+    page_range = window_page_range(page, total_pages)
 
     for device in devices_list:
         if device.model:

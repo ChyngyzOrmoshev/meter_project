@@ -28,6 +28,10 @@ def region_cache_key(period):
     return f'region_stats_{period}'
 
 
+def no_reading_cache_key(period):
+    return f'no_reading_ids_{period}'
+
+
 AUTO_NOTES = [
     "Авто-сбор: База cEnergo",       # sync_mssql
     "Авто-сбор: Sanxing_old",        # sync_sanxing
@@ -52,7 +56,7 @@ def _bounds(period):
 def compute_period_stats(period):
     """Считает за один проход данные дашборда и статистику по районам.
 
-    Возвращает (data, region_stats). Главный запрос один: множество устройств с показаниями
+    Возвращает (data, region_stats, no_reading_ids). Главный запрос один: множество устройств с показаниями
     за период (без JOIN к devices, он заставлял MySQL перебирать устройства по одному);
     всё остальное считается в Python по списку активных устройств.
     """
@@ -112,15 +116,21 @@ def compute_period_stats(period):
         'producer_stats': producer_stats,
         'period': period,
     }
-    return data, region_stats
+    # Все приборы (любого статуса) без показаний за период: на них строятся отчёты
+    # «с показаниями» / «без показаний», чтобы не гонять в SQL список из 130 тысяч id
+    no_reading_ids = sorted(set(Device.objects.values_list('id', flat=True)) - with_readings)
+
+    return data, region_stats, no_reading_ids
 
 
 def store_period_stats(period):
     """Считает и кладёт в кэш обе статистики; возвращает (data, region_stats)."""
     period = normalize_period(period)
-    data, region_stats = compute_period_stats(period)
+    data, region_stats, no_reading_ids = compute_period_stats(period)
     cache.set(cache_key(period), data, CACHE_TTL[period])
     cache.set(region_cache_key(period), region_stats, CACHE_TTL[period])
+    cache.set(no_reading_cache_key(period),
+              {'date': timezone.now().date(), 'ids': no_reading_ids}, CACHE_TTL[period])
     return data, region_stats
 
 
@@ -130,6 +140,22 @@ def get_dashboard_stats(period, refresh=False):
     if data is None:
         data, _ = store_period_stats(period)
     return data
+
+
+def get_no_reading_ids(period):
+    """ID приборов без показаний за период (кэш прогрева; за вчерашний день не берётся)."""
+    period = normalize_period(period)
+    payload = cache.get(no_reading_cache_key(period))
+    if payload is None or payload['date'] != timezone.now().date():
+        store_period_stats(period)
+        payload = cache.get(no_reading_cache_key(period))
+    return payload['ids']
+
+
+def get_with_reading_ids(period):
+    """ID приборов, у которых есть показания за период (множество)."""
+    no_reading = set(get_no_reading_ids(period))
+    return set(Device.objects.values_list('id', flat=True)) - no_reading
 
 
 def get_region_stats(period):

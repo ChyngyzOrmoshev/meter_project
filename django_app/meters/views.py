@@ -333,10 +333,15 @@ def device_types_report(request):
         devices_qs = devices_qs.filter(model_id=model_filter)
 
     # --- Множество id «онлайн» (есть показание за окно) ---
-    online_ids = set(Reading.objects.filter(
-        timestamp__gte=start_dt,
-        timestamp__lt=end_dt
-    ).values_list('device_id', flat=True).distinct())
+    if not specific_date:
+        # период из прогрева кэша (неизвестный период, как раньше, = 7 дней)
+        from .dashboard_stats import PERIODS, get_with_reading_ids
+        online_ids = get_with_reading_ids(period if period in PERIODS else '7d')
+    else:
+        online_ids = set(Reading.objects.filter(
+            timestamp__gte=start_dt,
+            timestamp__lt=end_dt
+        ).values_list('device_id', flat=True).distinct())
 
     # --- Группировка по модели ---
     agg = {}

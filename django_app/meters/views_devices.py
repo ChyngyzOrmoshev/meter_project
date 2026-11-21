@@ -21,6 +21,7 @@ from .models import (
 )
 from .registration import register_devices_for_robot, ROBOT_CONFIGS
 from .views import is_allowed_user, get_producer_display, producer_model_ids
+from .report_helpers import window_page_range
 
 logger = logging.getLogger(__name__)
 
@@ -77,25 +78,21 @@ def devices(request):
     elif category_filter:
         qs = qs.filter(category=category_filter)
 
-    from django.db.models import Exists, OuterRef
-    from django.utils import timezone
-    from datetime import timedelta
-    seven_days_ago = timezone.now() - timedelta(days=7)
-    qs = qs.annotate(
-        has_recent_reading=Exists(
-            Reading.objects.filter(
-                device=OuterRef('pk'),
-                timestamp__gte=seven_days_ago
-            )
-        )
-    )
-
     total = qs.count()
     total_pages = (total + per_page - 1) // per_page if total > 0 else 1
     if page > total_pages:
         page = total_pages
-    devices_list = qs.order_by('serial_number')[(page-1)*per_page:page*per_page]
-    page_range = range(1, total_pages + 1)
+    devices_list = list(qs.order_by('serial_number')[(page-1)*per_page:page*per_page])
+    # «Есть показание за 7 дней» считаем одним запросом только для приборов страницы
+    from django.utils import timezone
+    from datetime import timedelta
+    recent_ids = set(Reading.objects.filter(
+        device_id__in=[d.id for d in devices_list],
+        timestamp__gte=timezone.now() - timedelta(days=7),
+    ).values_list('device_id', flat=True).distinct())
+    for d in devices_list:
+        d.has_recent_reading = d.id in recent_ids
+    page_range = window_page_range(page, total_pages)
 
     # Получаем списки для выпадающих фильтров
     codes = MeterModel.objects.values_list('device_type_str', flat=True).distinct().order_by('device_type_str')
@@ -655,7 +652,7 @@ def registered_devices_report(request):
     if page > total_pages:
         page = total_pages
     devices = devices_qs[(page-1)*per_page:page*per_page]
-    page_range = range(1, total_pages + 1)
+    page_range = window_page_range(page, total_pages)
 
     # Список источников (роботов) для фильтра с флагом selected
     sources = [
