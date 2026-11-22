@@ -344,3 +344,16 @@ body::before {
 
 /* Плавающая кнопка в шапке карточки не должна сужать содержимое под шапкой */
 .card-pastel > .card-header { display: flow-root; }
+
+/* ---------- Кнопки на узких экранах: меньше боковые отступы, чтобы подписи помещались в колонки ---------- */
+@media (max-width: 1199.98px) {
+    .btn-pastel-primary, .btn-pastel-success, .btn-pastel-outline { padding-left: 0.85rem; padding-right: 0.85rem; }
+}
+@media (max-width: 575.98px) {
+    .btn-pastel-primary, .btn-pastel-success, .btn-pastel-outline { padding-left: 0.7rem; padding-right: 0.7rem; }
+}
+@media (max-width: 1199.98px) {
+    /* кнопки на всю ширину узкой колонки фильтра: без иконки и с малыми отступами */
+    .btn.w-100.btn-pastel-primary, .btn.w-100.btn-pastel-success, .btn.w-100.btn-pastel-outline { padding-left: 0.4rem; padding-right: 0.4rem; font-size: 0.875rem; }
+    .btn.w-100:not(.btn-icon-only).btn-pastel-primary > i, .btn.w-100:not(.btn-icon-only).btn-pastel-success > i { display: none; }
+}
