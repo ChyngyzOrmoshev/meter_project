@@ -38,47 +38,48 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Раскрытие/сворачивание дерева
-        document.querySelectorAll('.toggle-icon').forEach(icon => {
-            icon.addEventListener('click', function (e) {
-                e.stopPropagation();
-                const li = this.closest('li');
-                const ul = li.querySelector('.children-list');
-                if (ul) {
-                    if (ul.style.display === 'none') {
-                        ul.style.display = 'block';
-                        this.textContent = '▼';
-                    } else {
-                        ul.style.display = 'none';
-                        this.textContent = '▶';
-                    }
+        // Раскрытие/сворачивание дерева (делегирование: ТП подгружаются при раскрытии фидера)
+        document.addEventListener('click', function (e) {
+            const icon = e.target.closest('.toggle-icon');
+            if (!icon) return;
+            e.stopPropagation();
+            const li = icon.closest('li');
+            const ul = li.querySelector(':scope > .children-list');
+            if (!ul) return;
+            if (ul.style.display === 'none') {
+                ul.style.display = 'block';
+                icon.textContent = '▼';
+                if (ul.dataset.lazyUrl && !ul.dataset.loaded) {
+                    ul.dataset.loaded = '1';
+                    ul.innerHTML = '<li class="text-muted px-2">Загрузка...</li>';
+                    fetch(ul.dataset.lazyUrl).then(r => r.text()).then(html => { ul.innerHTML = html; })
+                        .catch(() => { ul.innerHTML = '<li class="text-danger px-2">Ошибка загрузки</li>'; delete ul.dataset.loaded; });
                 }
-            });
+            } else {
+                ul.style.display = 'none';
+                icon.textContent = '▶';
+            }
         });
 
         // Клик по элементу дерева (загрузка деталей)
-        document.querySelectorAll('.tree-item').forEach(item => {
-            item.addEventListener('click', function (e) {
-                // Игнорируем клики по кнопкам
-                if (e.target.closest('button')) return;
-                const li = this.closest('li');
-                const id = li.dataset.id;
-                const type = li.dataset.type;
-                if (!id || !type) return;
-
-                fetch(`/hierarchy/node-details/?id=${id}&type=${type}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        document.getElementById('node-details-container').innerHTML = html;
-                    })
-                    .catch(error => {
-                        document.getElementById('node-details-container').innerHTML =
-                            '<div class="alert alert-danger">Ошибка загрузки</div>';
-                    });
-            });
+        document.addEventListener('click', function (e) {
+            const item = e.target.closest('.tree-item');
+            if (!item || e.target.closest('button') || e.target.closest('.toggle-icon')) return;
+            const li = item.closest('li');
+            const id = li.dataset.id;
+            const type = li.dataset.type;
+            if (!id || !type) return;
+            fetch(`/hierarchy/node-details/?id=${id}&type=${type}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('node-details-container').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('node-details-container').innerHTML =
+                        '<div class="alert alert-danger">Ошибка загрузки</div>';
+                });
         });
 
-        // Добавление района (корневой)
         document.getElementById('add-root-btn').addEventListener('click', function () {
             const name = prompt('Введите название нового района:');
             if (!name) return;

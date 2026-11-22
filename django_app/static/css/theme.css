@@ -341,3 +341,6 @@ body::before {
 [data-bs-theme="dark"] .metric-card .metric-content h2 { color: var(--ink) !important; }
 [data-bs-theme="dark"] .metric-card .metric-content h5,
 [data-bs-theme="dark"] .metric-card .metric-content small { color: var(--ink-2) !important; }
+
+/* Плавающая кнопка в шапке карточки не должна сужать содержимое под шапкой */
+.card-pastel > .card-header { display: flow-root; }

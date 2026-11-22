@@ -278,3 +278,51 @@ class SimilarFeederTests(HierarchyBase):
         h = RegionHierarchy(self.region, commit=True)
         _, feeder, _ = resolve_for_device(h, aggregate_names(self.ROWS), 'ТП-1', 'Насосный', 'ПС Ажиматов')
         self.assertEqual(feeder.substation.region, self.region)
+
+
+class HierarchyTreeTests(HierarchyBase):
+    """Дерево на странице иерархии показывает и фидеры без вводного (пришедшие из 1С), вместе с ТП."""
+
+    def test_feeder_without_input_parent_is_shown_under_substation_with_tp_count(self):
+        from meters.views_hierarchy import get_hierarchy_tree
+        ps = Substation.objects.create(region=self.region, name='ПС Западная')
+        feeder = Feeder.objects.create(substation=ps, name='ВЛ-10 кВ Насосный')  # отходящий, без родителя
+        TransformerSubstation.objects.create(feeder=feeder, name='ТП-2')
+        TransformerSubstation.objects.create(feeder=feeder, name='ТП-1')
+        region_node = next(n for n in get_hierarchy_tree() if n['id'] == self.region.id)
+        sub_node = region_node['children'][0]
+        self.assertEqual([c['name'] for c in sub_node['children']], ['ВЛ-10 кВ Насосный'])
+        # ТП в HTML страницы не вкладываются (6 тысяч узлов тормозили страницу): только счётчик
+        self.assertEqual(sub_node['children'][0]['lazy_tps'], 2)
+        self.assertEqual(sub_node['children'][0]['children'], [])
+
+    def test_feeder_tps_endpoint_returns_sorted_nodes(self):
+        from django.contrib.auth.models import User
+        ps = Substation.objects.create(region=self.region, name='ПС')
+        feeder = Feeder.objects.create(substation=ps, name='Ф')
+        other = Feeder.objects.create(substation=ps, name='Другой')
+        TransformerSubstation.objects.create(feeder=feeder, name='ТП-2')
+        TransformerSubstation.objects.create(feeder=feeder, name='ТП-1')
+        TransformerSubstation.objects.create(feeder=other, name='ТП-9')
+        self.client.force_login(User.objects.create_superuser('hh', 'h@h.h', 'x'))
+        body = self.client.get('/hierarchy/feeder-tps/', {'id': feeder.pk}).content.decode()
+        self.assertLess(body.index('ТП-1'), body.index('ТП-2'))
+        self.assertNotIn('ТП-9', body)
+        self.assertIn('data-type="tp"', body)
+
+    def test_page_html_has_no_tp_nodes_but_has_lazy_url(self):
+        from django.contrib.auth.models import User
+        ps = Substation.objects.create(region=self.region, name='ПС')
+        feeder = Feeder.objects.create(substation=ps, name='Ф')
+        TransformerSubstation.objects.create(feeder=feeder, name='ТП-ЕДИНСТВЕННАЯ')
+        self.client.force_login(User.objects.create_superuser('hh2', 'h@h.h', 'x'))
+        body = self.client.get('/hierarchy/').content.decode()
+        self.assertNotIn('ТП-ЕДИНСТВЕННАЯ', body)
+        self.assertIn(f'/hierarchy/feeder-tps/?id={feeder.pk}', body)
+
+    def test_input_feeder_not_duplicated(self):
+        from meters.views_hierarchy import get_hierarchy_tree
+        ps = Substation.objects.create(region=self.region, name='ПС')
+        Feeder.objects.create(substation=ps, name='Ввод', feeder_type='input')
+        sub_node = next(n for n in get_hierarchy_tree() if n['id'] == self.region.id)['children'][0]
+        self.assertEqual([c['name'] for c in sub_node['children']], ['Ввод'])

@@ -63,6 +63,7 @@ urlpatterns = [
     path('balance/summary/', views_balance.balance_summary, name='balance_summary'),
     path('balance/report/', views_balance.balance_report_all, name='balance_report_all'),
     path('device/<int:device_id>/coefficients/', views_balance.device_coefficients, name='device_coefficients'),
+    path('hierarchy/feeder-tps/', views_hierarchy.hierarchy_feeder_tps, name='hierarchy_feeder_tps'),
     path('hierarchy/node-details/', views_hierarchy.hierarchy_node_details, name='hierarchy_node_details'),
     path('sync-1c/', views_1c.sync_1c_manage, name='sync_1c_manage'),
     path('sync-1c/run/', views_1c.run_sync_1c, name='run_sync_1c'),

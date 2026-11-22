@@ -3,9 +3,11 @@
 Вынесено из views.py. Маршруты подключены в urls.py через `views_hierarchy`.
 """
 from django.contrib import messages
+from django.db.models import Count
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 
 from .models import Device, Region, Substation, Feeder, TransformerSubstation
 from .views import is_allowed_user
@@ -63,22 +65,39 @@ def get_hierarchy_tree():
                         'head_meter': out_feeder.head_meter.serial_number if out_feeder.head_meter else None,
                         'children': []
                     }
-                    # ТП привязаны к отходящему фидеру (или можно к любому, но обычно к отходящему)
-                    tps = out_feeder.tps.all().order_by('name')
-                    for tp in tps:
-                        tp_node = {
-                            'id': tp.id,
-                            'name': tp.name,
-                            'type': 'tp',
-                            'head_meter': tp.head_meter.serial_number if tp.head_meter else None,
-                            'children': []
-                        }
-                        out_feeder_node['children'].append(tp_node)
+                    # ТП подгружаются при раскрытии фидера (hierarchy_feeder_tps)
+                    out_feeder_node['lazy_tps'] = out_feeder.tps.count()
                     feeder_node['children'].append(out_feeder_node)
                 substation_node['children'].append(feeder_node)
+            # Фидеры без вводного фидера над ними (например, пришедшие из 1С) — прямо под подстанцией;
+            # ТП подгружаются при раскрытии (hierarchy_feeder_tps)
+            for feeder in substation.feeders.filter(parent_feeder__isnull=True).exclude(feeder_type='input') \
+                    .select_related('head_meter').annotate(tp_count=Count('tps')).order_by('name'):
+                substation_node['children'].append({
+                    'id': feeder.id,
+                    'name': feeder.name,
+                    'type': 'feeder',
+                    'feeder_type': feeder.get_feeder_type_display(),
+                    'head_meter': feeder.head_meter.serial_number if feeder.head_meter else None,
+                    'children': [],
+                    'lazy_tps': feeder.tp_count,
+                })
             region_node['children'].append(substation_node)
         tree.append(region_node)
     return tree
+
+
+@login_required
+@user_passes_test(is_allowed_user)
+def hierarchy_feeder_tps(request):
+    """ТП фидера в виде узлов дерева (ленивая подгрузка при раскрытии фидера)."""
+    feeder = get_object_or_404(Feeder, id=request.GET.get('id'))
+    nodes = [{
+        'id': tp.id, 'name': tp.name, 'type': 'tp',
+        'head_meter': tp.head_meter.serial_number if tp.head_meter else None, 'children': [],
+    } for tp in feeder.tps.select_related('head_meter').order_by('name')]
+    html = ''.join(render_to_string('meters/_tree_node.html', {'node': n}, request=request) for n in nodes)
+    return HttpResponse(html)
 
 
 @login_required
