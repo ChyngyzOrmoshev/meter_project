@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from .balance_calculator import (
     get_reading_for_date, get_coefficient_for_date, get_or_create_period,
-    calculate_balance_for_substation,
+    calculate_balance_for_substation, get_balance_result,
 )
 from .models import Device, Region, Substation, CoefficientHistory, BalanceResult
 from .views import is_allowed_user
@@ -349,11 +349,10 @@ def balance_report_all(request):
 
     for sub in substations:
         period = get_or_create_period(sub, year, month, 'month')
-        try:
-            balance = BalanceResult.objects.get(substation=sub, period=period)
-        except BalanceResult.DoesNotExist:
+        balance = get_balance_result(sub, period)
+        if balance is None:
             calculate_balance_for_substation(sub, year, month)  # расчёт
-            balance = BalanceResult.objects.get(substation=sub, period=period)
+            balance = get_balance_result(sub, period)
 
         data.append({
             'substation': sub,

@@ -99,14 +99,35 @@ def calculate_device_consumption(device, start_date, end_date, direction='aplus'
     return energy, start_reading, end_reading
 
 
+def get_balance_result(substation, period):
+    """Сохранённый результат ПС за период или None. Дубли (гонка параллельных
+    запросов: уникального ограничения у BalanceResult нет) не мешают: берётся последний."""
+    return BalanceResult.objects.filter(substation=substation, period=period).order_by('-calculated_at', '-id').first()
+
+
+def save_balance_result(substation, period, input_energy, output_energy, imbalance, percent):
+    """Создаёт или обновляет результат ПС за период; лишние дубли удаляет."""
+    values = {'input_energy': input_energy, 'output_energy': output_energy,
+              'imbalance_kwh': imbalance, 'imbalance_percent': percent}
+    qs = BalanceResult.objects.filter(substation=substation, period=period).order_by('id')
+    balance = qs.first()
+    if balance is None:
+        return BalanceResult.objects.create(substation=substation, period=period, **values)
+    for field, value in values.items():
+        setattr(balance, field, value)
+    balance.save(update_fields=list(values))
+    qs.exclude(pk=balance.pk).delete()
+    return balance
+
+
 def calculate_balance_for_substation(substation, year, month, force_recalc=False):
     result = {}
     for period_type in ['decade1', 'decade2', 'decade3']:
         period = get_or_create_period(substation, year, month, period_type)
 
         if not force_recalc:
-            try:
-                balance = BalanceResult.objects.get(substation=substation, period=period)
+            balance = get_balance_result(substation, period)
+            if balance is not None:
                 result[period_type] = {
                     'input': balance.input_energy,
                     'output': balance.output_energy,
@@ -114,8 +135,6 @@ def calculate_balance_for_substation(substation, year, month, force_recalc=False
                     'percent': balance.imbalance_percent,
                 }
                 continue
-            except BalanceResult.DoesNotExist:
-                pass
 
         # Вводной фидер (feeder_type='input')
         input_feeder = substation.feeders.filter(feeder_type='input').first()
@@ -165,16 +184,7 @@ def calculate_balance_for_substation(substation, year, month, force_recalc=False
         imbalance = input_energy - output_energy
         percent = (imbalance / input_energy * 100) if input_energy else Decimal(0)
 
-        balance, _ = BalanceResult.objects.update_or_create(
-            substation=substation,
-            period=period,
-            defaults={
-                'input_energy': input_energy,
-                'output_energy': output_energy,
-                'imbalance_kwh': imbalance,
-                'imbalance_percent': percent,
-            }
-        )
+        save_balance_result(substation, period, input_energy, output_energy, imbalance, percent)
         result[period_type] = {
             'input': input_energy,
             'output': output_energy,
@@ -189,16 +199,7 @@ def calculate_balance_for_substation(substation, year, month, force_recalc=False
     total_imbalance = total_input - total_output
     total_percent = (total_imbalance / total_input * 100) if total_input else Decimal(0)
 
-    BalanceResult.objects.update_or_create(
-        substation=substation,
-        period=month_period,
-        defaults={
-            'input_energy': total_input,
-            'output_energy': total_output,
-            'imbalance_kwh': total_imbalance,
-            'imbalance_percent': total_percent,
-        }
-    )
+    save_balance_result(substation, month_period, total_input, total_output, total_imbalance, total_percent)
     result['month'] = {
         'input': total_input,
         'output': total_output,

@@ -209,3 +209,34 @@ class BalanceReportAllViewTests(BalanceBase):
         body = resp.content.decode()
         self.assertIn('<script id="chartImbalance" type="application/json">[', body)
         self.assertIn('<script id="chartLabels" type="application/json">["', body)
+
+
+class DuplicateBalanceResultTests(BalanceBase):
+    """Дубль BalanceResult (гонка параллельных запросов) не должен ронять страницы баланса."""
+
+    def make_duplicate(self):
+        calculate_balance_for_substation(self.substation, 2026, 11)
+        period = get_or_create_period(self.substation, 2026, 11, 'month')
+        BalanceResult.objects.create(substation=self.substation, period=period, input_energy=Decimal(5))
+        self.assertEqual(BalanceResult.objects.filter(substation=self.substation, period=period).count(), 2)
+        return period
+
+    def test_get_balance_result_survives_duplicates(self):
+        from meters.balance_calculator import get_balance_result
+        period = self.make_duplicate()
+        self.assertIsNotNone(get_balance_result(self.substation, period))
+
+    def test_calculate_with_duplicate_does_not_raise_and_report_page_opens(self):
+        from django.contrib.auth.models import User
+        self.make_duplicate()
+        calculate_balance_for_substation(self.substation, 2026, 11)  # раньше: MultipleObjectsReturned
+        self.client.force_login(User.objects.create_superuser('dup', 'd@d.d', 'x'))
+        self.assertEqual(self.client.get('/balance/report/?year=2026&month=11').status_code, 200)
+
+    def test_save_removes_extra_duplicates(self):
+        from meters.balance_calculator import save_balance_result
+        period = self.make_duplicate()
+        save_balance_result(self.substation, period, Decimal(10), Decimal(4), Decimal(6), Decimal(60))
+        rows = BalanceResult.objects.filter(substation=self.substation, period=period)
+        self.assertEqual(rows.count(), 1)
+        self.assertEqual(rows[0].input_energy, Decimal(10))
