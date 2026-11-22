@@ -61,7 +61,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot style="font-weight: bold; background: #f0f3f7;">
+                <tfoot style="font-weight: bold; background: var(--soft);">
                     <tr>
                         <td colspan="2"><strong>ИТОГО</strong></td>
                         <td>{{ total_input|floatformat:3 }}</td>
@@ -121,10 +121,10 @@
                         label: 'Небаланс, кВт·ч',
                         data: imbalanceData,
                         backgroundColor: imbalanceData.map(function (v) {
-                            return v >= 0 ? 'rgba(40, 167, 69, 0.7)' : 'rgba(220, 53, 69, 0.7)';
+                            return v >= 0 ? 'rgba(61, 143, 134, 0.65)' : 'rgba(224, 115, 95, 0.7)';
                         }),
                         borderColor: imbalanceData.map(function (v) {
-                            return v >= 0 ? '#28a745' : '#dc3545';
+                            return v >= 0 ? SYNTH.good : SYNTH.bad;
                         }),
                         borderWidth: 2
                     }]
@@ -159,11 +159,7 @@
                     labels: labels,
                     datasets: [{
                         data: inputData,
-                        backgroundColor: [
-                            '#ff6384', '#36a2eb', '#cc65fe', '#ffce56',
-                            '#4bc0c0', '#ff9f40', '#8ac24a', '#9966ff',
-                            '#ff6384', '#36a2eb', '#cc65fe', '#ffce56'
-                        ],
+                        backgroundColor: labels.map(function (_, i) { return SYNTH.palette[i % SYNTH.palette.length]; }),
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]

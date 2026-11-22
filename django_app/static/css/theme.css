@@ -6,21 +6,22 @@
    ================================================================= */
 
 :root {
-    --bg-1: #eef3f1;
-    --bg-2: #dde7e4;
-    --ink: #1e292d;
-    --ink-2: #6a7a80;
-    --ink-3: #98a6ab;
+    --bg-0: #86a9ba;
+    --bg-1: #cfe4e0;
+    --bg-2: #e6f4ef;
+    --ink: #163144;
+    --ink-2: #566f7f;
+    --ink-3: #84999f;
     --glass: rgba(255, 255, 255, 0.42);
-    --blob-1: rgba(124, 108, 240, 0.42);
-    --blob-2: rgba(255, 122, 104, 0.34);
-    --blob-3: rgba(45, 212, 191, 0.36);
-    --blob-4: rgba(80, 140, 255, 0.34);
+    --blob-1: rgba(27, 64, 91, 0.30);
+    --blob-2: rgba(110, 165, 190, 0.42);
+    --blob-3: rgba(223, 243, 235, 0.95);
+    --blob-4: rgba(255, 255, 255, 0.60);
     --glass-strong: rgba(255, 255, 255, 0.78);
     --glass-border: rgba(255, 255, 255, 0.75);
     --line: rgba(30, 41, 45, 0.08);
-    --navy: #1d2b4f;
-    --violet: #7c6cf0;
+    --navy: #163144;
+    --violet: #3f7a9c;
     --coral: #ff7a68;
     --radius: 24px;
     --shadow: 0 10px 40px rgba(40, 70, 60, 0.08);
@@ -39,21 +40,22 @@
 
 /* ---------- Тёмная тема (переключатель в меню, выбор хранится в браузере) ---------- */
 [data-bs-theme="dark"] {
-    --bg-1: #0e1514;
-    --bg-2: #18211f;
-    --ink: #e7efed;
-    --ink-2: #a0b1ae;
-    --ink-3: #8b9d99;
+    --bg-0: #0b1822;
+    --bg-1: #10222e;
+    --bg-2: #163144;
+    --ink: #e4f0f1;
+    --ink-2: #a2b7bf;
+    --ink-3: #8aa1a9;
     --glass: rgba(255, 255, 255, 0.06);
-    --blob-1: rgba(124, 108, 240, 0.40);
-    --blob-2: rgba(255, 122, 104, 0.22);
-    --blob-3: rgba(45, 212, 191, 0.22);
-    --blob-4: rgba(80, 140, 255, 0.28);
+    --blob-1: rgba(63, 122, 156, 0.40);
+    --blob-2: rgba(27, 64, 91, 0.55);
+    --blob-3: rgba(45, 160, 150, 0.20);
+    --blob-4: rgba(90, 150, 190, 0.22);
     --glass-strong: rgba(34, 46, 44, 0.88);
     --glass-border: rgba(255, 255, 255, 0.11);
     --line: rgba(255, 255, 255, 0.09);
-    --navy: #5b4fe0;
-    --violet: #9a8cff;
+    --navy: #2f6f93;
+    --violet: #7fc0dc;
     --coral: #ff8a78;
     --shadow: 0 12px 44px rgba(0, 0, 0, 0.45);
     --hover: rgba(255, 255, 255, 0.11);
@@ -68,19 +70,20 @@
     color-scheme: dark;
 }
 
-html { background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%) fixed; min-height: 100%; }
+html { background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 42%, var(--bg-2) 100%) fixed; min-height: 100%; }
 [data-bs-theme="light"] { color-scheme: light; }
 body {
     background: transparent !important;
     color: var(--ink) !important;
-    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+    /* Urbanist (латиница и цифры) + Jost (кириллица): у Urbanist нет кириллицы, Jost близок по геометрии */
+    font-family: 'Urbanist', 'Jost', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
     font-weight: 400;
-    letter-spacing: -0.005em;
+    letter-spacing: 0.005em;
 }
 
 /* ---------- Заголовки ---------- */
-.page-title { font-weight: 300 !important; font-size: 2rem !important; letter-spacing: -0.02em; color: var(--ink) !important; }
-.page-title i { color: var(--ink-3) !important; }
+.page-title { font-weight: 300 !important; font-size: 2rem !important; letter-spacing: 0; color: var(--ink) !important; }
+.page-title i { color: var(--ink-2) !important; opacity: 0.8; }
 h1, h2, h3, h4 { font-weight: 400; }
 
 /* ---------- Карточки (стекло) ---------- */
@@ -105,17 +108,17 @@ h1, h2, h3, h4 { font-weight: 400; }
     font-weight: 400;
     color: var(--ink);
 }
-.card-pastel .card-header span { font-weight: 500; }
+.card-pastel .card-header span { font-weight: 400; }
 
 /* Карточки-метрики: тонкие крупные цифры, серые подписи */
-.stat-card .stat-value, .metric-modern h2 { font-weight: 300 !important; letter-spacing: -0.03em; color: var(--ink) !important; }
+.stat-card .stat-value, .metric-modern h2 { font-weight: 300 !important; letter-spacing: 0; color: var(--ink) !important; }
 .stat-card .stat-value { font-size: 2.3rem; }
 .stat-card .stat-label, .metric-modern h5 { color: var(--ink-2) !important; font-weight: 400 !important; letter-spacing: 0.06em; }
 .stat-card .stat-sub { color: var(--ink-3); }
 .region-card .region-card__num { font-size: 1.5rem; white-space: nowrap; }
 .region-card__stats > * { min-width: 0; }
 .region-card .stat-sub { white-space: nowrap; }
-.region-card__percent { font-weight: 300 !important; letter-spacing: -0.03em; }
+.region-card__percent { font-weight: 300 !important; letter-spacing: 0; }
 .region-card__head .region-link, .region-card__title { font-weight: 500; }
 .stat-card .stat-icon { background: var(--icon-bg) !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); }
 .stat-link:hover { background: var(--hover); }
@@ -152,14 +155,14 @@ h1, h2, h3, h4 { font-weight: 400; }
     box-shadow: 0 2px 8px rgba(40, 70, 60, 0.05);
 }
 textarea.form-control { border-radius: 18px !important; }
-.form-control:focus, .form-select:focus { box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.18) !important; border-color: rgba(124, 108, 240, 0.5) !important; }
+.form-control:focus, .form-select:focus { box-shadow: 0 0 0 3px rgba(63, 122, 156, 0.20) !important; border-color: rgba(63, 122, 156, 0.55) !important; }
 .btn-pastel-outline:hover { background: var(--glass-strong) !important; }
 .btn-pastel-primary, .btn-primary, .btn-group-pill .btn-pastel-primary {
     background: var(--navy) !important;
     border: none !important;
     color: var(--on-navy) !important;
     border-radius: 999px !important;
-    box-shadow: 0 6px 18px rgba(29, 43, 79, 0.25);
+    box-shadow: 0 6px 18px rgba(22, 49, 68, 0.28);
 }
 .btn-pastel-primary:hover, .btn-primary:hover { background: var(--navy) !important; filter: brightness(1.15); color: var(--on-navy) !important; }
 .btn-group-pill .btn-pastel-outline { background: var(--field) !important; color: var(--ink-2) !important; }
@@ -215,7 +218,7 @@ textarea.form-control { border-radius: 18px !important; }
 
 /* Спокойная палитра: акценты только фиолетовый и коралловый */
 .region-card__percent { color: var(--ink) !important; }
-.bg-success-pastel { background: linear-gradient(90deg, #1d2b4f, #7c6cf0) !important; }
+.bg-success-pastel { background: linear-gradient(90deg, #163144, #5b9ab8) !important; }
 .bg-warning-pastel { background: linear-gradient(90deg, #ffc9a8, #ff9a76) !important; }
 .bg-danger-pastel  { background: linear-gradient(90deg, #ffb3a8, #ff7a68) !important; }
 
@@ -359,3 +362,13 @@ body::before {
 @media (max-width: 400px) {
     .category-card__name { font-size: 0.72rem; letter-spacing: -0.01em; }
 }
+
+/* ---------- Единая гамма иконок и акцентов Bootstrap ---------- */
+.text-primary { color: #2f6f93 !important; }
+.text-info { color: #5b9ab8 !important; }
+.text-success { color: #3d8f86 !important; }
+.text-warning { color: #e0922f !important; }
+.text-danger { color: #e0735f !important; }
+[data-bs-theme="dark"] .text-primary { color: #7fc0dc !important; }
+[data-bs-theme="dark"] .text-info { color: #8fc1d4 !important; }
+[data-bs-theme="dark"] .text-success { color: #6fd0bd !important; }

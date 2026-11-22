@@ -562,7 +562,7 @@ def compare_1c_stats(request):
             total_stats['auto_fixed'],
             total_stats['ignored'],
         ],
-        'colors': ['#ffc107', '#0d6efd', '#198754', '#17a2b8', '#6c757d'],
+        'colors': ['#e0922f', '#2f6f93', '#3d8f86', '#8fc1d4', '#6c8797'],
     }
     
     bar_data = {

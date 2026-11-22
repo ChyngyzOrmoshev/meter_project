@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/countup.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap&subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@200;300;400;500;600&family=Jost:wght@300;400;500&family=Inter:wght@300;400;500&display=swap&subset=cyrillic" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
     <script>document.documentElement.classList.add('js');</script>
     <script src="{% static 'js/theme.js' %}"></script>
@@ -932,10 +932,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Единая палитра диаграмм (сине-бирюзовая гамма Synthex)
+        window.SYNTH = {
+            palette: ['#163144', '#2f6f93', '#5b9ab8', '#8fc1d4', '#3d8f86', '#7fc8b4', '#b7dcd0', '#6c8797'],
+            good: '#3d8f86', bad: '#e0735f', warn: '#e0922f'
+        };
         // Chart.js: подписи и сетка в цветах текущей темы (ECharts на дашборде делает это сам)
         if (window.Chart) {
             var cs = getComputedStyle(document.documentElement);
             Chart.defaults.color = cs.getPropertyValue('--ink-2').trim() || Chart.defaults.color;
+            Chart.defaults.font.family = "'Urbanist', 'Jost', 'Inter', sans-serif";
+            Chart.defaults.scale.grid.borderDash = [4, 4];   // пунктирная сетка, как в макете
             Chart.defaults.borderColor = document.documentElement.getAttribute('data-bs-theme') === 'dark'
                 ? 'rgba(255,255,255,0.12)' : Chart.defaults.borderColor;
         }
