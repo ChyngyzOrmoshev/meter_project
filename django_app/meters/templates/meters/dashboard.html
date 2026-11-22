@@ -37,6 +37,22 @@
         </div>
     </div>
 </div>
+<!-- Активность по категориям -->
+<div class="card-pastel mb-4">
+    <div class="card-header">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span><i class="fas fa-tags me-2"></i>Активность по категориям</span>
+        </div>
+    </div>
+    <div class="card-body" id="category-cards-container">
+        <div class="text-center py-4">
+            <div class="spinner-border text-secondary" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted" style="font-size: 0.9rem;">Загрузка данных...</p>
+        </div>
+    </div>
+</div>
 <!-- Статистика по районам -->
 <div class="card-pastel mb-5">
     <div class="card-header">
@@ -219,6 +235,21 @@
             });
     }
 
+    function loadCategoryCards(period) {
+        const container = document.getElementById('category-cards-container');
+        fetch('/category-cards/?period=' + period)
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+                if (window.animateNumbers) window.animateNumbers();
+                if (window.initReveal) window.initReveal();
+            })
+            .catch(error => {
+                container.innerHTML = '<div class="alert alert-warning">Ошибка загрузки данных</div>';
+                console.error('Error loading category cards:', error);
+            });
+    }
+
     function loadRegionStats(period) {
         const container = document.getElementById('region-stats-container');
         container.innerHTML = `
@@ -274,6 +305,7 @@
 
         // Загружаем статистику по районам
         loadRegionStats(period);
+        loadCategoryCards('today');
 
 
 

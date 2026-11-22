@@ -569,6 +569,13 @@ def region_stats_table(request):
 
 
 # Доступ без входа (гостевая страница)
+def category_cards(request):
+    from .dashboard_stats import get_category_cards, normalize_period
+    period = normalize_period(request.GET.get('period', 'today'))
+    return HttpResponse(render_to_string('meters/_category_cards.html', {'cards': get_category_cards(period), 'period': period}))
+
+
+# Доступ без входа (гостевая страница)
 def category_stats_table(request):
     """Возвращает HTML-таблицу со статистикой по категориям для выбранного района."""
     region_id = request.GET.get('region_id')

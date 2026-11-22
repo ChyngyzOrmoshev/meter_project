@@ -330,3 +330,32 @@ body::before {
     .btn.w-100.btn-pastel-primary, .btn.w-100.btn-pastel-success, .btn.w-100.btn-pastel-outline { padding-left: 0.4rem; padding-right: 0.4rem; font-size: 0.875rem; }
     .btn.w-100:not(.btn-icon-only).btn-pastel-primary > i, .btn.w-100:not(.btn-icon-only).btn-pastel-success > i { display: none; }
 }
+
+/* ---------- Карточки категорий: процент и линия активности ---------- */
+.category-card { padding: 1rem 1.1rem 0.8rem; text-align: left; height: 100%; }
+.category-card__head { display: flex; flex-direction: column; gap: 0.1rem; }
+.category-card__name { font-weight: 500; color: var(--ink-2); font-size: 0.9rem; overflow-wrap: break-word; }
+.category-card__percent { font-size: 1.7rem; line-height: 1.15; font-weight: 300; letter-spacing: 0; color: var(--ink); white-space: nowrap; }
+.category-card__percent.is-warn { color: #e0922f; }
+.category-card__percent.is-bad { color: var(--coral, #ff7a68); }
+.category-card__counts { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 0.5rem; font-size: 0.8rem; color: var(--ink-3); margin: 0.1rem 0 0.4rem; }
+.category-card__counts > span:first-child { white-space: nowrap; }
+.category-card__counts b { color: var(--ink-2); font-weight: 500; }
+.category-card__delta.is-up { color: #2e9e6a; }
+.category-card__delta.is-down { color: var(--coral, #ff7a68); }
+.category-card__spark { display: block; width: 100%; height: auto; overflow: visible; }
+.category-card__spark .spark-grid { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 3 3; }
+.category-card__spark .spark-line { fill: none; stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; opacity: 0.55; }
+.category-card__spark .spark-area { opacity: 1; }
+.category-card__spark .spark-hatch { stroke: var(--ink-3); stroke-width: 0.7; opacity: 0.55; }
+.category-card__spark .spark-dot { fill: var(--ink); }
+.category-card__spark .spark-dot--last { fill: var(--ink); stroke: var(--glass-strong); stroke-width: 1.5; }
+.category-card__axis { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--ink-3); margin-top: 0.15rem; }
+@media (max-width: 575.98px) {
+    .category-card { padding: 0.8rem 0.7rem 0.65rem; }
+    .category-card__name { font-size: 0.8rem; overflow-wrap: normal; }
+    .category-card__percent { font-size: 1.5rem; }
+}
+@media (max-width: 400px) {
+    .category-card__name { font-size: 0.72rem; letter-spacing: -0.01em; }
+}

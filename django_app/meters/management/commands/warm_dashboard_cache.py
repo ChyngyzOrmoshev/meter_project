@@ -3,7 +3,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from meters.dashboard_stats import PERIODS, store_period_stats
+from meters.dashboard_stats import PERIODS, store_category_history, store_period_stats
 
 
 class Command(BaseCommand):
@@ -18,3 +18,6 @@ class Command(BaseCommand):
             started = time.time()
             store_period_stats(period)
             self.stdout.write(f'{period}: {time.time() - started:.1f}с')
+        started = time.time()
+        store_category_history()
+        self.stdout.write(f'линия по категориям: {time.time() - started:.1f}с')

@@ -49,6 +49,7 @@ urlpatterns = [
     path('compare-1c/issues/<int:issue_id>/verify/', views_1c.compare_1c_issue_verify, name='compare_1c_issue_verify'),
     path('readings/fetch/', views_readings.fetch_device_readings, name='fetch_device_readings'),
     path('readings/fetch/status/', views_readings.fetch_readings_status, name='fetch_readings_status'),
+    path('category-cards/', views.category_cards, name='category_cards'),
     path('category-stats/', views.category_stats_table, name='category_stats_table'),
     path('devices/bulk-category/', views_devices.bulk_update_category_page, name='bulk_update_category_page'),
     path('hierarchy/', views_hierarchy.hierarchy_management, name='hierarchy_management'),

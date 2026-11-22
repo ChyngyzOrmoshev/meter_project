@@ -236,3 +236,70 @@ class ReportsViaCacheTests(StatsBase):
         self.assertEqual(window_page_range(1, 5), [1, 2, 3, 4, 5])
         self.assertEqual(window_page_range(500, 1000), [1, 497, 498, 499, 500, 501, 502, 503, 1000])
         self.assertEqual(window_page_range(1000, 1000), [1, 997, 998, 999, 1000])
+
+
+class CategoryCardsTests(StatsBase):
+    """Карточки категорий: проценты, «без категории» = «Прочие», линия за 7 дней."""
+
+    def setUp(self):
+        super().setUp()
+        Device.objects.filter(pk=self.active.pk).update(category='population')
+        Device.objects.filter(pk=self.silent.pk).update(category=None)
+
+    def test_category_stats_cover_all_six_categories_in_order(self):
+        stats = dashboard_stats.compute_period_stats('today')[0]['category_stats']
+        self.assertEqual([c['code'] for c in stats],
+                         ['population', 'commercial', 'industrial', 'budget', 'agriculture', 'other'])
+        by = {c['code']: c for c in stats}
+        self.assertEqual((by['population']['total'], by['population']['active'], by['population']['percent']), (1, 1, 100))
+        # прибор без категории считается в «Прочих» и без показаний
+        self.assertEqual((by['other']['total'], by['other']['active'], by['other']['percent']), (1, 0, 0))
+        self.assertEqual(by['commercial']['total'], 0)
+        self.assertEqual(by['commercial']['percent'], 0)
+
+    def test_unknown_category_goes_to_other(self):
+        self.assertEqual(dashboard_stats.category_code('weird'), 'other')
+        self.assertEqual(dashboard_stats.category_code(None), 'other')
+        self.assertEqual(dashboard_stats.category_code('budget'), 'budget')
+
+    def test_history_is_seven_days_with_today_last(self):
+        self.assertEqual(dashboard_stats.HISTORY_DAYS, 7)
+        stats = dashboard_stats.compute_period_stats('today')[0]['category_stats']
+        series, days = dashboard_stats.get_category_history(stats)
+        self.assertEqual(len(days), 7)
+        self.assertEqual(days[-1], timezone.now().date())
+        self.assertEqual(series['population'][-1], 100)   # сегодня есть показание
+        self.assertEqual(series['population'][0], 0)      # неделю назад показаний не было
+        self.assertTrue(all(len(v) == 7 for v in series.values()))
+
+    def test_history_uses_cached_past_days(self):
+        stats = dashboard_stats.compute_period_stats('today')[0]['category_stats']
+        dashboard_stats.get_category_history(stats)
+        with mock.patch.object(dashboard_stats, '_day_category_counts') as day:
+            dashboard_stats.get_category_history(stats)
+        day.assert_not_called()
+
+    def test_sparkline_geometry(self):
+        spark = dashboard_stats.build_sparkline([50, 60, 70])
+        self.assertEqual(spark['line'].count(' '), 2)
+        first_y = float(spark['line'].split()[0].split(',')[1])
+        last_y = float(spark['line'].split()[-1].split(',')[1])
+        self.assertGreater(first_y, last_y)  # рост рисуется вверх (y меньше)
+        flat = dashboard_stats.build_sparkline([90, 90, 90])
+        ys = {p.split(',')[1] for p in flat['line'].split()}
+        self.assertEqual(len(ys), 1)          # ровная линия остаётся ровной
+        self.assertIsNone(dashboard_stats.build_sparkline([]))
+
+    def test_cards_view_renders_six_cards(self):
+        resp = self.client.get('/category-cards/?period=today')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        self.assertEqual(body.count('data-category='), 6)
+        self.assertIn('Население', body)
+        self.assertIn('Сельхоз', body)
+        self.assertIn('7 дн.', body)
+
+    def test_warm_command_fills_history_cache(self):
+        call_command('warm_dashboard_cache', stdout=io.StringIO())
+        today = timezone.now().date()
+        self.assertIsNotNone(cache.get(dashboard_stats.day_cache_key(today)))

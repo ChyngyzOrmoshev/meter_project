@@ -1,0 +1,42 @@
+{% load l10n %}
+{# Карточки категорий: активность за выбранный период и линия по дням (SVG без библиотек). #}
+<div class="row g-3">
+    {% for c in cards %}
+    <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+        <div class="metric-modern stat-card category-card" data-reveal data-category="{{ c.code }}">
+            <div class="category-card__head">
+                <span class="category-card__name">{{ c.name }}</span>
+                <span class="category-card__percent {% if c.percent < 50 %}is-bad{% elif c.percent < 80 %}is-warn{% endif %}">
+                    <count-up value="{{ c.percent|unlocalize }}" decimals="1" suffix="%">{{ c.percent|floatformat:1 }}%</count-up>
+                </span>
+            </div>
+            <div class="category-card__counts">
+                <span><b>{{ c.active }}</b> из {{ c.total }}</span>
+                <span class="category-card__delta {% if c.delta < 0 %}is-down{% elif c.delta > 0 %}is-up{% endif %}"
+                    title="Изменение к предыдущему дню">{% if c.delta > 0 %}+{% endif %}{{ c.delta|floatformat:1 }}</span>
+            </div>
+            {% if c.spark %}
+            <svg class="category-card__spark" viewBox="0 0 {{ c.spark.width }} {{ c.spark.height }}"
+                role="img" aria-label="Активность {{ c.name }} за {{ c.days }} дн.">
+                <defs>
+                    <pattern id="hatch-{{ c.code }}" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(60)">
+                        <line class="spark-hatch" x1="0" y1="0" x2="0" y2="3"></line>
+                    </pattern>
+                </defs>
+                <line class="spark-grid" x1="0" x2="{{ c.spark.width }}" y1="{{ c.spark.top }}" y2="{{ c.spark.top }}" vector-effect="non-scaling-stroke"></line>
+                <line class="spark-grid" x1="0" x2="{{ c.spark.width }}" y1="{{ c.spark.bottom }}" y2="{{ c.spark.bottom }}" vector-effect="non-scaling-stroke"></line>
+                <polygon class="spark-area" points="{{ c.spark.area }}" fill="url(#hatch-{{ c.code }})"></polygon>
+                <polyline class="spark-line" points="{{ c.spark.line }}" vector-effect="non-scaling-stroke"></polyline>
+                {% for x, y in c.spark.points %}<circle class="spark-dot" cx="{{ x|unlocalize }}" cy="{{ y|unlocalize }}" r="1.5"></circle>{% endfor %}
+                <circle class="spark-dot spark-dot--last" cx="{{ c.spark.last_x|unlocalize }}" cy="{{ c.spark.last_y|unlocalize }}" r="2.2"></circle>
+            </svg>
+            <div class="category-card__axis">
+                <span>{{ c.first_day|date:"d.m" }}</span>
+                <span>{{ c.days }} дн.</span>
+                <span>{{ c.last_day|date:"d.m" }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
