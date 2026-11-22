@@ -197,18 +197,41 @@ class SubstationBalanceTests(BalanceBase):
 
 
 class BalanceReportAllViewTests(BalanceBase):
-    """Данные диаграмм уходят в json_script списками: строка вместо массива ломала JS (`.map is not a function`)."""
+    """Данные диаграмм уходят в json_script списками (строка вместо массива ломала JS), и в них только ПС с небалансом выше 3%."""
 
-    def test_chart_data_are_lists_and_render_as_json_arrays(self):
+    def setUp(self):
+        super().setUp()
         from django.contrib.auth.models import User
         self.client.force_login(User.objects.create_superuser('bal', 'b@b.b', 'x'))
+
+    def add_substation(self, name, input_energy, imbalance, percent):
+        sub = Substation.objects.create(name=name, region=self.substation.region, is_active=True)
+        period = get_or_create_period(sub, 2026, 11, 'month')
+        BalanceResult.objects.create(
+            substation=sub, period=period, input_energy=Decimal(input_energy),
+            output_energy=Decimal(input_energy) - Decimal(imbalance),
+            imbalance_kwh=Decimal(imbalance), imbalance_percent=Decimal(percent))
+        return sub
+
+    def test_chart_data_are_lists_and_render_as_json_arrays(self):
+        self.add_substation('ПС-высокий', 1000, 100, 10)
         resp = self.client.get('/balance/report/?year=2026&month=11')
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.context['chart_labels'], ['ПС-1'])
+        self.assertEqual(resp.context['chart_labels'], ['ПС-высокий'])
         self.assertIsInstance(resp.context['chart_imbalance'], list)
         body = resp.content.decode()
         self.assertIn('<script id="chartImbalance" type="application/json">[', body)
         self.assertIn('<script id="chartLabels" type="application/json">["', body)
+
+    def test_charts_show_only_stations_above_threshold_sorted_by_abs_percent(self):
+        self.add_substation('ПС-2%', 1000, 20, 2)
+        self.add_substation('ПС-3%', 1000, 30, 3)       # ровно 3% не выше порога
+        self.add_substation('ПС-5%', 1000, 50, 5)
+        self.add_substation('ПС-минус8%', 1000, -80, -8)
+        resp = self.client.get('/balance/report/?year=2026&month=11')
+        self.assertEqual(resp.context['chart_labels'], ['ПС-минус8%', 'ПС-5%'])
+        self.assertEqual(resp.context['chart_percent'], [-8.0, 5.0])
+        self.assertEqual(len(resp.context['data']), 5)  # таблица остаётся полной (с ПС-1 из setUp)
 
 
 class DuplicateBalanceResultTests(BalanceBase):

@@ -79,19 +79,21 @@
 {{ chart_labels|json_script:"chartLabels" }}
 {{ chart_imbalance|json_script:"chartImbalance" }}
 {{ chart_input|json_script:"chartInput" }}
+{{ chart_percent|json_script:"chartPercent" }}
 
 <div class="row g-4">
     <div class="col-md-6">
         <div class="card-pastel">
-            <div class="card-header"><i class="fas fa-chart-bar"></i> Небаланс по ПС</div>
+            <div class="card-header"><i class="fas fa-chart-bar"></i> Небаланс по ПС (выше {{ chart_threshold }}%)</div>
             <div class="card-body">
+                {% if not chart_labels %}<p class="text-muted mb-0">Нет ПС с небалансом выше {{ chart_threshold }}%.</p>{% endif %}
                 <canvas id="imbalanceChart" height="300"></canvas>
             </div>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card-pastel">
-            <div class="card-header"><i class="fas fa-chart-pie"></i> Доля поступлений</div>
+            <div class="card-header"><i class="fas fa-chart-pie"></i> Доля поступлений (ПС выше {{ chart_threshold }}%)</div>
             <div class="card-body">
                 <canvas id="pieChart" height="300"></canvas>
             </div>
@@ -105,6 +107,7 @@
         // Получаем данные из json_script
         const labels = JSON.parse(document.getElementById('chartLabels').textContent);
         const imbalanceData = JSON.parse(document.getElementById('chartImbalance').textContent);
+        const percentData = JSON.parse(document.getElementById('chartPercent').textContent);
         const inputData = JSON.parse(document.getElementById('chartInput').textContent);
 
         // Столбчатая диаграмма небаланса
@@ -133,7 +136,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    return context.parsed.y + ' кВт·ч';
+                                    return context.parsed.y + ' кВт·ч (' + percentData[context.dataIndex] + '%)';
                                 }
                             }
                         }

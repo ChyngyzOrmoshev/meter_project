@@ -335,6 +335,9 @@ def balance_summary(request):
     return render(request, 'meters/balance_summary.html', context)
 
 
+CHART_PERCENT_THRESHOLD = 3  # порог небаланса для диаграмм, %
+
+
 @login_required
 @user_passes_test(is_allowed_user)
 def balance_report_all(request):
@@ -367,9 +370,14 @@ def balance_report_all(request):
 
     total_percent = (total_imbalance / total_input * 100) if total_input else 0
 
-    chart_labels = [d['substation'].name for d in data]
-    chart_imbalance = [float(d['imbalance']) for d in data]
-    chart_input = [float(d['input']) for d in data]
+    # На диаграммах только ПС с небалансом выше порога (по модулю), по убыванию
+    chart_data = sorted(
+        (d for d in data if abs(d['percent']) > CHART_PERCENT_THRESHOLD),
+        key=lambda d: abs(d['percent']), reverse=True)
+    chart_labels = [d['substation'].name for d in chart_data]
+    chart_imbalance = [float(d['imbalance']) for d in chart_data]
+    chart_percent = [round(float(d['percent']), 2) for d in chart_data]
+    chart_input = [float(d['input']) for d in chart_data]
 
     context = {
         'data': data,
@@ -377,7 +385,9 @@ def balance_report_all(request):
         'month': month,
         'chart_labels': chart_labels,
         'chart_imbalance': chart_imbalance,
+        'chart_percent': chart_percent,
         'chart_input': chart_input,
+        'chart_threshold': CHART_PERCENT_THRESHOLD,
         'total_input': total_input,
         'total_output': total_output,
         'total_imbalance': total_imbalance,
