@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
@@ -175,9 +176,15 @@ class Command(BaseCommand):
             sub.save()
 
         if actual_debt <= 0:
+            old_debt = task.debt_snapshot
             task.status = 'cancelled'
-            task.error_message = f'Отменено: 1С сообщает, что долг оплачен (Долг: {actual_debt}).'
-            task.save(update_fields=['status', 'error_message'])
+            task.error_message = (
+                f'Отменено: долг оплачен. 1С при проверке вернула долг {actual_debt:.2f}'
+                + (f' (при постановке задачи было {old_debt:.2f})' if old_debt is not None else '') + '.'
+            )
+            # в мониторе показываем долг, который ответила 1С при проверке
+            task.debt_snapshot = Decimal(str(actual_debt)).quantize(Decimal('0.01'))
+            task.save(update_fields=['status', 'error_message', 'debt_snapshot'])
             self.stdout.write(self.style.WARNING(
                 f"⏭️ Задача #{task.id} ОТМЕНЕНА: 1С сообщает, что долг оплачен."
             ))

@@ -116,6 +116,14 @@ class DebtCheckTests(WorkerBase):
         self.assertIn('долг оплачен', task.error_message)
         self.sanxing.set_relay.assert_not_called()
 
+    def test_cancel_stores_debt_answered_by_1c(self):
+        self.check_debts.return_value = {'61002510': -83.17}
+        task = self.make_task('off')
+        self.run_task(task)
+        task.refresh_from_db()
+        self.assertEqual(float(task.debt_snapshot), -83.17)
+        self.assertIn('-83.17', task.error_message)
+
     def test_off_with_debt_sends_command(self):
         self.check_debts.return_value = {'61002510': 1500.0}
         task = self.make_task('off')

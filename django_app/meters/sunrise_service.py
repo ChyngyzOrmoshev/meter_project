@@ -15,6 +15,8 @@ STATE_OFF, STATE_ON, STATE_READY = 0, 1, 2
 
 
 class SunRiseService:
+    API_TIMEOUT = 45  # сервер SunRise опрашивает счётчик сам; спящий отвечает дольше 15 с
+
     def __init__(self):
         load_dotenv('/app/cEnergo.env')
         self.base_url = os.getenv('SUNRISE_API_URL', '').rstrip('/')
@@ -66,7 +68,7 @@ class SunRiseService:
         req = urllib.request.Request(f"{self.base_url}/api{endpoint}?token={self.token}", data=body_encoded, method='POST')
         req.add_header('Content-Type', 'application/x-www-form-urlencoded')
         
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=self.API_TIMEOUT) as resp:
             res = json.loads(resp.read().decode('utf-8'))
             if res.get('errorCode') != 0:
                 raise Exception(f"Ошибка API: {res.get('errorMsg')}")
