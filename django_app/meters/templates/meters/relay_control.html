@@ -233,10 +233,13 @@
                 </div>
                 <div class="rq-tools">
                     <label class="rq-search"><i class="fas fa-search"></i>
-                        <input type="text" id="filter-search" placeholder="ЛС, ФИО или номер счётчика" autocomplete="off">
+                        <input type="text" id="filter-search" placeholder="ЛС, ФИО или номер счётчика"
+                            autocomplete="off">
                     </label>
-                    <button type="button" class="rq-btn" onclick="loadTasks(currentMonitorPage)"><i class="fas fa-sync-alt"></i> Обновить</button>
-                    <button type="button" class="rq-btn rq-btn-primary" onclick="document.getElementById('manual-tab').click()">+ Новая задача</button>
+                    <button type="button" class="rq-btn" onclick="loadTasks(currentMonitorPage)"><i
+                            class="fas fa-sync-alt"></i> Обновить</button>
+                    <button type="button" class="rq-btn rq-btn-primary"
+                        onclick="document.getElementById('manual-tab').click()">+ Новая задача</button>
                 </div>
             </div>
 
@@ -283,12 +286,14 @@
                                 <th class="num">Долг, сом</th>
                                 <th>Реле</th>
                                 <th>Статус</th>
-                                <th>Кто</th>
+                                <th>Пользователь</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody id="monitor-tbody">
-                            <tr><td colspan="8" class="rq-empty">Загрузка…</td></tr>
+                            <tr>
+                                <td colspan="8" class="rq-empty">Загрузка…</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -780,8 +785,8 @@
 
         // --- ЛОГИКА МОНИТОРИНГА ---
         let currentMonitorPage = 1;
-        const RQ_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        const rqEsc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        const RQ_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        const rqEsc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
         function rqTodayStr() {
             const t = new Date();
@@ -859,14 +864,14 @@
                 tbody.innerHTML = '<tr><td colspan="8" class="rq-empty"><div class="spinner-border spinner-border-sm"></div> Загрузка…</td></tr>';
             }
 
-            const q = new URLSearchParams({date_from: dateFrom, date_to: dateTo, region, action, status, search, page, page_size: pageSize});
+            const q = new URLSearchParams({ date_from: dateFrom, date_to: dateTo, region, action, status, search, page, page_size: pageSize });
             fetch(`/relay-control/api/tasks-monitor/?${q}`)
                 .then(res => res.json())
                 .then(data => {
                     const counts = data.counts || {};
                     rqRenderPills(counts);
                     const total = data.pagination.total_items;
-                    const word = (n) => (n % 10 === 1 && n % 100 !== 11) ? 'задача' : ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) ? 'задачи' : 'задач';
+                    const word = (n) => (n % 10 === 1 && n % 100 !== 11) ? 'задача' : ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) ? 'задачи' : 'задач';
                     document.getElementById('monitor-total-info').textContent = `${rqPeriodText(dateFrom, dateTo)} · ${counts.all || 0} ${word(counts.all || 0)}`;
 
                     if (data.items.length === 0) {
@@ -885,7 +890,7 @@
                         const relayPill = task.action === 'on'
                             ? '<span class="rq-relay on"><i class="fas fa-bolt"></i>Включение</span>'
                             : '<span class="rq-relay off"><i class="fas fa-power-off"></i>Отключение</span>';
-                        const stCls = {success: 'ok', error: 'bad', processing: 'warn', pending: 'warn'}[task.status] || 'idle';
+                        const stCls = { success: 'ok', error: 'bad', processing: 'warn', pending: 'warn' }[task.status] || 'idle';
                         const hasAcc = task.account && task.account !== '—';
                         const hasName = task.name && task.name !== '—';
                         const btnConfirm = task.awaiting_button
