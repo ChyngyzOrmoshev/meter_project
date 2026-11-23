@@ -105,9 +105,13 @@ def relay_mass_get_subscribers(request):
                 device = Device.objects.filter(serial_number__endswith=norm_serial).first()
 
             if device:
+                # Тип ПУ и ампераж: из ответа 1С, если она их вернула, иначе из карточки прибора
+                dev_model = device.model
                 found_items.append({
                     'id': device.id,
                     'serial': device.serial_number,
+                    'model': d.get('model') or (dev_model.model_name if dev_model else '—'),
+                    'amperage': d.get('amperage') or ((dev_model.nominal_current or '—') if dev_model else '—'),
                     'account': d.get('account_number'),
                     'name': d.get('full_name'),
                     'debt': float(d.get('debt')),

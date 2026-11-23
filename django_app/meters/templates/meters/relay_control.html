@@ -182,13 +182,15 @@
                                 <th>Лицевой счет</th>
                                 <th>ФИО</th>
                                 <th>Счетчик</th>
+                                <th>Тип ПУ</th>
+                                <th>Ампер</th>
                                 <th>Долг</th>
                                 <th>Район</th>
                             </tr>
                         </thead>
                         <tbody id="mass-tbody">
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Нажмите «Применить» для поиска</td>
+                                <td colspan="8" class="text-center text-muted py-4">Нажмите «Применить» для поиска</td>
                             </tr>
                         </tbody>
                     </table>
@@ -636,20 +638,20 @@
             document.getElementById('select-all-mass').checked = false;
             document.getElementById('orphan-block').classList.add('d-none');
 
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Поиск...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Поиск...</td></tr>';
 
             fetch(`/relay-control/api/mass-subscribers/?region=${encodeURIComponent(region)}&min_debt=${debt}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.error) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${data.error}</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${data.error}</td></tr>`;
                         return;
                     }
 
                     // 1. Отрисовка найденных
                     document.getElementById('mass-count').textContent = data.total_found;
                     if (data.total_found === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Найденных абонентов нет</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Найденных абонентов нет</td></tr>';
                     } else {
                         let html = '';
                         data.found.forEach(item => {
@@ -658,6 +660,8 @@
                             <td>${item.account}</td>
                             <td>${item.name || '—'}</td>
                             <td>${item.serial}</td>
+                            <td>${item.model || '—'}</td>
+                            <td>${item.amperage || '—'}</td>
                             <td><span class="text-danger fw-bold">${item.debt.toFixed(2)}</span></td>
                             <td>${item.region || '—'}</td>
                         </tr>`;

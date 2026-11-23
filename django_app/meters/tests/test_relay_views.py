@@ -331,6 +331,26 @@ class MassSubscribersTests(RelayViewsBase):
         self.assertEqual(data['found'][0]['id'], self.own.id)
         self.assertEqual(data['not_found'][0]['serial'], '0099999999')
 
+    def test_model_and_amperage_from_db_or_1c(self):
+        m = MeterModel.objects.create(catalog_code='X2', model_name='SX-2', digit_capacity='6',
+                                      phases=1, nominal_current='10(100)А')
+        self.own.model = m
+        self.own.save()
+        debtors = [{'serial_number': '61002510', 'account_number': '1', 'full_name': 'А', 'debt': 900}]
+        with mock.patch('meters.onec_service.OneCService.get_debtors', return_value=debtors):
+            item = self.get(self.admin).json()['found'][0]
+        self.assertEqual((item['model'], item['amperage']), ('SX-2', '10(100)А'))
+        debtors[0].update(model='От 1С', amperage='5А')
+        with mock.patch('meters.onec_service.OneCService.get_debtors', return_value=debtors):
+            item = self.get(self.admin).json()['found'][0]
+        self.assertEqual((item['model'], item['amperage']), ('От 1С', '5А'))
+        self.own.model = None
+        self.own.save()
+        debtors[0].pop('model'); debtors[0].pop('amperage')
+        with mock.patch('meters.onec_service.OneCService.get_debtors', return_value=debtors):
+            item = self.get(self.admin).json()['found'][0]
+        self.assertEqual((item['model'], item['amperage']), ('—', '—'))
+
     def test_local_fallback_key_is_understood(self):
         debtors = [{'device__serial_number': '61002510', 'account_number': '1', 'full_name': 'А', 'debt': 900}]
         with mock.patch('meters.onec_service.OneCService.get_debtors', return_value=debtors):
