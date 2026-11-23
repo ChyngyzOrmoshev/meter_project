@@ -12,7 +12,7 @@ class OneCService:
         # HTTP-сервис 1С: {сервер}/{база}/hs/askue/{readdebt|checkdebt}, авторизация Basic
         self.auth = (os.getenv('ONEC_USER', ''), os.getenv('ONEC_PASSWORD', ''))
         # Пробная база для проверки обмена: если задана, ею заменяются базы всех районов,
-        # у которых в 1С есть база (районы без базы, ЖПЭС, остаются на локальных данных)
+        # (в том числе ЖПЭС; без override районы без базы остаются на локальных данных)
         self.db_override = os.getenv('ONEC_DB_OVERRIDE', '').strip()
         
         # Маппинг районов на базы 1С
@@ -39,10 +39,13 @@ class OneCService:
 
     def _db_for(self, region_name):
         """База 1С района или None, если для района (или всей интеграции) 1С не используется."""
-        db_name = self.region_db_map.get(region_name)
-        if not db_name or not self.server_url:
+        if not self.server_url:
             return None
-        return self.db_override or db_name
+        # Пробная база заменяет базы ВСЕХ районов, включая ЖПЭС и счётчики без района: иначе
+        # тестовые счётчики ЖПЭС проверяются по пустой локальной таблице и отключение отменяется
+        if self.db_override:
+            return self.db_override
+        return self.region_db_map.get(region_name) or None
 
     def _call(self, db_name, region_name, method, payload):
         """POST в HTTP-сервис 1С. Возвращает data ([] при статусе Not), иначе исключение."""
@@ -128,3 +131,31 @@ class OneCService:
 
         debts = {norm(r.get('serial_number')): float(r.get('debt') or 0) for r in rows}
         return {m['serial_number']: debts.get(norm(m['serial_number']), 0.0) for m in meters_list}
+
+    def has_1c(self, region_name):
+        """Есть ли для района база 1С (иначе данные берутся из локального Subscriber)."""
+        return self._db_for(region_name) is not None
+
+    def known_debts(self, region_name, meters_list):
+        """
+        Долги только тех счётчиков, которые 1С явно вернула в ответе checkdebt:
+        { 'serial_number': debt }. Отсутствующие в ответе в словарь не попадают
+        (в отличие от check_debts, где они считаются долгом 0). Нужен автовключению:
+        включать счётчик можно только по подтверждению оплаты, а не по молчанию 1С.
+        Район без базы 1С не поддерживается (используйте локальный Subscriber).
+        """
+        db_name = self._db_for(region_name)
+        if not db_name:
+            raise Exception(f"Для района {region_name!r} нет базы 1С")
+        payload = {"meters": [{
+            "serial_number": str(m['serial_number']),
+            "askue_type_id": str(m.get('askue_type_id') or ''),
+            "askue_type_str": str(m.get('askue_type_str') or ''),
+        } for m in meters_list]}
+        rows = self._call(db_name, region_name, 'checkdebt', payload)
+        debts = {str(r.get('serial_number')).strip().lstrip('0'): float(r.get('debt') or 0) for r in rows}
+        return {
+            m['serial_number']: debts[str(m['serial_number']).strip().lstrip('0')]
+            for m in meters_list
+            if str(m['serial_number']).strip().lstrip('0') in debts
+        }

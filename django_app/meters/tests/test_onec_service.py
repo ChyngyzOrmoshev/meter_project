@@ -78,6 +78,16 @@ class OneCServiceTests(TestCase):
             svc.get_debtors('03 Сузак', 1)
         self.assertEqual(post.call_args.args[0], 'http://1c.test/proba83/hs/askue/readdebt')
 
+    def test_db_override_also_covers_region_without_db_and_no_region(self):
+        svc = self.service(ONEC_DB_OVERRIDE='proba83')
+        body = {'status': 'ok', 'data': [{'serial_number': '555', 'askue_type_id': '26', 'debt': 5656.27}]}
+        for region in ('ЖПЭС', ''):
+            with mock.patch('requests.post', return_value=response(body)) as post:
+                debts = svc.check_debts(region, [{'serial_number': '555', 'askue_type_id': '26',
+                                                  'askue_type_str': 'SR'}])
+            self.assertEqual(post.call_args.args[0], 'http://1c.test/proba83/hs/askue/checkdebt')
+            self.assertEqual(debts, {'555': 5656.27})
+
     # --- локальный режим (район без базы 1С) ---
 
     def test_region_without_db_uses_local_subscribers_and_no_http(self):
