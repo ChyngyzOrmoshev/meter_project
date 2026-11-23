@@ -1,3 +1,4 @@
+import io
 """Вьюхи управления реле: доступ, районы, поиск счётчика, постановка задач, повтор, монитор."""
 import json
 import os
@@ -10,6 +11,7 @@ from django.test import Client, TestCase
 from django.utils import timezone
 
 from meters import views_relay
+from meters.relay_queue import READY_NOTE
 from meters.models import (
     CompareResult, Device, MeterModel, Region, RelayCommandHistory, RelayTask, Subscriber,
 )
@@ -214,9 +216,17 @@ class ApiStatusTests(RelayViewsBase):
     def test_sunrise_state_read_from_provider(self):
         Device.objects.filter(id=self.own.id).update(askue_id='26')
         with mock.patch('meters.views_relay.SunRiseService') as svc:
-            svc.return_value.get_relay_status.return_value = True
+            svc.return_value.get_relay_state.return_value = 1
             r = self.get(self.admin, '61002510')
         self.assertEqual((r.json()['status'], r.json()['provider']), ('on', 'SunRise'))
+
+    def test_sunrise_ready_state_is_reported_as_ready(self):
+        Device.objects.filter(id=self.own.id).update(askue_id='26')
+        with mock.patch('meters.views_relay.SunRiseService') as svc:
+            svc.return_value.get_relay_state.return_value = 2
+            self.assertEqual(self.get(self.admin, '61002510').json()['status'], 'ready')
+            svc.return_value.get_relay_state.return_value = 0
+            self.assertEqual(self.get(self.admin, '61002510').json()['status'], 'off')
 
     def test_provider_error_falls_back_to_history(self):
         Device.objects.filter(id=self.own.id).update(askue_id='23')
@@ -462,6 +472,113 @@ class RetryTests(RelayViewsBase):
         self.assertEqual(self.client_for(self.admin).get(RETRY).status_code, 405)
 
 
+CONFIRM = '/relay-control/api/task-confirm-button/'
+
+
+class CtMeterViewsTests(RelayViewsBase):
+    def setUp(self):
+        super().setUp()
+        ct = MeterModel.objects.create(catalog_code='CT1', model_name='P34S02 CT', digit_capacity='6',
+                                       phases=3, nominal_current='5(10)')
+        self.ct = Device.objects.create(serial_number='99000001', region=self.suzak, model=ct)
+
+    def test_single_off_is_rejected_but_on_is_allowed(self):
+        c = self.client_for(self.admin)
+        r = c.post(ACTION, {'action': 'off', 'serial': '99000001'})
+        self.assertEqual(r.status_code, 409)
+        self.assertIn('5А', r.json()['error'])
+        self.assertEqual(RelayTask.objects.count(), 0)
+        self.assertEqual(c.post(ACTION, {'action': 'on', 'serial': '99000001'}).status_code, 200)
+
+    def test_mass_create_skips_ct_and_reports(self):
+        r = self.client_for(self.admin).post(MASS_CREATE, {
+            'action': 'off', 'scheduled_at': local_time(90), 'device_ids[]': [self.own.id, self.ct.id]})
+        data = r.json()
+        self.assertEqual((data['count_tasks'], data['skipped_ct']), (1, ['99000001']))
+        self.assertIn('5А', data['message'])
+        self.assertFalse(RelayTask.objects.filter(device=self.ct).exists())
+
+    def test_mass_create_on_does_not_skip_ct(self):
+        r = self.client_for(self.admin).post(MASS_CREATE, {
+            'action': 'on', 'scheduled_at': local_time(90), 'device_ids[]': [self.ct.id]})
+        self.assertEqual(r.json()['count_tasks'], 1)
+
+    def test_mass_subscribers_flags_ct(self):
+        debtors = [{'serial_number': '99000001', 'account_number': '1', 'full_name': 'А', 'debt': 900},
+                   {'serial_number': '61002510', 'account_number': '2', 'full_name': 'Б', 'debt': 900}]
+        with mock.patch('meters.onec_service.OneCService.get_debtors', return_value=debtors):
+            found = self.client_for(self.admin).get(MASS_SUBS, {'region': '03 Сузак', 'min_debt': '500'}).json()['found']
+        self.assertEqual({i['serial']: i['is_ct'] for i in found}, {'99000001': True, '61002510': False})
+
+    def test_worker_cancels_old_off_task_for_ct(self):
+        from meters.management.commands.process_relay_tasks import Command
+        task = self.task(self.ct, 'off', status='processing')
+        res = Command(stdout=io.StringIO(), stderr=io.StringIO())._execute_task_safe(task)
+        task.refresh_from_db()
+        self.assertEqual((res['status'], task.status), ('cancelled', 'cancelled'))
+        self.assertIn('5А', task.error_message)
+
+
+class ConfirmButtonTests(RelayViewsBase):
+    def ready_task(self, device=None):
+        task = self.task(device or self.own, 'on', status='success')
+        RelayTask.objects.filter(id=task.id).update(error_message=READY_NOTE)
+        RelayCommandHistory.objects.create(device=device or self.own, action='on', status='success',
+                                           error_message=READY_NOTE)
+        return task
+
+    def post(self, user, task, state=1, **extra):
+        data = {'task_id': task.id, **extra}
+        with mock.patch('meters.views_relay.SunRiseService') as svc:
+            if isinstance(state, Exception):
+                svc.return_value.get_relay_state.side_effect = state
+            else:
+                svc.return_value.get_relay_state.return_value = state
+            return self.client_for(user).post(CONFIRM, data)
+
+    def test_monitor_marks_awaiting_button(self):
+        task = self.ready_task()
+        item = next(i for i in self.client_for(self.admin).get(MONITOR).json()['items'] if i['id'] == task.id)
+        self.assertTrue(item['awaiting_button'])
+
+    def test_confirmed_when_meter_is_on(self):
+        task = self.ready_task()
+        self.assertEqual(self.post(self.admin, task, state=1).status_code, 200)
+        task.refresh_from_db()
+        self.assertIsNone(task.error_message)
+        self.assertIsNone(RelayCommandHistory.objects.get().error_message)
+        item = next(i for i in self.client_for(self.admin).get(MONITOR).json()['items'] if i['id'] == task.id)
+        self.assertFalse(item['awaiting_button'])
+
+    def test_still_ready_or_off_is_conflict(self):
+        task = self.ready_task()
+        self.assertEqual(self.post(self.admin, task, state=2).status_code, 409)
+        self.assertEqual(self.post(self.admin, task, state=0).status_code, 409)
+        task.refresh_from_db()
+        self.assertEqual(task.error_message, READY_NOTE)
+
+    def test_unreachable_meter_allows_manual_force(self):
+        task = self.ready_task()
+        r = self.post(self.admin, task, state=Exception('таймаут'))
+        self.assertEqual((r.status_code, r.json()['can_force']), (502, True))
+        task.refresh_from_db()
+        self.assertEqual(task.error_message, READY_NOTE)
+        self.assertEqual(self.post(self.admin, task, state=Exception('таймаут'), force='1').status_code, 200)
+        task.refresh_from_db()
+        self.assertIsNone(task.error_message)
+
+    def test_task_not_waiting_is_rejected(self):
+        task = self.task(self.own, 'on', status='success')
+        self.assertEqual(self.post(self.admin, task).status_code, 400)
+
+    def test_foreign_region_denied_and_no_access_redirected(self):
+        task = self.ready_task(self.foreign)
+        self.assertEqual(self.post(self.engineer, task).status_code, 403)
+        self.assertEqual(self.post(self.nobody, task).status_code, 302)
+        task.refresh_from_db()
+        self.assertEqual(task.error_message, READY_NOTE)
+
+
 class MonitorTests(RelayViewsBase):
     def get(self, **params):
         return self.client_for(self.admin).get(MONITOR, params).json()
@@ -479,6 +596,21 @@ class MonitorTests(RelayViewsBase):
         self.own.save()
         item = next(i for i in self.get()['items'] if i['id'] == t.id)
         self.assertEqual((item['model'], item['amperage']), ('—', '—'))
+
+    def test_on_task_takes_account_and_name_from_previous_off_task(self):
+        off = self.task(self.own, 'off', minutes=-10)
+        RelayTask.objects.filter(id=off.id).update(account_snapshot='0800056', name_snapshot='Иванов И.')
+        on = self.task(self.own, 'on')
+        item = next(i for i in self.get()['items'] if i['id'] == on.id)
+        self.assertEqual((item['account'], item['name']), ('0800056', 'Иванов И.'))
+        # собственные данные задачи (из 1С) главнее
+        RelayTask.objects.filter(id=on.id).update(account_snapshot='999', name_snapshot='Из 1С')
+        item = next(i for i in self.get()['items'] if i['id'] == on.id)
+        self.assertEqual((item['account'], item['name']), ('999', 'Из 1С'))
+        # отключение чужим данным не наследует
+        off2 = self.task(self.own, 'off', minutes=-5)
+        item = next(i for i in self.get()['items'] if i['id'] == off2.id)
+        self.assertEqual(item['account'], '—')
 
     def test_defaults_to_today(self):
         today = self.task(self.own, 'on')

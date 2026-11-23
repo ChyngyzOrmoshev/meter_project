@@ -372,3 +372,11 @@ body::before {
 [data-bs-theme="dark"] .text-primary { color: #7fc0dc !important; }
 [data-bs-theme="dark"] .text-info { color: #8fc1d4 !important; }
 [data-bs-theme="dark"] .text-success { color: #6fd0bd !important; }
+
+/* Монитор реле: компактная таблица, чтобы 11 столбцов помещались */
+.table-pastel.relay-monitor-table { font-size: .84rem; }
+.table-pastel.relay-monitor-table thead th { padding: .6rem .45rem; font-size: .68rem; letter-spacing: .02em; white-space: nowrap; }
+.table-pastel.relay-monitor-table tbody td { padding: .5rem .45rem; white-space: nowrap; vertical-align: middle; }
+.table-pastel.relay-monitor-table tbody td.cell-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.table-pastel.relay-monitor-table tbody td.cell-model { max-width: 105px; overflow: hidden; text-overflow: ellipsis; }
+.relay-monitor-table .relay-note { font-size: .74rem; color: var(--warn, #e0922f); margin-top: 2px; }

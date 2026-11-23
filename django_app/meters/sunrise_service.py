@@ -9,6 +9,11 @@ import urllib.parse
 import re
 from dotenv import load_dotenv
 
+# Состояния управления реле (DLMS control state): 0 — отключено, 1 — включено,
+# 2 — готово к включению (после дистанционной команды нужно нажать кнопку на счётчике)
+STATE_OFF, STATE_ON, STATE_READY = 0, 1, 2
+
+
 class SunRiseService:
     def __init__(self):
         load_dotenv('/app/cEnergo.env')
@@ -76,6 +81,11 @@ class SunRiseService:
         return serial
     
     def get_relay_status(self, serial):
+        """True — реле включено (состояние 1). Состояния 0 и 2 дают False; точное — в get_relay_state."""
+        return self.get_relay_state(serial) == STATE_ON
+
+    def get_relay_state(self, serial):
+        """Состояние реле числом: 0 отключено, 1 включено, 2 готово к включению (ждёт кнопку)."""
         api_serial = self._format_serial_for_api(serial)
         
         xml = f"""<RequestMessage xmlns:m="http://iec.ch/TC57/2011/schema/message"><Header><Verb>create</Verb><Noun>MeterReadings</Noun><Revision>2.0</Revision><Timestamp>2026-10-29T12:00:00.0Z</Timestamp><Source>SUNHOPE</Source><MessageID>EF68F453</MessageID><CorrelationID>EF68F453</CorrelationID></Header><Payload><m:MeterReadings><m:ReadingType><m:mRID>3.15.91.26</m:mRID><m:name>Reading</m:name></m:ReadingType><m:MeterReading><m:Meter><m:mRID>{api_serial}</m:mRID></m:Meter></m:MeterReading></m:MeterReadings></Payload></RequestMessage>"""
@@ -85,7 +95,10 @@ class SunRiseService:
             res_xml = self._post_request('/meter/relayStatus', xml, {'nativeData': '1'})
             match = re.search(r'<[a-zA-Z0-9:]*value>(.*?)</[a-zA-Z0-9:]*value>', res_xml)
             if match:
-                return match.group(1).strip() == '1'
+                try:
+                    return int(float(match.group(1).strip()))
+                except ValueError:
+                    raise Exception(f"Неожиданное состояние реле: {match.group(1).strip()!r}")
             
             # Если value нет, ищем ошибку
             error_match = re.search(r'<code>(.*?)</code>', res_xml)

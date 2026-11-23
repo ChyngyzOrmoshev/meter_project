@@ -9,10 +9,11 @@ from django.db import transaction, close_old_connections
 
 from meters.models import RelayTask, RelayCommandHistory
 from meters.hexing_service import HexingService
-from meters.sunrise_service import SunRiseService
+from meters.sunrise_service import SunRiseService, STATE_ON as SUNRISE_STATE_ON, STATE_READY as SUNRISE_STATE_READY
 from meters.risesun_service import RiseSunService
 from meters.cenergo_service import CEnergoService
 from meters.sanxing_service import SanxingService
+from meters.relay_queue import READY_NOTE, READY_EXPIRE_HOURS, is_ct_meter, CT_METER_TEXT
 
 
 class Command(BaseCommand):
@@ -20,6 +21,7 @@ class Command(BaseCommand):
     STUCK_TIMEOUT_MIN = 30  # через сколько минут 'processing' считается зависшей
     CENERGO_WINDOW_MIN = 10  # окно повторов на стороне cEnergo (настройка сервера cEnergo)
     SUNRISE_POLL_SEC = 60  # интервал проверки состояния реле после отправки команды SunRise
+    READY_NOTE = READY_NOTE
     SUNRISE_WAIT_MIN = 5   # сколько ждём подтверждения состояния, потом ошибка и обычные ретраи
     RISESUN_POLL_SEC = 60  # интервал опроса статуса пакета MMWS (регламент: не чаще 1 раза в 10 сек)
     RISESUN_WAIT_MIN = 15  # сколько ждём терминального статуса пакета, потом ошибка и обычные ретраи
@@ -42,8 +44,46 @@ class Command(BaseCommand):
             self.process_batch()
             time.sleep(5)
 
+    def expire_ready_tasks(self):
+        """
+        Задачи включения, ждущие нажатия кнопки дольше READY_EXPIRE_HOURS: читаем состояние счётчика.
+        Включён — пометку снимаем (задача просто «Успешно»). Иначе (кнопку не нажали или счётчик
+        не ответил) — задача получает статус «Ошибка» с причиной; «Повтор» отправит команду заново.
+        """
+        limit = timezone.now() - timedelta(hours=READY_EXPIRE_HOURS)
+        stale = RelayTask.objects.filter(
+            status='success', action='on', error_message=READY_NOTE, updated_at__lt=limit
+        ).select_related('device')[:20]
+        for task in stale:
+            try:
+                state = SunRiseService().get_relay_state(task.device.serial_number)
+                if state == SUNRISE_STATE_ON:
+                    reason = None
+                elif state == SUNRISE_STATE_READY:
+                    reason = f'Кнопка на счётчике не нажата за {READY_EXPIRE_HOURS} ч (состояние: готов к включению)'
+                else:
+                    reason = f'Включение не подтверждено через {READY_EXPIRE_HOURS} ч (состояние: отключено)'
+            except Exception as e:
+                reason = f'Не удалось проверить состояние через {READY_EXPIRE_HOURS} ч: {str(e)[:300]}'
+
+            if reason is None:
+                task.error_message = None
+                task.save(update_fields=['error_message', 'updated_at'])
+            else:
+                task.status = 'error'
+                task.error_message = reason
+                task.save(update_fields=['status', 'error_message', 'updated_at'])
+            RelayCommandHistory.objects.filter(
+                device=task.device, action='on', status='success', error_message=READY_NOTE
+            ).update(error_message=reason, status='success' if reason is None else 'error')
+
     def process_batch(self):
         now = timezone.now()
+
+        try:
+            self.expire_ready_tasks()
+        except Exception as e:
+            self.stderr.write(self.style.WARNING(f"Проверка задач «ждёт кнопку»: {e}"))
 
         # Возвращаем в очередь «зависшие» задачи (воркер упал/был перезапущен
         # посреди обработки). Hexing ждёт ~2 мин, поэтому порог с запасом.
@@ -151,15 +191,24 @@ class Command(BaseCommand):
             # Проверка актуального долга перед отключением.
             # Ошибка 1С попадает в общий except ниже → ретраи 5/10/20 мин.
             # (на второй фазе Hexing команда уже отправлена — долг не перепроверяем)
+            # Страховка для задач, созданных до запрета: счётчик 5А (через ТТ) не отключить физически
+            if task.action == 'off' and not task.hexing_payload and is_ct_meter(task.device):
+                task.status = 'cancelled'
+                task.error_message = f'Отменено: {CT_METER_TEXT}.'
+                task.save(update_fields=['status', 'error_message'])
+                return {'id': task.id, 'status': 'cancelled'}
+
             if task.action == 'off' and not task.hexing_payload and self._cancel_if_debt_paid(task):
                 return {'id': task.id, 'status': 'cancelled'}
 
-            if self._execute_relay_command(task) == 'deferred':
+            outcome = self._execute_relay_command(task)
+            if outcome == 'deferred':
                 return {'id': task.id, 'status': 'deferred'}
 
-            # УСПЕХ
+            # УСПЕХ. 'ready' — команда принята, но счётчик ждёт нажатия кнопки на нём (SunRise, состояние 2):
+            # для дистанционной работы дальше сделать нечего, поэтому не ошибка и не повтор команды
             task.status = 'success'
-            task.error_message = None
+            task.error_message = self.READY_NOTE if outcome == 'ready' else None
             task.hexing_payload = None
             task.save(update_fields=['status', 'error_message', 'hexing_payload'])
             return {'id': task.id, 'status': 'success'}
@@ -252,18 +301,34 @@ class Command(BaseCommand):
             # ретраи 5/10/20 мин (команда отправится заново).
             if task.hexing_payload:
                 payload = json.loads(task.hexing_payload)
+                ready = False
                 try:
-                    current_state = 'on' if service.get_relay_status(device.serial_number) else 'off'
-                    note = None if current_state == action else f"состояние: {current_state}, ожидали: {action}"
+                    state = service.get_relay_state(device.serial_number)
+                    if state == SUNRISE_STATE_READY and action == 'on':
+                        # Режим управления реле требует нажать кнопку: удалённо включить нельзя
+                        ready = True
+                        note = None
+                    else:
+                        current_state = {SUNRISE_STATE_ON: 'on', 0: 'off', SUNRISE_STATE_READY: 'готов к включению (ждёт кнопку)'}.get(state, f'код {state}')
+                        note = None if current_state == action else f"состояние: {current_state}, ожидали: {action}"
                 except Exception as e:
                     note = str(e)
 
                 if note is None:
-                    RelayCommandHistory.objects.create(
-                        device=device, user=task.created_by, action=action, status='success'
-                    )
+                    # Запись «pending» из первой фазы закрываем, а не оставляем висеть рядом с «success»
+                    pending = RelayCommandHistory.objects.filter(
+                        device=device, action=action, status='pending').order_by('-created_at').first()
+                    if pending:
+                        pending.status = 'success'
+                        pending.error_message = self.READY_NOTE if ready else None
+                        pending.save(update_fields=['status', 'error_message'])
+                    else:
+                        RelayCommandHistory.objects.create(
+                            device=device, user=task.created_by, action=action, status='success',
+                            error_message=self.READY_NOTE if ready else None
+                        )
                     task.hexing_payload = None
-                    return None
+                    return 'ready' if ready else None
 
                 if time.time() > payload['deadline']:
                     raise Exception(f"SunRise: команда не подтверждена за {self.SUNRISE_WAIT_MIN} мин ({note})")

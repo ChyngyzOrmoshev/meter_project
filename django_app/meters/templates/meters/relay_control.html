@@ -317,7 +317,7 @@
                 </div>
 
                 <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-pastel mb-0">
+                    <table class="table table-pastel mb-0 relay-monitor-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -499,6 +499,9 @@
             } else if (status === 'off') {
                 badge.innerHTML = '<span class="badge-pastel error p-3 fs-5"><i class="fas fa-toggle-off me-2 fs-4"></i> РЕЛЕ ОТКЛЮЧЕНО</span>';
                 btnOn.classList.remove('d-none'); // Показываем кнопку ВКЛЮЧИТЬ
+            } else if (status === 'ready') {
+                badge.innerHTML = '<span class="badge-pastel warning p-3 fs-5"><i class="fas fa-hand-pointer me-2"></i> ГОТОВ К ВКЛЮЧЕНИЮ (нужно нажать кнопку на счётчике)</span>';
+                btnOff.classList.remove('d-none');
             } else if (status === 'pending') {
                 badge.innerHTML = `<span class="badge-pastel warning p-3 fs-5"><i class="fas fa-clock me-2"></i> В ОЧЕРЕДИ</span>`;
                 document.getElementById('action-loading').classList.remove('d-none');
@@ -656,12 +659,12 @@
                         let html = '';
                         data.found.forEach(item => {
                             html += `<tr>
-                            <td><input type="checkbox" class="mass-checkbox" value="${item.id}" data-debt="${item.debt}" data-account="${encodeURIComponent(item.account || '')}" data-name="${encodeURIComponent(item.name || '')}" onchange="updateMassButtons()"></td>
+                            <td><input type="checkbox" class="mass-checkbox" value="${item.id}" data-debt="${item.debt}" data-ct="${item.is_ct ? 1 : 0}" data-serial="${item.serial}" data-account="${encodeURIComponent(item.account || '')}" data-name="${encodeURIComponent(item.name || '')}" onchange="updateMassButtons()"></td>
                             <td>${item.account}</td>
                             <td>${item.name || '—'}</td>
                             <td>${item.serial}</td>
                             <td>${item.model || '—'}</td>
-                            <td>${item.amperage || '—'}</td>
+                            <td>${item.amperage || '—'}${item.is_ct ? ' <span class="badge-pastel warning" title="Трансформаторное включение: физически не отключается">5А ТТ</span>' : ''}</td>
                             <td><span class="text-danger fw-bold">${item.debt.toFixed(2)}</span></td>
                             <td>${item.region || '—'}</td>
                         </tr>`;
@@ -723,13 +726,24 @@
             }
             // -----------------------------
 
+            // Счётчики 5А (через ТТ) физически не отключаются: задач на них не будет
+            const ctSerials = action === 'off'
+                ? Array.from(document.querySelectorAll('.mass-checkbox:checked[data-ct="1"]')).map(cb => cb.getAttribute('data-serial'))
+                : [];
+            if (ctSerials.length === selected.length) {
+                return alert('Выбраны только счётчики 5А (через трансформатор тока): физически отключить их нельзя, задачи не будут созданы. Проверьте выбор.');
+            }
+
             selectedMassIds = selected;
             selectedMassAction = action;
 
             const actionName = action === 'on' ? 'ВКЛЮЧЕНИЕ' : 'ОТКЛЮЧЕНИЕ';
 
             // Показываем модалку
-            let modalText = `Вы собираетесь поставить <b>${selected.length}</b> задач на <b>${actionName}</b>.<br>Время: <b>${dateVal}</b>`;
+            let modalText = `Вы собираетесь поставить <b>${selected.length - ctSerials.length}</b> задач на <b>${actionName}</b>.<br>Время: <b>${dateVal}</b>`;
+            if (ctSerials.length > 0) {
+                modalText += `<br><br><span class="text-warning"><b>Проверьте выбор:</b> среди выбранных ${ctSerials.length} счётчиков 5А (через трансформатор тока). Физически они не отключаются, задачи на них не будут созданы:<br>${ctSerials.join(', ')}</span>`;
+            }
 
             if (currentOrphans && currentOrphans.length > 0) {
                 modalText += `<br><br><span class="text-danger"><b>Внимание!</b> Для ${currentOrphans.length} абонентов из 1С нет счетчиков в базе. Для них будут созданы Заявки на проверку.</span>`;
@@ -865,19 +879,21 @@
                             ? `<span class="text-danger fw-bold">${task.debt.toFixed(2)}</span>`
                             : `<span class="text-success">0.00</span>`;
 
-                        const btnRetry = (task.status === 'error') ?
-                            `<button type="button" class="btn btn-sm btn-pastel-outline text-danger" onclick="retryTask(${task.id})"><i class="fas fa-redo"></i> Повтор</button>` : '—';
+                        const btnConfirm = task.awaiting_button
+                            ? `<button type="button" class="btn btn-sm btn-pastel-outline" onclick="confirmButton(${task.id})"><i class="fas fa-hand-pointer"></i> Кнопка нажата</button>` : '';
+                        const btnRetry = btnConfirm || (task.status === 'error') ?
+                            (btnConfirm || `<button type="button" class="btn btn-sm btn-pastel-outline text-danger" onclick="retryTask(${task.id})"><i class="fas fa-redo"></i> Повтор</button>`) : '—';
 
                         html += `<tr>
                         <td>#${task.id}</td>
-                        <td>${task.scheduled_at}</td>
+                        <td>${task.scheduled_at.slice(8,10)}.${task.scheduled_at.slice(5,7)} ${task.scheduled_at.slice(11)}</td>
                         <td>${task.account}</td>
-                        <td>${task.name}</td>
+                        <td class="cell-name" title="${task.name}">${task.name}</td>
                         <td>${debtDisplay}</td>
                         <td>${task.serial}</td>
-                        <td>${task.model}</td>
+                        <td class="cell-model" title="${task.model}">${task.model}</td>
                         <td>${task.amperage}</td>
-                        <td>${task.action_display}</td>
+                        <td>${task.action_display}${task.note ? `<div class="relay-note" title="${task.note}"><i class="fas fa-hand-pointer me-1"></i>ждёт кнопку</div>` : ''}</td>
                         <td><span class="badge-pastel ${badgeClass}">${task.status_display}</span></td>
                         <td>${task.user}</td>
                         <td>${btnRetry}</td>
@@ -949,6 +965,35 @@
             document.getElementById('filter-status').value = '';
             document.getElementById('filter-search').value = '';
             loadTasks(1);
+        }
+
+        document.querySelectorAll('#relayTabs [data-bs-toggle="pill"]').forEach(btn => {
+            btn.addEventListener('shown.bs.tab', e => {
+                document.querySelectorAll('#relayTabs .nav-link').forEach(b => {
+                    const active = b === e.target;
+                    b.classList.toggle('btn-pastel-primary', active);
+                    b.classList.toggle('btn-pastel-outline', !active);
+                });
+            });
+        });
+
+        function confirmButton(id, force) {
+            const body = new URLSearchParams({ 'task_id': id });
+            if (force) body.append('force', '1');
+            fetch('/relay-control/api/task-confirm-button/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok) { loadTasks(currentMonitorPage, true); return; }
+                    if (data.can_force && confirm(data.error + '\n\nПодтвердить вручную, что кнопка нажата и счётчик включён?')) {
+                        confirmButton(id, true);
+                    } else if (!data.can_force) {
+                        alert(data.error);
+                    }
+                });
         }
 
         function retryTask(id) {

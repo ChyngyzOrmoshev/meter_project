@@ -99,3 +99,33 @@ class RelayQueueTests(TestCase):
         when, busy = supersede_tasks(self.device, self.now, 'x', actions=('off',))
         self.assertFalse(busy)
         self.assertEqual(when, self.now)
+
+
+class CtMeterTests(TestCase):
+    """Счётчики 5А (через ТТ) физически не отключаются."""
+
+    def device(self, current, name='M'):
+        from meters.models import MeterModel
+        m = MeterModel.objects.create(catalog_code=f'{name}-{current}', model_name=name, digit_capacity='6',
+                                      phases=3, nominal_current=current)
+        return Device.objects.create(serial_number=f'{name}{current}', model=m)
+
+    def test_transformer_meters_are_ct(self):
+        from meters.relay_queue import is_ct_meter
+        for cur in ('5(10)', '5(7.5)', '1/5(10)', '0.25-5(10)', '5(7,5)'):
+            self.assertTrue(is_ct_meter(self.device(cur)), cur)
+
+    def test_direct_meters_are_not_ct(self):
+        from meters.relay_queue import is_ct_meter
+        for cur in ('5(100)', '5(80)', '10(80)', '0.25-5(100)', '0.25-5(80)', None, '5А'):
+            self.assertFalse(is_ct_meter(self.device(cur)), cur)
+
+    def test_ct_in_model_name(self):
+        from meters.relay_queue import is_ct_meter
+        self.assertTrue(is_ct_meter(self.device('5(100)', name='DTS-27 CT')))
+        self.assertTrue(is_ct_meter(self.device('5(100)', name='CЭT-4M CT/VT')))
+        self.assertFalse(is_ct_meter(self.device('5(100)', name='ST34-HW08')))
+
+    def test_no_model_is_not_ct(self):
+        from meters.relay_queue import is_ct_meter
+        self.assertFalse(is_ct_meter(Device.objects.create(serial_number='NOMODEL')))

@@ -19,7 +19,7 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 
 from .models import Device, Reading, Region, RelayTask, RelayCommandHistory, CompareResult
-from .relay_queue import supersede_tasks, inflight_tasks
+from .relay_queue import supersede_tasks, inflight_tasks, last_off_snapshot, READY_NOTE, is_ct_meter, CT_METER_TEXT
 from .views import REVERSE_REGION_MAPPING
 
 
@@ -112,6 +112,7 @@ def relay_mass_get_subscribers(request):
                     'serial': device.serial_number,
                     'model': d.get('model') or (dev_model.model_name if dev_model else '—'),
                     'amperage': d.get('amperage') or ((dev_model.nominal_current or '—') if dev_model else '—'),
+                    'is_ct': is_ct_meter(device),
                     'account': d.get('account_number'),
                     'name': d.get('full_name'),
                     'debt': float(d.get('debt')),
@@ -179,16 +180,22 @@ def relay_mass_create_tasks(request):
     created_tasks = 0
     skipped_region = 0
     skipped_duplicate = 0
+    skipped_ct = []
     # 1. Создаем обычные задачи
     for dev_id in dict.fromkeys(device_ids):  # без повторов, порядок сохраняется
         try:
-            device = Device.objects.select_related('region').get(id=dev_id)
+            device = Device.objects.select_related('region', 'model').get(id=dev_id)
         except (Device.DoesNotExist, ValueError):
             continue
 
         # Инженер района не может ставить задачи на чужие счётчики
         if relay_region_denied(request.user, device):
             skipped_region += 1
+            continue
+
+        # Счётчики 5А (через ТТ) физически не отключаются: задачу не создаём
+        if action == 'off' and is_ct_meter(device):
+            skipped_ct.append(device.serial_number)
             continue
 
         # Такая же активная задача уже есть (например, двойной клик)
@@ -262,8 +269,11 @@ def relay_mass_create_tasks(request):
         message += f' Пропущено (уже есть такая задача): {skipped_duplicate}.'
     if skipped_region:
         message += f' Пропущено (чужой район): {skipped_region}.'
+    if skipped_ct:
+        message += f' Не поставлено (счётчики 5А, физически не отключаются): {len(skipped_ct)}.'
 
     return JsonResponse({
+        'skipped_ct': skipped_ct,
         'message': message,
         'count_tasks': created_tasks,
         'count_issues': created_issues,
@@ -293,14 +303,14 @@ def relay_task_monitor_data(request):
             d_from = datetime.strptime(date_from, '%Y-%m-%d').date()
             tasks = tasks.filter(scheduled_at__date__gte=d_from)
         except ValueError:
-            pass
+            account, name = last_off_snapshot(t.device, before=t.id)
             
     if date_to:
         try:
             d_to = datetime.strptime(date_to, '%Y-%m-%d').date()
             tasks = tasks.filter(scheduled_at__date__lte=d_to)
         except ValueError:
-            pass
+            account, name = last_off_snapshot(t.device, before=t.id)
 
     # 2. Фильтр по району
     region = request.GET.get('region')
@@ -356,15 +366,21 @@ def relay_task_monitor_data(request):
     data = []
     for t in page_obj.object_list:
         sub = getattr(t.device, 'subscriber', None)
-        
+        # Данные из 1С при создании; для включения без них — из задачи на отключение; иначе Subscriber
+        account, name = t.account_snapshot, t.name_snapshot
+        if not account and t.action == 'on':
+            account, name = last_off_snapshot(t.device, before=t.id)
+        account = account or (sub.account_number if sub else None)
+        name = name or (sub.full_name if sub else None)
+
         # Убираем sub.debt и используем t.debt_snapshot
         data.append({
             'id': t.id,
             'serial': t.device.serial_number,
             'model': t.device.model.model_name if t.device.model else '—',
             'amperage': (t.device.model.nominal_current or '—') if t.device.model else '—',
-            'account': t.account_snapshot or (sub.account_number if sub else '—'),
-            'name': t.name_snapshot or (sub.full_name if sub else '—'),
+            'account': account or '—',
+            'name': name or '—',
             'debt': float(t.debt_snapshot) if t.debt_snapshot is not None else 0, # <--- БЕРЕМ ИЗ ЗАДАЧИ
             'action': t.action,
             'action_display': t.get_action_display(),
@@ -372,7 +388,9 @@ def relay_task_monitor_data(request):
             'status_display': t.get_status_display(),
             'scheduled_at': t.scheduled_at.strftime('%Y-%m-%d %H:%M'),
             'user': t.created_by.username if t.created_by else 'Система',
-            'error': t.error_message or ''
+            'error': t.error_message or '',
+            'note': (t.error_message or '') if t.status == 'success' else '',
+            'awaiting_button': t.status == 'success' and t.action == 'on' and t.error_message == READY_NOTE,
         })
 
     return JsonResponse({
@@ -513,8 +531,10 @@ def relay_api_status(request):
         
         elif device.askue_id == '26' or (device.api_id and device.api_id.upper().startswith('SR')):
             service = SunRiseService()
-            is_on = service.get_relay_status(device.serial_number)
-            return JsonResponse({'status': 'on' if is_on else 'off', 'provider': 'SunRise', 'device': device_info})
+            state = service.get_relay_state(device.serial_number)
+            # 2 — готов к включению: команда принята, ждёт нажатия кнопки на счётчике
+            status = {1: 'on', 0: 'off', 2: 'ready'}.get(state, 'unknown')
+            return JsonResponse({'status': status, 'provider': 'SunRise', 'device': device_info})
             
         elif device.askue_id == '23' or (device.api_id and device.api_id.upper().startswith('EM')):
             service = CEnergoService()
@@ -538,6 +558,39 @@ def relay_api_status(request):
 @login_required
 @user_passes_test(can_manage_relay)
 @require_POST
+def relay_task_confirm_button(request):
+    """
+    «Кнопка нажата»: задача включения ждёт нажатия кнопки на счётчике (SunRise, состояние 2).
+    Сначала читаем состояние счётчика: включён — снимаем пометку. Иначе 409; если счётчик не
+    отвечает, пользователь может подтвердить вручную (force=1).
+    """
+    task = RelayTask.objects.select_related('device', 'device__region').filter(
+        id=request.POST.get('task_id') or 0).first()
+    if not task or task.status != 'success' or task.action != 'on' or task.error_message != READY_NOTE:
+        return JsonResponse({'error': 'Задача не ждёт нажатия кнопки'}, status=400)
+    if relay_region_denied(request.user, task.device):
+        return JsonResponse({'error': 'Нет прав на этот счётчик'}, status=403)
+
+    if request.POST.get('force') != '1':
+        try:
+            state = SunRiseService().get_relay_state(task.device.serial_number)
+        except Exception as e:
+            return JsonResponse({'error': f'Не удалось проверить счётчик: {e}', 'can_force': True}, status=502)
+        if state != 1:
+            text = 'готов к включению (кнопка ещё не нажата)' if state == 2 else 'отключено'
+            return JsonResponse({'error': f'Состояние счётчика: {text}'}, status=409)
+
+    task.error_message = None
+    task.save(update_fields=['error_message', 'updated_at'])
+    RelayCommandHistory.objects.filter(
+        device=task.device, action='on', status='success', error_message=READY_NOTE
+    ).update(error_message=None)
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@user_passes_test(can_manage_relay)
+@require_POST
 def relay_api_action(request):
     action = request.POST.get('action')
     if action not in ['on', 'off']:
@@ -548,6 +601,9 @@ def relay_api_action(request):
         return JsonResponse({'error': error}, status=404)
     if relay_region_denied(request.user, device):
         return JsonResponse({'error': 'Счётчик не из вашего района'}, status=403)
+
+    if action == 'off' and is_ct_meter(device):
+        return JsonResponse({'error': f'Задача не создана: {CT_METER_TEXT}. Проверьте выбранный счётчик.'}, status=409)
 
     # Такая же команда уже выполняется воркером — дубль не нужен
     if inflight_tasks(device, actions=(action,)).exists():
@@ -616,6 +672,9 @@ def relay_bulk_start(request):
             continue
         if relay_region_denied(request.user, device):
             results['errors'].append(f'{serial}: счётчик не из вашего района')
+            continue
+        if action == 'off' and is_ct_meter(device):
+            results['errors'].append(f'{serial}: {CT_METER_TEXT}')
             continue
         if RelayTask.objects.filter(
             device=device, action=action, status__in=['pending', 'processing']

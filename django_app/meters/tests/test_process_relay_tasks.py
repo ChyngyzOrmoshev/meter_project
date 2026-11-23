@@ -15,6 +15,7 @@ from django.utils import timezone
 from meters.management.commands import process_relay_tasks as worker
 from meters.management.commands.process_relay_tasks import Command
 from meters.models import Device, RelayCommandHistory, RelayTask, Subscriber
+from meters.relay_queue import READY_NOTE
 
 MODULE = 'meters.management.commands.process_relay_tasks'
 
@@ -212,29 +213,114 @@ class SunRiseTests(WorkerBase):
         self.assertEqual([h.status for h in self.history()], ['pending'])
 
     def test_phase2_state_matches_is_success(self):
-        self.sunrise.get_relay_status.return_value = False  # реле отключено
+        self.sunrise.get_relay_state.return_value = 0  # реле отключено
         task = self.make_task('off', payload={'deadline': time.time() + 100})
         self.assertEqual(self.run_task(task), 'success')
         self.sunrise.set_relay.assert_not_called()
         self.assertEqual([h.status for h in self.history()], ['success'])
 
     def test_phase2_waits_until_deadline_without_resending(self):
-        self.sunrise.get_relay_status.return_value = True  # всё ещё включено
+        self.sunrise.get_relay_state.return_value = 1  # всё ещё включено
         task = self.make_task('off', payload={'deadline': time.time() + 100})
         self.assertEqual(self.run_task(task), 'deferred')
         self.assertEqual(task.status, 'pending')
         self.sunrise.set_relay.assert_not_called()
 
     def test_phase2_after_deadline_is_error_and_retry(self):
-        self.sunrise.get_relay_status.return_value = True
+        self.sunrise.get_relay_state.return_value = 1
         task = self.make_task('off', payload={'deadline': time.time() - 1})
         self.assertEqual(self.run_task(task), 'retry')
         self.assertIn('не подтверждена', task.error_message)
 
     def test_phase2_meter_not_responding_keeps_waiting(self):
-        self.sunrise.get_relay_status.side_effect = Exception('счётчик не отвечает')
+        self.sunrise.get_relay_state.side_effect = Exception('счётчик не отвечает')
         task = self.make_task('on', payload={'deadline': time.time() + 100})
         self.assertEqual(self.run_task(task), 'deferred')
+
+    def test_phase2_ready_state_after_on_is_success_with_note(self):
+        """Состояние 2 (готов к включению, нужна кнопка) после команды on — не ошибка и не повтор."""
+        self.sunrise.get_relay_state.return_value = 2
+        task = self.make_task('on', payload={'deadline': time.time() + 100})
+        self.assertEqual(self.run_task(task), 'success')
+        task.refresh_from_db()
+        self.assertEqual(task.status, 'success')
+        self.assertIn('кнопки', task.error_message)
+        self.sunrise.set_relay.assert_not_called()
+        h = self.history()[0]
+        self.assertEqual(h.status, 'success')
+        self.assertIn('кнопки', h.error_message)
+
+    def test_phase2_closes_pending_history_instead_of_adding(self):
+        RelayCommandHistory.objects.create(device=self.device, action='on', status='pending')
+        self.sunrise.get_relay_state.return_value = 1
+        task = self.make_task('on', payload={'deadline': time.time() + 100})
+        self.assertEqual(self.run_task(task), 'success')
+        self.assertEqual([h.status for h in self.history()], ['success'])
+
+    def test_phase2_ready_state_after_off_is_not_confirmation(self):
+        self.sunrise.get_relay_state.return_value = 2
+        task = self.make_task('off', payload={'deadline': time.time() + 100})
+        self.assertEqual(self.run_task(task), 'deferred')
+
+
+class ReadyExpireTests(WorkerBase):
+    """Задача включения «ждёт кнопку» старше 6 ч: перепроверка состояния SunRise."""
+    ASKUE = '26'
+
+    def setUp(self):
+        super().setUp()
+        self.sunrise = self.patch_service('SunRiseService')
+
+    def ready_task(self, hours_ago):
+        task = self.make_task('on', status='success')
+        RelayTask.objects.filter(id=task.id).update(
+            error_message=READY_NOTE, updated_at=timezone.now() - timedelta(hours=hours_ago))
+        RelayCommandHistory.objects.create(device=self.device, action='on', status='success',
+                                           error_message=READY_NOTE)
+        return task
+
+    def expire(self, task):
+        self.cmd.expire_ready_tasks()
+        task.refresh_from_db()
+
+    def test_recent_task_is_not_checked(self):
+        task = self.ready_task(hours_ago=1)
+        self.expire(task)
+        self.sunrise.get_relay_state.assert_not_called()
+        self.assertEqual((task.status, task.error_message), ('success', READY_NOTE))
+
+    def test_button_pressed_clears_note(self):
+        self.sunrise.get_relay_state.return_value = 1
+        task = self.ready_task(hours_ago=7)
+        self.expire(task)
+        self.assertEqual((task.status, task.error_message), ('success', None))
+        h = self.history()[0]
+        self.assertEqual((h.status, h.error_message), ('success', None))
+
+    def test_button_not_pressed_becomes_error(self):
+        self.sunrise.get_relay_state.return_value = 2
+        task = self.ready_task(hours_ago=7)
+        self.expire(task)
+        self.assertEqual(task.status, 'error')
+        self.assertIn('не нажата', task.error_message)
+        self.assertEqual(self.history()[0].status, 'error')
+
+    def test_meter_off_becomes_error(self):
+        self.sunrise.get_relay_state.return_value = 0
+        task = self.ready_task(hours_ago=7)
+        self.expire(task)
+        self.assertEqual(task.status, 'error')
+        self.assertIn('не подтверждено', task.error_message)
+
+    def test_unreachable_meter_becomes_error_and_is_not_rechecked(self):
+        self.sunrise.get_relay_state.side_effect = Exception('таймаут')
+        task = self.ready_task(hours_ago=7)
+        self.expire(task)
+        self.assertEqual(task.status, 'error')
+        self.assertIn('таймаут', task.error_message)
+        self.sunrise.get_relay_state.reset_mock()
+        self.cmd.expire_ready_tasks()
+        self.sunrise.get_relay_state.assert_not_called()
 
 
 class RiseSunTests(WorkerBase):

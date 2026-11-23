@@ -81,6 +81,7 @@ urlpatterns = [
     path('relay-control/api/mass-subscribers/', views_relay.relay_mass_get_subscribers, name='relay_mass_get_subscribers'),
     path('relay-control/api/mass-create-tasks/', views_relay.relay_mass_create_tasks, name='relay_mass_create_tasks'),
     path('relay-control/api/tasks-monitor/', views_relay.relay_task_monitor_data, name='relay_task_monitor_data'),
+    path('relay-control/api/task-confirm-button/', views_relay.relay_task_confirm_button, name='relay_task_confirm_button'),
     path('relay-control/api/task-retry/', views_relay.relay_task_retry, name='relay_task_retry'),
     path('reports/device-types/', views.device_types_report, name='device_types_report'),
 ]
