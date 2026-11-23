@@ -6,6 +6,7 @@
 import os
 import re
 import json
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -143,6 +144,12 @@ def relay_mass_create_tasks(request):
     scheduled_str = request.POST.get('scheduled_at')
     orphan_devices_json = request.POST.get('orphan_devices', '[]')
     region_name = request.POST.get('region_name', '')
+    try:
+        devices_info = json.loads(request.POST.get('devices_info', '{}'))
+        if not isinstance(devices_info, dict):
+            devices_info = {}
+    except ValueError:
+        devices_info = {}
 
     if action not in ('on', 'off'):
         return JsonResponse({'error': 'Неверное действие'}, status=400)
@@ -193,12 +200,21 @@ def relay_mass_create_tasks(request):
             device, scheduled_at, 'Отменено из-за создания новой задачи', actions=(opposite_action,)
         )
 
+        # Данные из 1С (пришли из формы) главнее локального Subscriber
+        info = devices_info.get(str(device.id))
+        info = info if isinstance(info, dict) else {}
         sub = getattr(device, 'subscriber', None)
-        current_debt = sub.debt if sub else 0
+        try:
+            current_debt = Decimal(str(info['debt'])).quantize(Decimal('0.01'))
+        except (KeyError, InvalidOperation, ValueError, TypeError):
+            current_debt = sub.debt if sub else 0
+        account = str(info.get('account') or '').strip()[:50] or (sub.account_number if sub else None)
+        full_name = str(info.get('name') or '').strip()[:255] or (sub.full_name if sub else None)
 
         RelayTask.objects.create(
             device=device, action=action, scheduled_at=task_time,
-            created_by=request.user, status='pending', debt_snapshot=current_debt
+            created_by=request.user, status='pending', debt_snapshot=current_debt,
+            account_snapshot=account, name_snapshot=full_name,
         )
         created_tasks += 1
 
@@ -255,7 +271,7 @@ def relay_mass_create_tasks(request):
 @user_passes_test(can_manage_relay)
 def relay_task_monitor_data(request):
     """Выгрузка задач для вкладки Мониторинг с фильтрами и пагинацией"""
-    tasks = RelayTask.objects.select_related('device', 'device__subscriber', 'created_by').order_by('-scheduled_at')
+    tasks = RelayTask.objects.select_related('device', 'device__subscriber', 'device__model', 'created_by').order_by('-scheduled_at')
 
     # --- ФИЛЬТРЫ ---
     # 1. Фильтр по периоду
@@ -341,8 +357,10 @@ def relay_task_monitor_data(request):
         data.append({
             'id': t.id,
             'serial': t.device.serial_number,
-            'account': sub.account_number if sub else '—',
-            'name': sub.full_name if sub else '—',
+            'model': t.device.model.model_name if t.device.model else '—',
+            'amperage': (t.device.model.nominal_current or '—') if t.device.model else '—',
+            'account': t.account_snapshot or (sub.account_number if sub else '—'),
+            'name': t.name_snapshot or (sub.full_name if sub else '—'),
             'debt': float(t.debt_snapshot) if t.debt_snapshot is not None else 0, # <--- БЕРЕМ ИЗ ЗАДАЧИ
             'action': t.action,
             'action_display': t.get_action_display(),

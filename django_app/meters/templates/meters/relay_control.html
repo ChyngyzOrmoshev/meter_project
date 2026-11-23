@@ -324,6 +324,8 @@
                                 <th>ФИО</th>
                                 <th>Долг</th>
                                 <th>Счетчик</th>
+                                <th>Тип ПУ</th>
+                                <th>Ампер</th>
                                 <th>Действие реле</th>
                                 <th>Статус</th>
                                 <th>Пользователь</th>
@@ -332,7 +334,7 @@
                         </thead>
                         <tbody id="monitor-tbody">
                             <tr>
-                                <td colspan="10" class="text-center text-muted py-4">Загрузка...</td>
+                                <td colspan="12" class="text-center text-muted py-4">Загрузка...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -652,7 +654,7 @@
                         let html = '';
                         data.found.forEach(item => {
                             html += `<tr>
-                            <td><input type="checkbox" class="mass-checkbox" value="${item.id}" data-debt="${item.debt}" onchange="updateMassButtons()"></td>
+                            <td><input type="checkbox" class="mass-checkbox" value="${item.id}" data-debt="${item.debt}" data-account="${encodeURIComponent(item.account || '')}" data-name="${encodeURIComponent(item.name || '')}" onchange="updateMassButtons()"></td>
                             <td>${item.account}</td>
                             <td>${item.name || '—'}</td>
                             <td>${item.serial}</td>
@@ -751,6 +753,15 @@
 
             const formData = new URLSearchParams();
             selectedMassIds.forEach(id => formData.append('device_ids[]', id));
+            const devicesInfo = {};
+            document.querySelectorAll('.mass-checkbox:checked').forEach(cb => {
+                devicesInfo[cb.value] = {
+                    account: decodeURIComponent(cb.getAttribute('data-account') || ''),
+                    name: decodeURIComponent(cb.getAttribute('data-name') || ''),
+                    debt: parseFloat(cb.getAttribute('data-debt') || 0)
+                };
+            });
+            formData.append('devices_info', JSON.stringify(devicesInfo));
             formData.append('action', selectedMassAction);
 
             // Передаем дату
@@ -820,7 +831,7 @@
             currentMonitorPage = page;
 
             if (!silent) {
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Загрузка...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Загрузка...</td></tr>';
             }
 
             const url = `/relay-control/api/tasks-monitor/?date_from=${dateFrom}&date_to=${dateTo}&region=${region}&action=${action}&status=${status}&search=${search}&page=${page}&page_size=${pageSize}`;
@@ -831,7 +842,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.items.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Задач по вашему фильтру не найдено</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Задач по вашему фильтру не найдено</td></tr>';
                         document.getElementById('monitor-total-info').textContent = 'Всего: 0';
                         document.getElementById('monitor-pagination-top').innerHTML = '';
                         return;
@@ -860,6 +871,8 @@
                         <td>${task.name}</td>
                         <td>${debtDisplay}</td>
                         <td>${task.serial}</td>
+                        <td>${task.model}</td>
+                        <td>${task.amperage}</td>
                         <td>${task.action_display}</td>
                         <td><span class="badge-pastel ${badgeClass}">${task.status_display}</span></td>
                         <td>${task.user}</td>
@@ -873,7 +886,7 @@
                 })
                 .catch(err => {
                     if (!silent) {
-                        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Ошибка загрузки данных</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Ошибка загрузки данных</td></tr>';
                     }
                 });
         }

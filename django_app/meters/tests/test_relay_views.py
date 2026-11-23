@@ -259,6 +259,22 @@ class MassCreateTests(RelayViewsBase):
         self.assertEqual((task.action, task.status, task.created_by), ('off', 'pending', self.admin))
         self.assertEqual(float(task.debt_snapshot), 777.0)
 
+    def test_1c_data_saved_without_local_subscriber(self):
+        info = {str(self.own.id): {'account': '0800056', 'name': 'Иванов И.', 'debt': 1418.07}}
+        self.post(self.admin, devices_info=json.dumps(info))
+        task = RelayTask.objects.get()
+        self.assertEqual((task.account_snapshot, task.name_snapshot), ('0800056', 'Иванов И.'))
+        self.assertEqual(float(task.debt_snapshot), 1418.07)
+        item = self.client_for(self.admin).get(MONITOR).json()['items'][0]
+        self.assertEqual((item['account'], item['name'], item['debt']), ('0800056', 'Иванов И.', 1418.07))
+
+    def test_1c_data_overrides_subscriber_and_bad_info_falls_back(self):
+        Subscriber.objects.create(device=self.own, account_number='L1', full_name='Локальный', debt=5)
+        self.post(self.admin, devices_info='не json')
+        task = RelayTask.objects.get()
+        self.assertEqual((task.account_snapshot, task.name_snapshot, float(task.debt_snapshot)),
+                         ('L1', 'Локальный', 5.0))
+
     def test_duplicate_active_task_is_skipped(self):
         self.task(self.own, 'off')
         r = self.post(self.admin)
@@ -429,6 +445,20 @@ class RetryTests(RelayViewsBase):
 class MonitorTests(RelayViewsBase):
     def get(self, **params):
         return self.client_for(self.admin).get(MONITOR, params).json()
+
+    def test_model_and_amperage(self):
+        m = MeterModel.objects.create(catalog_code='X1', model_name='SX-1', digit_capacity='6',
+                                      phases=1, nominal_current='5(60)А')
+        self.own.model = m
+        self.own.save()
+        t = self.task(self.own, 'on')
+        item = next(i for i in self.get()['items'] if i['id'] == t.id)
+        self.assertEqual(item['model'], 'SX-1')
+        self.assertEqual(item['amperage'], '5(60)А')
+        self.own.model = None
+        self.own.save()
+        item = next(i for i in self.get()['items'] if i['id'] == t.id)
+        self.assertEqual((item['model'], item['amperage']), ('—', '—'))
 
     def test_defaults_to_today(self):
         today = self.task(self.own, 'on')

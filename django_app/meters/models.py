@@ -464,6 +464,8 @@ class RelayTask(models.Model):
     scheduled_at = models.DateTimeField(verbose_name='Запланировано на')
     error_message = models.TextField(blank=True, null=True, verbose_name='Текст ошибки')
     debt_snapshot = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name='Долг при создании')
+    account_snapshot = models.CharField(max_length=50, blank=True, null=True, verbose_name='Лицевой счёт (из 1С при создании)')
+    name_snapshot = models.CharField(max_length=255, blank=True, null=True, verbose_name='ФИО (из 1С при создании)')
     
     created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Создал')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
