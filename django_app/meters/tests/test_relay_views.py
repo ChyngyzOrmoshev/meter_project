@@ -597,6 +597,28 @@ class MonitorTests(RelayViewsBase):
         item = next(i for i in self.get()['items'] if i['id'] == t.id)
         self.assertEqual((item['model'], item['amperage']), ('—', '—'))
 
+    def test_counts_ignore_status_and_action_filters(self):
+        a = self.task(self.own, 'off')
+        b = self.task(self.own, 'on')
+        RelayTask.objects.filter(id=b.id).update(status='success')
+        data = self.get(status='success')
+        self.assertEqual([i['id'] for i in data['items']], [b.id])
+        self.assertEqual(data['counts']['all'], 2)
+        self.assertEqual((data['counts']['off'], data['counts']['on']), (1, 1))
+        self.assertEqual(data['counts']['success'], 1)
+
+    def test_search_by_name_from_task(self):
+        t = self.task(self.own, 'off')
+        RelayTask.objects.filter(id=t.id).update(name_snapshot='Ашкана Арстанбек')
+        self.assertEqual([i['id'] for i in self.get(search='Арстанб')['items']], [t.id])
+        self.assertEqual(self.get(search='нет такого')['items'], [])
+
+    def test_cancelled_task_shows_reason_in_note(self):
+        t = self.task(self.own, 'off')
+        RelayTask.objects.filter(id=t.id).update(status='cancelled', error_message='Отменено: долг оплачен. 1С вернула -5.00.')
+        item = next(i for i in self.get()['items'] if i['id'] == t.id)
+        self.assertIn('долг оплачен', item['note'])
+
     def test_on_task_takes_account_and_name_from_previous_off_task(self):
         off = self.task(self.own, 'off', minutes=-10)
         RelayTask.objects.filter(id=off.id).update(account_snapshot='0800056', name_snapshot='Иванов И.')

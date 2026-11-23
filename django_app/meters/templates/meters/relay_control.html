@@ -225,121 +225,76 @@
     </div>
     <!-- ВКЛАДКА 3: МОНИТОРИНГ -->
     <div class="tab-pane fade" id="monitor" role="tabpanel">
-        <!-- Блок фильтров -->
-        <div class="card-pastel mb-4">
-            <div class="card-body p-3">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-2">
-                        <label class="form-label text-muted small mb-1">Дата</label>
-                        <input type="date" id="filter-date-from" class="form-control form-control-pastel">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label text-muted small mb-1">Дата</label>
-                        <input type="date" id="filter-date-to" class="form-control form-control-pastel">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label text-muted small mb-1">Район</label>
-                        <select id="filter-region" class="form-select form-control-pastel" {{
-                            user_region|yesno:"disabled," }}>
-                            {% if not user_region %}
-                            <option value="">Все районы</option>
-                            {% endif %}
-                            {% for r in regions %}
-                            <option value="{{ r.name }}" {{ user_region|yesno:"selected," }}>{{ r.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label text-muted small mb-1">Действие</label>
-                        <select id="filter-action" class="form-select form-control-pastel">
-                            <option value="">Все</option>
-                            <option value="on">Вкл</option>
-                            <option value="off">Выкл</option>
-                        </select>
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label text-muted small mb-1">Статус</label>
-                        <select id="filter-status" class="form-select form-control-pastel">
-                            <option value="">Все</option>
-                            <option value="pending">Ожидание</option>
-                            <option value="processing">В процессе</option>
-                            <option value="success">Успешно</option>
-                            <option value="error">Ошибка</option>
-                            <option value="cancelled">Отменено</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label text-muted small mb-1">Поиск (ЛС или Счетчик)</label>
-                        <input type="text" id="filter-search" class="form-control form-control-pastel"
-                            placeholder="Номер...">
-                    </div>
-
-                    <!-- Кнопки -->
-                    <div class="col-md-2">
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-pastel-primary flex-grow-1" onclick="loadTasks(1)">
-                                <i class="fas fa-filter"></i> Найти
-                            </button>
-                            <button type="button" class="btn btn-pastel-outline" onclick="resetFilters()"
-                                title="Сбросить">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
+        <div class="rq">
+            <div class="rq-head">
+                <div>
+                    <h2 class="rq-title">Очередь задач</h2>
+                    <div class="rq-sub" id="monitor-total-info">Загрузка…</div>
+                </div>
+                <div class="rq-tools">
+                    <label class="rq-search"><i class="fas fa-search"></i>
+                        <input type="text" id="filter-search" placeholder="ЛС, ФИО или номер счётчика" autocomplete="off">
+                    </label>
+                    <button type="button" class="rq-btn" onclick="loadTasks(currentMonitorPage)"><i class="fas fa-sync-alt"></i> Обновить</button>
+                    <button type="button" class="rq-btn rq-btn-primary" onclick="document.getElementById('manual-tab').click()">+ Новая задача</button>
                 </div>
             </div>
-        </div>
-        <!-- Таблица -->
-        <div class="card-pastel">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-tasks"></i> Очередь задач</span>
-                <button type="button" class="btn btn-pastel-outline btn-sm" onclick="loadTasks(currentMonitorPage)">
-                    <i class="fas fa-sync-alt"></i> Обновить
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <!-- Панель пагинации (сверху) -->
-                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-muted small">Показывать по:</span>
-                        <select id="monitor-page-size" class="form-select form-select-sm" style="width: 80px;"
-                            onchange="loadTasks(1)">
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span class="text-muted small ms-3" id="monitor-total-info">Всего: 0</span>
-                    </div>
-                    <div id="monitor-pagination-top">
-                        <!-- Сюда рендерится пагинация -->
-                    </div>
-                </div>
 
-                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-pastel mb-0 relay-monitor-table">
+            <div class="rq-pills" id="rq-pills"></div>
+
+            <!-- Скрытые значения фильтров (меняются кнопками выше) -->
+            <input type="hidden" id="filter-action" value="">
+            <input type="hidden" id="filter-status" value="">
+
+            <div class="rq-filters">
+                <label>Период
+                    <input type="date" id="filter-date-from" onchange="loadTasks(1)"> —
+                    <input type="date" id="filter-date-to" onchange="loadTasks(1)">
+                </label>
+                <label>Район
+                    <select id="filter-region" onchange="loadTasks(1)" {{ user_region|yesno:"disabled," }}>
+                        {% if not user_region %}
+                        <option value="">Все районы</option>
+                        {% endif %}
+                        {% for r in regions %}
+                        <option value="{{ r.name }}" {{ user_region|yesno:"selected," }}>{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Строк
+                    <select id="monitor-page-size" onchange="loadTasks(1)">
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </label>
+                <button type="button" class="rq-link" onclick="resetFilters()">Сбросить</button>
+            </div>
+
+            <div class="rq-card">
+                <div class="rq-scroll">
+                    <table class="rq-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Запланировано</th>
-                                <th>ЛС</th>
-                                <th>ФИО</th>
-                                <th>Долг</th>
-                                <th>Счетчик</th>
-                                <th>Тип ПУ</th>
-                                <th>Ампер</th>
-                                <th>Действие реле</th>
+                                <th>Время</th>
+                                <th>Абонент</th>
+                                <th>Прибор учёта</th>
+                                <th class="num">Долг, сом</th>
+                                <th>Реле</th>
                                 <th>Статус</th>
-                                <th>Пользователь</th>
-                                <th>Действия</th>
+                                <th>Кто</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="monitor-tbody">
-                            <tr>
-                                <td colspan="12" class="text-center text-muted py-4">Загрузка...</td>
-                            </tr>
+                            <tr><td colspan="8" class="rq-empty">Загрузка…</td></tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="rq-foot">
+                    <span id="rq-shown"></span>
+                    <div id="monitor-pagination-top"></div>
                 </div>
             </div>
         </div>
@@ -825,6 +780,62 @@
 
         // --- ЛОГИКА МОНИТОРИНГА ---
         let currentMonitorPage = 1;
+        const RQ_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        const rqEsc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+        function rqTodayStr() {
+            const t = new Date();
+            t.setMinutes(t.getMinutes() - t.getTimezoneOffset());
+            return t.toISOString().split('T')[0];
+        }
+
+        function rqPeriodText(from, to) {
+            const fmt = d => `${parseInt(d.slice(8, 10))} ${RQ_MONTHS[parseInt(d.slice(5, 7)) - 1]}`;
+            if (from === to) return (from === rqTodayStr() ? 'Сегодня, ' : '') + fmt(from);
+            return `${fmt(from)} — ${fmt(to)}`;
+        }
+
+        function rqSetPill(kind, value) {
+            if (kind === 'all') {
+                document.getElementById('filter-status').value = '';
+                document.getElementById('filter-action').value = '';
+            } else {
+                const el = document.getElementById(kind === 'status' ? 'filter-status' : 'filter-action');
+                el.value = el.value === value ? '' : value;
+            }
+            loadTasks(1);
+        }
+
+        function rqRenderPills(counts) {
+            const st = document.getElementById('filter-status').value;
+            const ac = document.getElementById('filter-action').value;
+            const defs = [
+                ['all', '', 'Все', !st && !ac, counts.all || 0, true],
+                ['status', 'success', 'Успешно', st === 'success', counts.success || 0],
+                ['status', 'error', 'Ошибка', st === 'error', counts.error || 0],
+                ['status', 'pending', 'Ожидание', st === 'pending', (counts.pending || 0) + (counts.processing || 0)],
+                ['status', 'cancelled', 'Отменено', st === 'cancelled', counts.cancelled || 0],
+                ['action', 'off', 'Отключения', ac === 'off', counts.off || 0, true],
+                ['action', 'on', 'Включения', ac === 'on', counts.on || 0, true],
+            ];
+            document.getElementById('rq-pills').innerHTML = defs
+                .filter(d => d[5] || d[3] || d[4] > 0)
+                .map(d => `<button type="button" class="rq-pill${d[3] ? ' active' : ''}" onclick="rqSetPill('${d[0]}', '${d[1]}')">${d[2]} <span>${d[4]}</span></button>`)
+                .join('');
+        }
+
+        function rqNote(task) {
+            if (task.status === 'cancelled' && task.note) {
+                return `<div class="rq-note warn"><i class="fas fa-exclamation-circle"></i>${rqEsc(task.note.replace(/^Отменено: /, ''))}</div>`;
+            }
+            if (task.awaiting_button) {
+                return `<div class="rq-note warn"><i class="fas fa-hand-pointer"></i>Счётчик ждёт нажатия кнопки на нём (готов к включению)</div>`;
+            }
+            if (task.status === 'error' && task.error) {
+                return `<div class="rq-note bad"><i class="fas fa-times-circle"></i>${rqEsc(task.error)}</div>`;
+            }
+            return '';
+        }
 
         function loadTasks(page = 1, silent = false) {
             const tbody = document.getElementById('monitor-tbody');
@@ -836,124 +847,98 @@
             const search = document.getElementById('filter-search').value;
             const pageSize = document.getElementById('monitor-page-size').value;
 
-            // Если не выбран период (хотя бы одна из дат), ставим сегодняшнюю дату
+            // Период не выбран — сегодня
             if (!dateFrom || !dateTo) {
-                const today = new Date();
-                today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-                const todayStr = today.toISOString().split('T')[0];
-                document.getElementById('filter-date-from').value = todayStr;
-                document.getElementById('filter-date-to').value = todayStr;
+                document.getElementById('filter-date-from').value = rqTodayStr();
+                document.getElementById('filter-date-to').value = rqTodayStr();
                 return loadTasks(1, silent);
             }
 
             currentMonitorPage = page;
-
             if (!silent) {
-                tbody.innerHTML = '<tr><td colspan="12" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Загрузка...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="rq-empty"><div class="spinner-border spinner-border-sm"></div> Загрузка…</td></tr>';
             }
 
-            const url = `/relay-control/api/tasks-monitor/?date_from=${dateFrom}&date_to=${dateTo}&region=${region}&action=${action}&status=${status}&search=${search}&page=${page}&page_size=${pageSize}`;
-
-            // ... (дальнейший код fetch и рендера таблицы остается без изменений) ...
-
-            fetch(url)
+            const q = new URLSearchParams({date_from: dateFrom, date_to: dateTo, region, action, status, search, page, page_size: pageSize});
+            fetch(`/relay-control/api/tasks-monitor/?${q}`)
                 .then(res => res.json())
                 .then(data => {
+                    const counts = data.counts || {};
+                    rqRenderPills(counts);
+                    const total = data.pagination.total_items;
+                    const word = (n) => (n % 10 === 1 && n % 100 !== 11) ? 'задача' : ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) ? 'задачи' : 'задач';
+                    document.getElementById('monitor-total-info').textContent = `${rqPeriodText(dateFrom, dateTo)} · ${counts.all || 0} ${word(counts.all || 0)}`;
+
                     if (data.items.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Задач по вашему фильтру не найдено</td></tr>';
-                        document.getElementById('monitor-total-info').textContent = 'Всего: 0';
+                        tbody.innerHTML = '<tr><td colspan="8" class="rq-empty">Задач по вашему фильтру не найдено</td></tr>';
+                        document.getElementById('rq-shown').textContent = '';
                         document.getElementById('monitor-pagination-top').innerHTML = '';
                         return;
                     }
 
-                    // Рендер строк таблицы
+                    const today = rqTodayStr();
                     let html = '';
                     data.items.forEach(task => {
-                        let badgeClass = 'idle';
-                        if (task.status === 'success') badgeClass = 'success';
-                        if (task.status === 'error') badgeClass = 'error';
-                        if (task.status === 'processing') badgeClass = 'warning';
-                        if (task.status === 'cancelled') badgeClass = 'idle';
-
-                        const debtDisplay = task.debt > 0
-                            ? `<span class="text-danger fw-bold">${task.debt.toFixed(2)}</span>`
-                            : `<span class="text-success">0.00</span>`;
-
+                        const day = task.scheduled_at.slice(0, 10);
+                        const dayText = day === today ? '' : ` · ${day.slice(8, 10)}.${day.slice(5, 7)}`;
+                        const debtCls = task.debt > 0 ? 'bad' : (task.debt < 0 ? 'ok' : 'zero');
+                        const relayPill = task.action === 'on'
+                            ? '<span class="rq-relay on"><i class="fas fa-bolt"></i>Включение</span>'
+                            : '<span class="rq-relay off"><i class="fas fa-power-off"></i>Отключение</span>';
+                        const stCls = {success: 'ok', error: 'bad', processing: 'warn', pending: 'warn'}[task.status] || 'idle';
+                        const hasAcc = task.account && task.account !== '—';
+                        const hasName = task.name && task.name !== '—';
                         const btnConfirm = task.awaiting_button
-                            ? `<button type="button" class="btn btn-sm btn-pastel-outline" onclick="confirmButton(${task.id})"><i class="fas fa-hand-pointer"></i> Кнопка нажата</button>` : '';
-                        const btnRetry = btnConfirm || (task.status === 'error') ?
-                            (btnConfirm || `<button type="button" class="btn btn-sm btn-pastel-outline text-danger" onclick="retryTask(${task.id})"><i class="fas fa-redo"></i> Повтор</button>`) : '—';
+                            ? `<button type="button" class="rq-btn rq-btn-sm" onclick="confirmButton(${task.id})"><i class="fas fa-hand-pointer"></i> Кнопка нажата</button>` : '';
+                        const btnRetry = task.status === 'error'
+                            ? `<button type="button" class="rq-btn rq-btn-sm bad" onclick="retryTask(${task.id})"><i class="fas fa-redo"></i> Повтор</button>` : '';
+                        const note = rqNote(task);
 
-                        html += `<tr>
-                        <td>#${task.id}</td>
-                        <td>${task.scheduled_at.slice(8,10)}.${task.scheduled_at.slice(5,7)} ${task.scheduled_at.slice(11)}</td>
-                        <td>${task.account}</td>
-                        <td class="cell-name" title="${task.name}">${task.name}</td>
-                        <td>${debtDisplay}</td>
-                        <td>${task.serial}</td>
-                        <td class="cell-model" title="${task.model}">${task.model}</td>
-                        <td>${task.amperage}</td>
-                        <td>${task.action_display}${task.note ? `<div class="relay-note" title="${task.note}"><i class="fas fa-hand-pointer me-1"></i>ждёт кнопку</div>` : ''}</td>
-                        <td><span class="badge-pastel ${badgeClass}">${task.status_display}</span></td>
-                        <td>${task.user}</td>
-                        <td>${btnRetry}</td>
-                    </tr>`;
+                        html += `<tr class="rq-row${note ? ' has-note' : ''}">
+                        <td><div class="rq-main">${task.scheduled_at.slice(11)}</div><div class="rq-sub2">#${task.id}${dayText}</div></td>
+                        <td class="rq-cell-abonent"><div class="rq-main" title="${rqEsc(task.name)}">${hasName ? rqEsc(task.name) : 'Без лицевого счёта'}</div><div class="rq-sub2">ЛС ${hasAcc ? rqEsc(task.account) : '—'}</div></td>
+                        <td><div class="rq-main">${rqEsc(task.serial)}</div><div class="rq-sub2" title="${rqEsc(task.model)}">${rqEsc(task.model)} · ${rqEsc(task.amperage)}</div></td>
+                        <td class="num"><span class="rq-debt ${debtCls}">${Number(task.debt).toFixed(2)}</span></td>
+                        <td>${relayPill}</td>
+                        <td><span class="rq-status ${stCls}"><i></i>${rqEsc(task.status_display)}</span></td>
+                        <td>${rqEsc(task.user)}</td>
+                        <td class="rq-actions">${btnConfirm || btnRetry}</td>
+                    </tr>${note ? `<tr class="rq-note-row"><td></td><td colspan="7">${note}</td></tr>` : ''}`;
                     });
                     tbody.innerHTML = html;
-
-                    // Рендер пагинации
                     renderPagination(data.pagination);
                 })
-                .catch(err => {
+                .catch(() => {
                     if (!silent) {
-                        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Ошибка загрузки данных</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="rq-empty text-danger">Ошибка загрузки данных</td></tr>';
                     }
                 });
         }
 
         function renderPagination(p) {
-            document.getElementById('monitor-total-info').textContent = `Всего: ${p.total_items}`;
+            const shown = Math.min(p.current_page * parseInt(document.getElementById('monitor-page-size').value), p.total_items);
+            const first = (p.current_page - 1) * parseInt(document.getElementById('monitor-page-size').value);
+            document.getElementById('rq-shown').textContent = `Показано ${shown - first} из ${p.total_items}`;
+            const box = document.getElementById('monitor-pagination-top');
+            if (p.total_pages <= 1) { box.innerHTML = ''; return; }
 
-            if (p.total_pages <= 1) {
-                document.getElementById('monitor-pagination-top').innerHTML = '';
-                return;
+            const pages = [];
+            for (let i = 1; i <= p.total_pages; i++) {
+                if (i === 1 || i === p.total_pages || Math.abs(i - p.current_page) <= 1) pages.push(i);
+                else if (pages[pages.length - 1] !== '…') pages.push('…');
             }
-
-            let html = `<ul class="pagination pagination-sm mb-0">`;
-
-            // Кнопка "Назад"
-            html += `<li class="page-item ${p.has_previous ? '' : 'disabled'}">
-            <a class="page-link" href="#" onclick="event.preventDefault(); if(${p.has_previous}) loadTasks(${p.current_page - 1});">«</a>
-        </li>`;
-
-            // Номера страниц (показываем диапазон вокруг текущей)
-            let startPage = Math.max(1, p.current_page - 2);
-            let endPage = Math.min(p.total_pages, p.current_page + 2);
-
-            if (startPage > 1) {
-                html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadTasks(1);">1</a></li>`;
-                if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                html += `<li class="page-item ${i === p.current_page ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="event.preventDefault(); loadTasks(${i});">${i}</a>
-            </li>`;
-            }
-
-            if (endPage < p.total_pages) {
-                if (endPage < p.total_pages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadTasks(${p.total_pages});">${p.total_pages}</a></li>`;
-            }
-
-            // Кнопка "Вперед"
-            html += `<li class="page-item ${p.has_next ? '' : 'disabled'}">
-            <a class="page-link" href="#" onclick="event.preventDefault(); if(${p.has_next}) loadTasks(${p.current_page + 1});">»</a>
-        </li>`;
-
-            html += `</ul>`;
-            document.getElementById('monitor-pagination-top').innerHTML = html;
+            box.innerHTML = '<div class="rq-pages">'
+                + `<button type="button" ${p.has_previous ? '' : 'disabled'} onclick="loadTasks(${p.current_page - 1})">‹</button>`
+                + pages.map(i => i === '…' ? '<span>…</span>' : `<button type="button" class="${i === p.current_page ? 'active' : ''}" onclick="loadTasks(${i})">${i}</button>`).join('')
+                + `<button type="button" ${p.has_next ? '' : 'disabled'} onclick="loadTasks(${p.current_page + 1})">›</button></div>`;
         }
+
+        // Поиск по Enter и с паузой при наборе
+        (function () {
+            const el = document.getElementById('filter-search');
+            let timer;
+            el.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => loadTasks(1), 400); });
+        })();
 
         function resetFilters() {
             document.getElementById('filter-date-from').value = '';
@@ -974,6 +959,7 @@
                     b.classList.toggle('btn-pastel-primary', active);
                     b.classList.toggle('btn-pastel-outline', !active);
                 });
+                if (e.target.id === 'monitor-tab') loadTasks(1);
             });
         });
 

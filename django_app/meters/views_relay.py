@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -303,14 +303,14 @@ def relay_task_monitor_data(request):
             d_from = datetime.strptime(date_from, '%Y-%m-%d').date()
             tasks = tasks.filter(scheduled_at__date__gte=d_from)
         except ValueError:
-            account, name = last_off_snapshot(t.device, before=t.id)
+            pass
             
     if date_to:
         try:
             d_to = datetime.strptime(date_to, '%Y-%m-%d').date()
             tasks = tasks.filter(scheduled_at__date__lte=d_to)
         except ValueError:
-            account, name = last_off_snapshot(t.device, before=t.id)
+            pass
 
     # 2. Фильтр по району
     region = request.GET.get('region')
@@ -326,6 +326,23 @@ def relay_task_monitor_data(request):
             Q(device__subscriber__region__icontains=sub_region_name)
         )
 
+    search = (request.GET.get('search') or '').strip()
+    if search:
+        tasks = tasks.filter(
+            Q(device__serial_number__icontains=search) |
+            Q(account_snapshot__icontains=search) |
+            Q(name_snapshot__icontains=search) |
+            Q(device__subscriber__account_number__icontains=search) |
+            Q(device__subscriber__full_name__icontains=search)
+        ).distinct()
+
+    # Счётчики для кнопок-фильтров: по периоду, району и поиску, без учёта действия и статуса
+    counts = {'all': tasks.count()}
+    for row in tasks.order_by().values('status').annotate(n=Count('id', distinct=True)):
+        counts[row['status']] = row['n']
+    for row in tasks.order_by().values('action').annotate(n=Count('id', distinct=True)):
+        counts[row['action']] = row['n']
+
     action = request.GET.get('action')
     if action:
         tasks = tasks.filter(action=action)
@@ -333,13 +350,6 @@ def relay_task_monitor_data(request):
     status = request.GET.get('status')
     if status:
         tasks = tasks.filter(status=status)
-
-    search = request.GET.get('search')
-    if search:
-        tasks = tasks.filter(
-            Q(device__serial_number__icontains=search) |
-            Q(device__subscriber__account_number__icontains=search)
-        )
 
     # --- ПАГИНАЦИЯ ---
     page_num = request.GET.get('page', 1)
@@ -389,12 +399,13 @@ def relay_task_monitor_data(request):
             'scheduled_at': t.scheduled_at.strftime('%Y-%m-%d %H:%M'),
             'user': t.created_by.username if t.created_by else 'Система',
             'error': t.error_message or '',
-            'note': (t.error_message or '') if t.status == 'success' else '',
+            'note': (t.error_message or '') if t.status in ('success', 'cancelled') else '',
             'awaiting_button': t.status == 'success' and t.action == 'on' and t.error_message == READY_NOTE,
         })
 
     return JsonResponse({
         'items': data,
+        'counts': counts,
         'pagination': {
             'current_page': page_obj.number,
             'total_pages': paginator.num_pages,
