@@ -64,6 +64,7 @@ def get_producer_display(code, type_id):
         "ST": "Star",
         "HX": "Hexing",
         "IM": "InheMeter",
+        "KF": "KAIFA",
         "8": "Others",
     }
     return mapping.get(code, code or "Неизвестно")
@@ -533,6 +534,7 @@ def restart_robot(request, robot_name):
         'Sanxing_new_5A': 'sync_website_period1',
         'Star': 'sync_star',
         'Inhemeter': 'sync_inhemeter',
+        'Kaifa': 'sync_kaifa',
         'RelayWorker': 'process_relay_tasks',
     }
 

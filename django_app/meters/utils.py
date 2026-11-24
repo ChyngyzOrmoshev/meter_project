@@ -85,6 +85,7 @@ def get_robot_devices(robot_name, status='active'):
         'Sanxing_new_5A': Q(askue_id='18') | Q(api_id__istartswith='SX'),
         'Star': Q(askue_id='14') | Q(api_id__istartswith='ST'),
         'Inhemeter': Q(askue_id='6') | Q(api_id__istartswith='IM'),
+        'Kaifa': Q(askue_id='30') | Q(api_id__istartswith='KF'),
     }
 
     condition = filters.get(robot_name)

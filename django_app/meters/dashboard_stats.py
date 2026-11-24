@@ -40,6 +40,7 @@ AUTO_NOTES = [
     "Авто-сбор: SunRise",            # sync_sanrise
     "Авто-сбор: RiseSun API",        # sync_risesun_api
     "Авто-сбор: Inhemeter",          # sync_inhemeter
+    "Авто-сбор: Kaifa",              # sync_kaifa
     "Hexing KUK",                    # sync_hexing
     "Hexing Raw sync",               # sync_hxn
     "RiseSun",                       # sync_risesun (старый)
