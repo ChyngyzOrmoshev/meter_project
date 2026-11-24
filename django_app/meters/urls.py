@@ -1,8 +1,13 @@
 from django.urls import path
-from . import views, views_relay, views_1c, views_hierarchy, views_readings, views_devices, views_balance
+from . import api_v1, views, views_relay, views_1c, views_hierarchy, views_readings, views_devices, views_balance
 from django.views.generic import RedirectView
 
 urlpatterns = [
+    # Внешний API (только чтение, токен), см. API.md
+    path('api/v1/devices/', api_v1.devices_list),
+    path('api/v1/devices/<str:serial_number>/', api_v1.device_detail),
+    path('api/v1/readings/', api_v1.readings_list),
+    path('api/v1/readings/latest/', api_v1.readings_latest),
     path('', RedirectView.as_view(url='/readings/', permanent=False), name='home'),
     path('devices/', views_devices.devices, name='devices'),
     path('devices/edit/<str:serial_number>/', views_devices.edit_device, name='edit_device'),

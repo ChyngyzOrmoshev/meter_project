@@ -484,3 +484,18 @@ class RelayTask(models.Model):
 
     def __str__(self):
         return f"{self.device.serial_number} - {self.action} ({self.status})"
+
+class ApiToken(models.Model):
+    """Токен внешнего API (только чтение). Сам ключ не хранится: в базе только SHA-256 и префикс для опознания."""
+    name = models.CharField(max_length=100, verbose_name='Кому выдан')
+    prefix = models.CharField(max_length=12, verbose_name='Начало ключа')
+    key_hash = models.CharField(max_length=64, unique=True)
+    is_active = models.BooleanField(default=True, verbose_name='Действует')
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'api_tokens'
+
+    def __str__(self):
+        return f'{self.name} ({self.prefix}…)'
