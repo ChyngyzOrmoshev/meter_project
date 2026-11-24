@@ -360,6 +360,7 @@ def add_device(request):
                         phase = None
                         askue_id = ''
                         api_id = ''
+                    jpes_region, _ = Region.objects.get_or_create(name='ЖПЭС')
                     for sn in serials:
                         if Device.objects.filter(serial_number=sn).exists():
                             skipped.append(sn)
@@ -368,6 +369,7 @@ def add_device(request):
                             serial_number=sn,
                             model=model,
                             status=status,
+                            region=jpes_region,
                             nominal_current=nominal_current,
                             phase=phase,
                             askue_id=askue_id,
