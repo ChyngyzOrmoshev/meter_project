@@ -446,3 +446,19 @@ body::before {
 .rq-pages button.active { background: var(--navy); border-color: transparent; color: var(--on-navy); }
 .rq-pages button:disabled { opacity: .4; cursor: default; }
 @media (max-width: 640px) { .rq-search { min-width: 0; width: 100%; } }
+
+/* ---------- Сверка с 1С: карточки районов ---------- */
+.sync-districts { --sd-ok: #14804a; --sd-bad: #b42318; }
+[data-bs-theme="dark"] .sync-districts { --sd-ok: #9be3b5; --sd-bad: #f5a3a3; }
+.sd-card .card-body { padding: 1.1rem 1.25rem; }
+.sd-head { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; margin-bottom: .9rem; }
+.sd-name { font-weight: 500; font-size: 1.05rem; color: var(--ink); }
+.sd-total { font-size: 1.5rem; font-weight: 300; color: var(--ink); white-space: nowrap; }
+.sd-total small { font-size: .72rem; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
+.sd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+.sd-item { background: var(--soft); border: 1px solid var(--line); border-radius: 14px; padding: .55rem .8rem; display: flex; flex-direction: column; min-width: 0; }
+.sd-item.sd-wide { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: baseline; }
+.sd-num { font-size: 1.25rem; font-weight: 300; line-height: 1.2; color: var(--ink); }
+.sd-label { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-new .sd-num { color: var(--sd-ok); }
+.sd-missing .sd-num { color: var(--sd-bad); }

@@ -125,40 +125,29 @@
         </div>
     </div>
 
-    <!-- Таблица по районам -->
+    <!-- Карточки по районам -->
     {% if last_result.districts %}
-    <div class="card-pastel">
-        <div class="card-header"><i class="fas fa-map-marker-alt"></i> Детализация по районам</div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-pastel mb-0">
-                    <thead>
-                        <tr>
-                            <th>Район</th>
-                            <th class="text-center">В 1С</th>
-                            <th class="text-center">Новых</th>
-                            <th class="text-center">Пропало</th>
-                            <th class="text-center">Inactive</th>
-                            <th class="text-center">Восстановлено</th>
-                            <th class="text-center">Обновлено (район/кат.)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for district, stats in last_result.districts.items %}
-                        <tr>
-                            <td><strong>{{ district }}</strong></td>
-                            <td class="text-center">{{ stats.total_1c }}</td>
-                            <td class="text-center text-success">{{ stats.new }}</td>
-                            <td class="text-center text-danger">{{ stats.missing }}</td>
-                            <td class="text-center text-primary">{{ stats.deactivated }}</td>
-                            <td class="text-center text-info">{{ stats.activated }}</td>
-                            <td class="text-center text-warning">{{ stats.updated }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <h6 class="mb-3 mt-2"><i class="fas fa-map-marker-alt me-2"></i>Детализация по районам</h6>
+    <div class="row g-3 sync-districts">
+        {% for district, stats in last_result.districts.items %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card-pastel h-100 sd-card">
+                <div class="card-body">
+                    <div class="sd-head">
+                        <strong class="sd-name">{{ district }}</strong>
+                        <span class="sd-total" title="Приборов района в выгрузке 1С">{{ stats.total_1c }} <small>в 1С</small></span>
+                    </div>
+                    <div class="sd-grid">
+                        <div class="sd-item sd-new"><span class="sd-num">{{ stats.new }}</span><span class="sd-label">Новых</span></div>
+                        <div class="sd-item sd-missing"><span class="sd-num">{{ stats.missing }}</span><span class="sd-label">Пропало</span></div>
+                        <div class="sd-item"><span class="sd-num">{{ stats.deactivated }}</span><span class="sd-label">Inactive</span></div>
+                        <div class="sd-item"><span class="sd-num">{{ stats.activated }}</span><span class="sd-label">Восстановлено</span></div>
+                        <div class="sd-item sd-wide"><span class="sd-num">{{ stats.updated }}</span><span class="sd-label">Обновлено (район/кат.)</span></div>
+                    </div>
+                </div>
             </div>
         </div>
+        {% endfor %}
     </div>
     {% endif %}
 </div>
