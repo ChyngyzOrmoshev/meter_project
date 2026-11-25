@@ -4,43 +4,29 @@ import glob
 import json
 from datetime import datetime, timedelta
 import pandas as pd
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.db.models import OuterRef, Subquery
 from django.db import transaction
-from meters.models import Device, Reading, Region
+from meters.models import Device, Reading, Region, SyncStatus
+from meters.region_mapping import (REGION_MAPPING, REVERSE_REGION_MAPPING, canonical_1c_name, check_folder,
+                                   display_name, today_folder)
 from meters.hierarchy_sync import RegionHierarchy, aggregate_names, resolve_for_device, clean_name, usable_tp
 
 BASE_1C_PATH = '/app/1c_reports'
 EXPORT_DIR = '/app/exports'
 
-# ЖЕСТКИЙ МАППИНГ РАЙОНОВ (Имя из 1С -> Имя в нашей БД)
-REGION_MAPPING = {
-    'Манас РЭС': '01 Манас',
-    'Кок-Арт': '02 Кок-Арт',
-    'Сузак ЭС': '03 Сузак',
-    'Базар-Коргон РЭС': '04 Базар-Коргон',
-    'Ноокен': '05 Ноокен',
-    'Майлуу-Суу': '06 Майлуу-Суу',
-    'Таш-Комур': '07 Таш-Комур',
-    'Аксы РЭС': '08 Аксы',
-    'Ала-Бука РЭС': '09 Ала-Бука',
-    'Чаткал': '10 Чаткал',
-    'Кара-Кол РЭС': '11 Кара-Куль',
-    'Токтогул': '12 Токтогул',
-    'ЖПЭС': 'ЖПЭС'
-}
+# Предохранитель для запуска по расписанию: если к отключению больше стольких приборов, автоматически ничего не применяем
+# (человек смотрит отчёт и применяет вручную на странице /sync-1c/).
+MAX_AUTO_DEACTIVATE = 500
 
-# Обратный маппинг для склеивания статистики (База -> 1С)
-REVERSE_REGION_MAPPING = {v: k for k, v in REGION_MAPPING.items()}
+# Маппинг районов (имя из 1С -> имя в нашей БД) живёт в meters/region_mapping.py и общий с views.py
+
 
 def get_district_key(name):
-    """Приводит название района к единому стандарту (имени файла 1С)"""
-    if not name: return "Без района"
-    # Если пришло имя из базы (например, "01 Манас"), меняем на "Манас РЭС"
-    if name in REVERSE_REGION_MAPPING:
-        return REVERSE_REGION_MAPPING[name]
-    return name
+    """Единое название района для статистики и таблицы: имя из нашей БД («03 Сузак»);
+    файл «Сузак ЭC» (латинская C) и район из БД склеиваются в одну строку."""
+    return display_name(name)
 
 def norm_serial(s):
     if pd.isna(s) or str(s).strip() == '':
@@ -81,20 +67,69 @@ def get_region_by_district(district_str, db_regions):
 class Command(BaseCommand):
     help = 'Сверка с 1С (с обновлением района и категории)'
 
+    def _already_applied(self, folder):
+        try:
+            with open(os.path.join(EXPORT_DIR, 'sync_1c_result.json'), encoding='utf-8') as f:
+                last = json.load(f)
+        except Exception:
+            return False
+        # blocked: сверка за сегодня уже посчитана, но ждёт ручного применения (см. MAX_AUTO_DEACTIVATE)
+        return last.get('folder_date') == folder and bool(last.get('applied') or last.get('blocked'))
+
+    def _mark_waiting(self, folder, problems):
+        """Карточка Sync1C: ждём полную выгрузку (дата и число записей прошлого применения не трогаем)."""
+        status = SyncStatus.objects.filter(robot_name='Sync1C').first()
+        text = f'Ждём выгрузку 1С за {folder}: ' + '; '.join(problems)
+        if status:
+            SyncStatus.objects.filter(pk=status.pk).update(status='waiting', error=text[:1000])
+        else:
+            SyncStatus.objects.create(robot_name='Sync1C', status='waiting', last_update=timezone.now(),
+                                      records_processed=0, error=text[:1000])
+
     def add_arguments(self, parser):
         parser.add_argument('--apply', action='store_true')
         parser.add_argument('--date', type=str)
+        parser.add_argument('--scheduled', action='store_true',
+                            help='Запуск по расписанию: только папка за сегодня, строгая проверка файлов, применение, один раз в день')
 
     def handle(self, *args, **options):
         if not os.path.exists(BASE_1C_PATH): return
         os.makedirs(EXPORT_DIR, exist_ok=True)
 
-        if options.get('date'):
+        db_region_names = list(Region.objects.values_list('name', flat=True))
+        scheduled = bool(options.get('scheduled'))
+
+        if scheduled:
+            # По расписанию: только папка за сегодня, файлы должны быть дописаны (не менялись последние 5 минут)
+            latest_folder = today_folder()
+            if self._already_applied(latest_folder):
+                self.stdout.write(f"⏭ Сверка за {latest_folder} уже применена, пропуск")
+                return
+            ok, problems = check_folder(BASE_1C_PATH, latest_folder, db_region_names, settle_sec=300)
+            if not ok:
+                self._mark_waiting(latest_folder, problems)
+                self.stdout.write(self.style.WARNING(f"⏸ Сверка не запущена ({latest_folder}): " + '; '.join(problems)))
+                return
+            options['apply'] = True
+        elif options.get('date'):
             latest_folder = options['date']
+            ok, problems = check_folder(BASE_1C_PATH, latest_folder, db_region_names)
+            if not ok:
+                raise CommandError(f"Папка {latest_folder} не прошла проверку: " + '; '.join(problems))
         else:
-            folders = [f for f in os.listdir(BASE_1C_PATH) if re.match(r'^\d{4}-\d{2}-\d{2}$', f)]
-            if not folders: return
-            latest_folder = sorted(folders)[-1]
+            # Вручную: последняя ПОЛНАЯ папка (сегодняшняя выгрузка может быть ещё не дописана)
+            folders = sorted((f for f in os.listdir(BASE_1C_PATH) if re.match(r'^\d{4}-\d{2}-\d{2}$', f)), reverse=True)
+            latest_folder, skipped = None, []
+            for f in folders[:10]:
+                ok, problems = check_folder(BASE_1C_PATH, f, db_region_names)
+                if ok:
+                    latest_folder = f
+                    break
+                skipped.append(f"{f}: " + '; '.join(problems))
+            if not latest_folder:
+                raise CommandError("Нет ни одной полной папки выгрузки 1С. " + ' | '.join(skipped))
+            for line in skipped:
+                self.stdout.write(self.style.WARNING(f"⚠ Пропущена неполная папка {line}"))
 
         self.stdout.write(f"📁 Читаем папку: {latest_folder}")
         db_regions = {r.name.lower(): r for r in Region.objects.all()}
@@ -103,6 +138,7 @@ class Command(BaseCommand):
         active_1c_serials = {} 
         district_entries = {}  # район 1С -> [(ТП, фидер)] по всем строкам
         district_stats = {}
+        read_errors = []       # файлы, которые не удалось прочитать: по ним сверка была бы неполной
 
         def init_district(name):
             # Используем get_district_key для склейки
@@ -116,7 +152,7 @@ class Command(BaseCommand):
             filename = os.path.basename(file_path)
             if filename.startswith('~$'):  # временный файл открытого Excel
                 continue
-            district = filename.replace('.xlsx', '').strip()
+            district = canonical_1c_name(filename.replace('.xlsx', '').strip())
             dist_key = init_district(district)
             
             try:
@@ -128,7 +164,9 @@ class Command(BaseCommand):
                 col_feeder = next((col for col in df.columns if 'фидер' in str(col).lower()), None)
                 col_sub = next((col for col in df.columns if 'подстанц' in str(col).lower() or str(col).strip().lower() == 'пс'), None)
 
-                if not col_serial: continue
+                if not col_serial:
+                    read_errors.append(f'{filename}: нет колонки с заводским номером')
+                    continue
 
                 for _, row in df.iterrows():
                     raw_sn = str(row[col_serial]).strip()
@@ -152,9 +190,19 @@ class Command(BaseCommand):
                             'tp': tp_1c, 'feeder': feeder_1c, 'sub': sub_1c,
                         }
             except Exception as e:
-                pass
+                read_errors.append(f'{filename}: {e}')
 
         self.stdout.write(f"✅ Всего в 1С: {len(active_1c_serials)}")
+
+        if read_errors:
+            msg = 'Не удалось прочитать файлы 1С: ' + '; '.join(read_errors)
+            self.stderr.write(self.style.ERROR(msg))
+            if options.get('apply'):
+                # неполные данные 1С: применять нельзя (пропавшими окажутся приборы нечитанных районов)
+                if scheduled:
+                    self._mark_waiting(latest_folder, [msg])
+                    return
+                raise CommandError(msg)
 
         # 2. Готовим БД
         last_ts_subquery = Reading.objects.filter(device=OuterRef('pk')).order_by('-timestamp').values('timestamp')[:1]
@@ -288,6 +336,13 @@ class Command(BaseCommand):
                     to_deactivate.append(d)
                     district_stats[dist_key]['deactivated'] += 1
 
+        blocked = None
+        if scheduled and len(to_deactivate) > MAX_AUTO_DEACTIVATE:
+            blocked = (f'К отключению {len(to_deactivate)} приборов (больше {MAX_AUTO_DEACTIVATE}): '
+                       f'проверьте отчёт и примените вручную на странице «Сверка с 1С»')
+            options['apply'] = False
+            self.stdout.write(self.style.WARNING(f'⛔ {blocked}'))
+
         # 5. Сохраняем CSV
         if new_meters: pd.DataFrame(new_meters).to_csv(os.path.join(EXPORT_DIR, 'new_meters.csv'), index=False, sep=';', encoding='utf-8-sig')
         if missing_in_1c:
@@ -332,12 +387,13 @@ class Command(BaseCommand):
 
         # 7. Сохраняем JSON
         result_data = {
-            'status': 'success', 'total_1c': len(active_1c_serials),
+            'status': 'success', 'applied': bool(options.get('apply')), 'blocked': bool(blocked),
+            'total_1c': len(active_1c_serials),
             'new_count': len(new_meters), 'missing_count': len(missing_in_1c),
             'candidates_count': len(to_deactivate), 
             'deactivated_count': deactivated_count,
             'activated_count': activated_count, 'updated_count': updated_count,
-            'folder_date': latest_folder, 'districts': district_stats,
+            'folder_date': latest_folder, 'districts': dict(sorted(district_stats.items())),
             'hierarchy_updated': len(hierarchy_rows),
             'hierarchy_created': {'substations': sum(len(h.created['substations']) for h in hierarchies.values()),
                                   'feeders': sum(len(h.created['feeders']) for h in hierarchies.values()),
@@ -346,3 +402,16 @@ class Command(BaseCommand):
         }
         with open(os.path.join(EXPORT_DIR, 'sync_1c_result.json'), 'w', encoding='utf-8') as f:
             json.dump(result_data, f, ensure_ascii=False)
+
+        if blocked:
+            self._mark_waiting(latest_folder, [blocked])
+        elif options.get('apply'):
+            # Карточка на дашборде и строка «Записей обработано» на странице /sync-1c/
+            SyncStatus.objects.update_or_create(
+                robot_name='Sync1C',
+                defaults={
+                    'status': 'success', 'last_update': timezone.now(),
+                    'records_processed': updated_count + activated_count + deactivated_count,
+                    'error': None,
+                },
+            )
