@@ -802,7 +802,7 @@ def export_devices_csv(request):
 
         for device in qs.iterator(chunk_size=1000):
             groups = ', '.join(g.name for g in device.groups.all())
-            online_status = 'Онлайн' if device.has_recent_reading else 'Оффлайн'
+            online_status = 'Онлайн' if device.id in recent_ids else 'Оффлайн'
             yield [
                 device.serial_number,
                 device.model.model_name if device.model else '',
@@ -831,22 +831,18 @@ def export_devices_csv(request):
 @login_required
 @user_passes_test(is_allowed_user)
 def export_devices_xlsx(request):
-    """Экспорт реестра приборов в Excel (только до 5000 записей, иначе предлагаем CSV)."""
+    """Экспорт реестра приборов в Excel (потоковая запись, без ограничения по числу строк)."""
     from openpyxl import Workbook
     from openpyxl.styles import Font, Alignment, PatternFill
     from openpyxl.utils import get_column_letter
-    from django.db.models import Exists, OuterRef
-
     # Базовый queryset с фильтрами (как в devices)
     qs = Device.objects.select_related('model', 'region', 'substation', 'feeder', 'tp').prefetch_related('groups')
     seven_days_ago = timezone.now() - timedelta(days=7)
-    qs = qs.annotate(
-        has_recent_reading=Exists(
-            Reading.objects.filter(
-                device=OuterRef('pk'),
-                timestamp__gte=seven_days_ago
-            )
-        )
+    # Приборы с показаниями за 7 дней одним запросом (Exists на каждую строку
+    # давал ~90 с на 180 тыс. приборов и упирался в таймаут gunicorn).
+    recent_ids = set(
+        Reading.objects.filter(timestamp__gte=seven_days_ago)
+        .values_list('device_id', flat=True).distinct()
     )
 
     # Фильтры (копируем из devices)
@@ -879,55 +875,48 @@ def export_devices_xlsx(request):
     if group_filter:
         qs = qs.filter(groups__id=group_filter)
 
-    count = qs.count()
-    MAX_ROWS = 10000
-    if count > MAX_ROWS:
-        messages.warning(request, f'Слишком много записей ({count}). Используйте CSV-экспорт.')
-        return redirect('devices')
+    # Потоковая запись (write_only): память не растёт с числом строк,
+    # лимит самого Excel - 1 048 575 строк данных.
+    from io import BytesIO
+    from openpyxl.cell import WriteOnlyCell
 
-    # Создаём книгу
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Реестр приборов"
+    wb = Workbook(write_only=True)
+    ws = wb.create_sheet("Реестр приборов")
 
     headers = [
         'Заводской номер', 'Тип ПУ', 'Статус', 'Категория', 'Район', 'Подстанция',
         'Фидер', 'ТП', 'Группы', 'Ток', 'Фазность', 'Статус связи', 'Дата добавления'
     ]
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
+    widths = [18, 20, 14, 16, 20, 22, 16, 14, 24, 14, 10, 14, 20]
+    for idx, w in enumerate(widths, 1):
+        ws.column_dimensions[get_column_letter(idx)].width = w
+    head_cells = []
+    for header in headers:
+        cell = WriteOnlyCell(ws, value=header)
         cell.font = Font(bold=True, color='FFFFFF')
         cell.fill = PatternFill(start_color='2d3e50', end_color='2d3e50', fill_type='solid')
         cell.alignment = Alignment(horizontal='center')
+        head_cells.append(cell)
+    ws.append(head_cells)
 
-    for row_idx, device in enumerate(qs, 2):
+    for device in qs.order_by('id').iterator(chunk_size=2000):
         groups = ', '.join(g.name for g in device.groups.all())
-        online_status = 'Онлайн' if device.has_recent_reading else 'Оффлайн'
-        ws.cell(row=row_idx, column=1, value=device.serial_number)
-        ws.cell(row=row_idx, column=2, value=device.model.model_name if device.model else '')
-        ws.cell(row=row_idx, column=3, value=device.status)
-        ws.cell(row=row_idx, column=4, value=device.get_category_display())
-        ws.cell(row=row_idx, column=5, value=device.region.name if device.region else '')
-        ws.cell(row=row_idx, column=6, value=device.substation.name if device.substation else '')
-        ws.cell(row=row_idx, column=7, value=device.feeder.name if device.feeder else '')
-        ws.cell(row=row_idx, column=8, value=device.tp.name if device.tp else '')
-        ws.cell(row=row_idx, column=9, value=groups)
-        ws.cell(row=row_idx, column=10, value=device.nominal_current or '')
-        ws.cell(row=row_idx, column=11, value=device.model.phases if device.model else '')
-        ws.cell(row=row_idx, column=12, value=online_status)
-        ws.cell(row=row_idx, column=13, value=device.created_at.strftime('%Y-%m-%d %H:%M:%S') if device.created_at else '')
+        ws.append([
+            device.serial_number,
+            device.model.model_name if device.model else '',
+            device.status,
+            device.get_category_display(),
+            device.region.name if device.region else '',
+            device.substation.name if device.substation else '',
+            device.feeder.name if device.feeder else '',
+            device.tp.name if device.tp else '',
+            groups,
+            device.nominal_current or '',
+            device.model.phases if device.model else '',
+            'Онлайн' if device.id in recent_ids else 'Оффлайн',
+            device.created_at.strftime('%Y-%m-%d %H:%M:%S') if device.created_at else '',
+        ])
 
-    # Автоширина
-    for col in ws.columns:
-        max_length = 0
-        col_letter = get_column_letter(col[0].column)
-        for cell in col:
-            if cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-        ws.column_dimensions[col_letter].width = min(max_length + 2, 50)
-
-    # Сохраняем
-    from io import BytesIO
     output = BytesIO()
     wb.save(output)
     output.seek(0)
