@@ -132,8 +132,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Район</label>
-                        <select id="mass-filter-region" class="form-select form-control-pastel" {{
-                            user_region|yesno:"disabled," }}>
+                        <select id="mass-filter-region" class="form-select form-control-pastel" {{ user_region|yesno:"disabled," }}>
                             {% if not user_region %}
                             <option value="">Все районы</option>
                             {% endif %}

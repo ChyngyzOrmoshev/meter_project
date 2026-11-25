@@ -16,12 +16,9 @@
     <strong>Результат импорта:</strong><br>
     Добавлено: {{ request.session.import_result.success }}<br>
     Обновлено: {{ request.session.import_result.updated }}<br>
-    Ошибок: {{ request.session.import_result.error_count }} (первые 5: {{ request.session.import_result.errors|join:", "
-    }})<br>
-    Пропущено (устройство не найдено): {{ request.session.import_result.skipped_count }} (первые 5: {{
-    request.session.import_result.skipped|join:", " }})<br>
-    Пропущено (пустое значение): {{ request.session.import_result.empty_count }} (первые 5: {{
-    request.session.import_result.skipped_empty|join:", " }})<br>
+    Ошибок: {{ request.session.import_result.error_count }} (первые 5: {{ request.session.import_result.errors|join:", " }})<br>
+    Пропущено (устройство не найдено): {{ request.session.import_result.skipped_count }} (первые 5: {{ request.session.import_result.skipped|join:", " }})<br>
+    Пропущено (пустое значение): {{ request.session.import_result.empty_count }} (первые 5: {{ request.session.import_result.skipped_empty|join:", " }})<br>
     <a href="?clear_result=1" class="btn btn-sm btn-pastel-outline">Очистить результат</a>
 </div>
 {% endif %}

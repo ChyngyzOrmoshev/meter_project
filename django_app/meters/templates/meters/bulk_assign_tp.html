@@ -18,8 +18,7 @@
                 <select name="tp_id" class="form-select form-control-pastel">
                     <option value="">—</option>
                     {% for tp in tps %}
-                    <option value="{{ tp.id }}">{{ tp.name }} ({{ tp.feeder.substation.region.name }} → {{
-                        tp.feeder.substation.name }} → {{ tp.feeder.name }})</option>
+                    <option value="{{ tp.id }}">{{ tp.name }} ({{ tp.feeder.substation.region.name }} → {{ tp.feeder.substation.name }} → {{ tp.feeder.name }})</option>
                     {% endfor %}
                 </select>
             </div>
